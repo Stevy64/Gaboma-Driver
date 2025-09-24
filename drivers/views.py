@@ -20,19 +20,25 @@ def login_chauffeur(request):
         username = request.POST.get('username')
         password = request.POST.get('password')
         
+        # Validation des champs
+        if not username or not password:
+            messages.error(request, 'Veuillez remplir tous les champs.')
+            return render(request, 'drivers/login_chauffeur.html')
+        
         user = authenticate(request, username=username, password=password)
         if user is not None:
             try:
                 chauffeur = Chauffeur.objects.get(user=user)
                 if chauffeur.actif:
                     login(request, user)
+                    messages.success(request, f'✅ Connexion réussie ! Bienvenue {chauffeur.nom_complet}.')
                     return redirect('drivers:dashboard_chauffeur')
                 else:
-                    messages.error(request, 'Votre compte chauffeur est désactivé.')
+                    messages.error(request, '❌ Votre compte chauffeur est désactivé. Contactez l\'administrateur.')
             except Chauffeur.DoesNotExist:
-                messages.error(request, 'Aucun chauffeur associé à ce compte.')
+                messages.error(request, '❌ Aucun chauffeur associé à ce compte. Contactez l\'administrateur.')
         else:
-            messages.error(request, 'Nom d\'utilisateur ou mot de passe incorrect.')
+            messages.error(request, '❌ Nom d\'utilisateur ou mot de passe incorrect. Vérifiez vos identifiants.')
     
     return render(request, 'drivers/login_chauffeur.html')
 
