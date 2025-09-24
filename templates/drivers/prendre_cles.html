@@ -1,0 +1,149 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Prendre les clés - Taxi App{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-key-fill"></i> Prendre les clés
+                </h4>
+                <small>Début de journée - {{ today|date:"d/m/Y" }}</small>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <!-- Objectif de recette -->
+                    <div class="mb-3">
+                        <label for="objectif_recette" class="form-label">
+                            <i class="bi bi-target"></i> Objectif de recette (FCFA) *
+                        </label>
+                        <input type="number" 
+                               class="form-control form-control-lg" 
+                               id="objectif_recette" 
+                               name="objectif_recette" 
+                               min="0" 
+                               step="100"
+                               placeholder="Ex: 50000"
+                               required>
+                        <div class="form-text">Définissez votre objectif pour cette journée</div>
+                    </div>
+                    
+                    <!-- Plein de carburant -->
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" 
+                                   type="checkbox" 
+                                   id="plein_carburant" 
+                                   name="plein_carburant">
+                            <label class="form-check-label" for="plein_carburant">
+                                <i class="bi bi-fuel-pump"></i> Plein de carburant effectué
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Problème mécanique -->
+                    <div class="mb-3">
+                        <label for="probleme_mecanique" class="form-label">
+                            <i class="bi bi-tools"></i> Problème mécanique
+                        </label>
+                        <select class="form-select" id="probleme_mecanique" name="probleme_mecanique">
+                            <option value="Aucun">Aucun problème</option>
+                            <option value="Freins">Problème de freins</option>
+                            <option value="Moteur">Problème de moteur</option>
+                            <option value="Transmission">Problème de transmission</option>
+                            <option value="Éclairage">Problème d'éclairage</option>
+                            <option value="Climatisation">Problème de climatisation</option>
+                            <option value="Autre">Autre problème</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Signature électronique -->
+                    <div class="mb-4">
+                        <label for="signature" class="form-label">
+                            <i class="bi bi-pen"></i> Signature électronique *
+                        </label>
+                        <textarea class="form-control" 
+                                  id="signature" 
+                                  name="signature" 
+                                  rows="3" 
+                                  placeholder="Tapez votre nom ou signature..."
+                                  required></textarea>
+                        <div class="form-text">Signature obligatoire pour valider la prise de clés</div>
+                    </div>
+                    
+                    <!-- Boutons d'action -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'drivers:dashboard_chauffeur' %}" class="btn btn-secondary me-md-2">
+                            <i class="bi bi-arrow-left"></i> Annuler
+                        </a>
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="bi bi-check-circle"></i> Valider la prise de clés
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Informations utiles -->
+        <div class="card mt-3">
+            <div class="card-body">
+                <h6><i class="bi bi-info-circle"></i> Informations importantes</h6>
+                <ul class="mb-0">
+                    <li>Vous ne pourrez prendre les clés qu'une seule fois par jour</li>
+                    <li>L'objectif de recette vous aidera à rester motivé</li>
+                    <li>Signalez tout problème mécanique dès le début de journée</li>
+                    <li>N'oubliez pas de faire le plein si nécessaire</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Focus sur le premier champ
+    document.getElementById('objectif_recette').focus();
+    
+    // Validation en temps réel
+    const objectifInput = document.getElementById('objectif_recette');
+    const signatureInput = document.getElementById('signature');
+    
+    function validateForm() {
+        const objectif = parseInt(objectifInput.value);
+        const signature = signatureInput.value.trim();
+        
+        if (objectif > 0 && signature.length > 0) {
+            return true;
+        }
+        return false;
+    }
+    
+    // Mise à jour du bouton de validation
+    function updateSubmitButton() {
+        const submitBtn = document.querySelector('button[type="submit"]');
+        if (validateForm()) {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('btn-secondary');
+            submitBtn.classList.add('btn-success');
+        } else {
+            submitBtn.disabled = true;
+            submitBtn.classList.remove('btn-success');
+            submitBtn.classList.add('btn-secondary');
+        }
+    }
+    
+    objectifInput.addEventListener('input', updateSubmitButton);
+    signatureInput.addEventListener('input', updateSubmitButton);
+    
+    // Initialisation
+    updateSubmitButton();
+});
+</script>
+{% endblock %}

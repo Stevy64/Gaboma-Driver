@@ -1,0 +1,200 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Remettre les clés - Taxi App{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="mb-0">
+                    <i class="bi bi-key"></i> Remettre les clés
+                </h4>
+                <small>Fin de journée - {{ today|date:"d/m/Y" }}</small>
+            </div>
+            <div class="card-body">
+                <!-- Informations de la prise du matin -->
+                {% if prise_aujourdhui %}
+                <div class="alert alert-info">
+                    <h6><i class="bi bi-info-circle"></i> Objectif du matin</h6>
+                    <p class="mb-0">
+                        <strong>Objectif fixé :</strong> {{ prise_aujourdhui.objectif_recette }} FCFA<br>
+                        <strong>Heure de prise :</strong> {{ prise_aujourdhui.heure_prise|time:"H:i" }}
+                    </p>
+                </div>
+                {% endif %}
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <!-- Recette réalisée -->
+                    <div class="mb-3">
+                        <label for="recette_realisee" class="form-label">
+                            <i class="bi bi-cash-stack"></i> Recette réalisée (FCFA) *
+                        </label>
+                        <input type="number" 
+                               class="form-control form-control-lg" 
+                               id="recette_realisee" 
+                               name="recette_realisee" 
+                               min="0" 
+                               step="100"
+                               placeholder="Ex: 45000"
+                               required>
+                        <div class="form-text">Montant total de la recette de la journée</div>
+                    </div>
+                    
+                    <!-- Plein de carburant -->
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" 
+                                   type="checkbox" 
+                                   id="plein_carburant" 
+                                   name="plein_carburant">
+                            <label class="form-check-label" for="plein_carburant">
+                                <i class="bi bi-fuel-pump"></i> Plein de carburant effectué
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Problème mécanique -->
+                    <div class="mb-3">
+                        <label for="probleme_mecanique" class="form-label">
+                            <i class="bi bi-tools"></i> Problème mécanique
+                        </label>
+                        <select class="form-select" id="probleme_mecanique" name="probleme_mecanique">
+                            <option value="Aucun">Aucun problème</option>
+                            <option value="Freins">Problème de freins</option>
+                            <option value="Moteur">Problème de moteur</option>
+                            <option value="Transmission">Problème de transmission</option>
+                            <option value="Éclairage">Problème d'éclairage</option>
+                            <option value="Climatisation">Problème de climatisation</option>
+                            <option value="Autre">Autre problème</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Signature électronique -->
+                    <div class="mb-4">
+                        <label for="signature" class="form-label">
+                            <i class="bi bi-pen"></i> Signature électronique *
+                        </label>
+                        <textarea class="form-control" 
+                                  id="signature" 
+                                  name="signature" 
+                                  rows="3" 
+                                  placeholder="Tapez votre nom ou signature..."
+                                  required></textarea>
+                        <div class="form-text">Signature obligatoire pour valider la remise de clés</div>
+                    </div>
+                    
+                    <!-- Boutons d'action -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'drivers:dashboard_chauffeur' %}" class="btn btn-secondary me-md-2">
+                            <i class="bi bi-arrow-left"></i> Annuler
+                        </a>
+                        <button type="submit" class="btn btn-warning btn-lg">
+                            <i class="bi bi-check-circle"></i> Valider la remise de clés
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Informations utiles -->
+        <div class="card mt-3">
+            <div class="card-body">
+                <h6><i class="bi bi-info-circle"></i> Informations importantes</h6>
+                <ul class="mb-0">
+                    <li>Vous ne pourrez remettre les clés qu'une seule fois par jour</li>
+                    <li>Votre performance sera comparée à l'objectif fixé le matin</li>
+                    <li>Signalez tout problème mécanique rencontré</li>
+                    <li>N'oubliez pas de faire le plein si nécessaire</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Focus sur le premier champ
+    document.getElementById('recette_realisee').focus();
+    
+    // Validation en temps réel
+    const recetteInput = document.getElementById('recette_realisee');
+    const signatureInput = document.getElementById('signature');
+    const objectif = {{ prise_aujourdhui.objectif_recette|default:0 }};
+    
+    function validateForm() {
+        const recette = parseInt(recetteInput.value);
+        const signature = signatureInput.value.trim();
+        
+        if (recette >= 0 && signature.length > 0) {
+            return true;
+        }
+        return false;
+    }
+    
+    // Mise à jour du bouton de validation
+    function updateSubmitButton() {
+        const submitBtn = document.querySelector('button[type="submit"]');
+        if (validateForm()) {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('btn-secondary');
+            submitBtn.classList.add('btn-warning');
+        } else {
+            submitBtn.disabled = true;
+            submitBtn.classList.remove('btn-warning');
+            submitBtn.classList.add('btn-secondary');
+        }
+    }
+    
+    // Affichage dynamique de la performance
+    function updatePerformanceIndicator() {
+        const recette = parseInt(recetteInput.value);
+        if (recette > 0 && objectif > 0) {
+            const pourcentage = (recette / objectif) * 100;
+            let alertClass = '';
+            let message = '';
+            
+            if (pourcentage >= 100) {
+                alertClass = 'alert-success';
+                message = `🎉 Excellent ! ${pourcentage.toFixed(1)}% de l'objectif atteint`;
+            } else if (pourcentage >= 90) {
+                alertClass = 'alert-warning';
+                message = `⚠️ Presque ! ${pourcentage.toFixed(1)}% de l'objectif`;
+            } else {
+                alertClass = 'alert-danger';
+                message = `❌ ${pourcentage.toFixed(1)}% de l'objectif`;
+            }
+            
+            // Supprimer l'ancien indicateur
+            const oldIndicator = document.getElementById('performance-indicator');
+            if (oldIndicator) {
+                oldIndicator.remove();
+            }
+            
+            // Créer le nouvel indicateur
+            const indicator = document.createElement('div');
+            indicator.id = 'performance-indicator';
+            indicator.className = `alert ${alertClass} mt-3`;
+            indicator.innerHTML = `<i class="bi bi-graph-up"></i> ${message}`;
+            
+            // Insérer après le champ recette
+            recetteInput.parentNode.parentNode.insertAdjacentElement('afterend', indicator);
+        }
+    }
+    
+    recetteInput.addEventListener('input', function() {
+        updateSubmitButton();
+        updatePerformanceIndicator();
+    });
+    signatureInput.addEventListener('input', updateSubmitButton);
+    
+    // Initialisation
+    updateSubmitButton();
+});
+</script>
+{% endblock %}

@@ -144,7 +144,22 @@ dmypy.json
 ehthumbs.db
 Thumbs.db
 
-# Taxi App specific
-media/
+# Django specific
 staticfiles/
+media/
 *.sqlite3
+*.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+tmp/
+
+# Backup files
+*.bak
+*.backup

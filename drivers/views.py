@@ -4,9 +4,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
 from django.utils import timezone
-from datetime import datetime, date
+from datetime import datetime, date, time
 from .models import Chauffeur
-from activities.models import Activite, Recette, Panne
+from activities.models import Activite, Recette, Panne, PriseCles, RemiseCles
 
 
 def index(request):
@@ -26,7 +26,7 @@ def login_chauffeur(request):
                 chauffeur = Chauffeur.objects.get(user=user)
                 if chauffeur.actif:
                     login(request, user)
-                    return redirect('dashboard_chauffeur')
+                    return redirect('drivers:dashboard_chauffeur')
                 else:
                     messages.error(request, 'Votre compte chauffeur est désactivé.')
             except Chauffeur.DoesNotExist:
@@ -39,118 +39,178 @@ def login_chauffeur(request):
 
 @login_required
 def dashboard_chauffeur(request):
-    """Tableau de bord du chauffeur"""
+    """Tableau de bord du chauffeur avec nouvelle logique"""
     try:
         chauffeur = Chauffeur.objects.get(user=request.user)
     except Chauffeur.DoesNotExist:
         messages.error(request, 'Aucun chauffeur associé à votre compte.')
-        return redirect('index')
+        return redirect('drivers:index')
     
-    # Vérifier s'il y a une activité en cours
-    activite_en_cours = Activite.objects.filter(
-        chauffeur=chauffeur,
-        type_activite='prise'
-    ).exclude(
-        id__in=Activite.objects.filter(
-            chauffeur=chauffeur,
-            type_activite='remise'
-        ).values_list('id', flat=True)
-    ).order_by('-date_heure').first()
-    
-    # Récupérer les activités récentes
-    activites_recentes = Activite.objects.filter(
-        chauffeur=chauffeur
-    ).order_by('-date_heure')[:10]
-    
-    # Récupérer les recettes de la semaine
     today = date.today()
-    week_start = today - timezone.timedelta(days=today.weekday())
-    recettes_semaine = Recette.objects.filter(
+    
+    # Vérifier l'état actuel : prise et remise du jour
+    prise_aujourdhui = PriseCles.objects.filter(
+        chauffeur=chauffeur, 
+        date=today
+    ).first()
+    
+    remise_aujourdhui = RemiseCles.objects.filter(
+        chauffeur=chauffeur, 
+        date=today
+    ).first()
+    
+    # Déterminer les actions possibles
+    peut_prendre_cles = not prise_aujourdhui
+    peut_remettre_cles = prise_aujourdhui and not remise_aujourdhui
+    
+    # Récupérer l'historique des 7 derniers jours
+    week_start = today - timezone.timedelta(days=7)
+    prises_recentes = PriseCles.objects.filter(
         chauffeur=chauffeur,
         date__gte=week_start
-    ).order_by('-date')
+    ).order_by('-date')[:7]
+    
+    remises_recentes = RemiseCles.objects.filter(
+        chauffeur=chauffeur,
+        date__gte=week_start
+    ).order_by('-date')[:7]
     
     context = {
         'chauffeur': chauffeur,
-        'activite_en_cours': activite_en_cours,
-        'activites_recentes': activites_recentes,
-        'recettes_semaine': recettes_semaine,
+        'today': today,
+        'prise_aujourdhui': prise_aujourdhui,
+        'remise_aujourdhui': remise_aujourdhui,
+        'peut_prendre_cles': peut_prendre_cles,
+        'peut_remettre_cles': peut_remettre_cles,
+        'prises_recentes': prises_recentes,
+        'remises_recentes': remises_recentes,
     }
     
     return render(request, 'drivers/dashboard_chauffeur.html', context)
 
 
 @login_required
-def prise_cles(request):
-    """Formulaire de prise de clés"""
+def prendre_cles(request):
+    """Formulaire de prise de clés du matin"""
     try:
         chauffeur = Chauffeur.objects.get(user=request.user)
     except Chauffeur.DoesNotExist:
         messages.error(request, 'Aucun chauffeur associé à votre compte.')
-        return redirect('index')
+        return redirect('drivers:index')
     
-    if request.method == 'POST':
-        carburant_litres = request.POST.get('carburant_litres')
-        carburant_pourcentage = request.POST.get('carburant_pourcentage')
-        signature = request.POST.get('signature', '')
-        
-        # Créer l'activité de prise de clés
-        activite = Activite.objects.create(
-            chauffeur=chauffeur,
-            type_activite='prise',
-            date_heure=timezone.now(),
-            carburant_litres=carburant_litres if carburant_litres else None,
-            carburant_pourcentage=carburant_pourcentage if carburant_pourcentage else None,
-            signature=signature
-        )
-        
-        messages.success(request, 'Prise de clés enregistrée avec succès!')
+    # Vérifier si une prise a déjà été faite aujourd'hui
+    today = date.today()
+    if PriseCles.objects.filter(chauffeur=chauffeur, date=today).exists():
+        messages.warning(request, 'Vous avez déjà pris les clés aujourd\'hui.')
         return redirect('dashboard_chauffeur')
     
-    return render(request, 'drivers/prise_cles.html', {'chauffeur': chauffeur})
+    if request.method == 'POST':
+        objectif_recette = request.POST.get('objectif_recette')
+        plein_carburant = request.POST.get('plein_carburant') == 'on'
+        probleme_mecanique = request.POST.get('probleme_mecanique', 'Aucun')
+        signature = request.POST.get('signature', '')
+        
+        # Validation
+        if not objectif_recette or not signature:
+            messages.error(request, 'L\'objectif de recette et la signature sont obligatoires.')
+        else:
+            try:
+                objectif_recette = int(objectif_recette)
+                if objectif_recette <= 0:
+                    raise ValueError()
+                
+                # Créer la prise de clés
+                PriseCles.objects.create(
+                    chauffeur=chauffeur,
+                    date=today,
+                    heure_prise=timezone.now().time(),
+                    objectif_recette=objectif_recette,
+                    plein_carburant=plein_carburant,
+                    probleme_mecanique=probleme_mecanique,
+                    signature=signature
+                )
+                
+                messages.success(request, '✅ La journée peut commencer, bonne route !')
+                return redirect('dashboard_chauffeur')
+                
+            except ValueError:
+                messages.error(request, 'L\'objectif de recette doit être un nombre entier positif.')
+    
+    return render(request, 'drivers/prendre_cles.html', {'chauffeur': chauffeur, 'today': today})
 
 
 @login_required
-def remise_cles(request):
-    """Formulaire de remise de clés"""
+def remettre_cles(request):
+    """Formulaire de remise de clés du soir"""
     try:
         chauffeur = Chauffeur.objects.get(user=request.user)
     except Chauffeur.DoesNotExist:
         messages.error(request, 'Aucun chauffeur associé à votre compte.')
-        return redirect('index')
+        return redirect('drivers:index')
     
-    if request.method == 'POST':
-        recette_jour = request.POST.get('recette_jour')
-        etat_vehicule = request.POST.get('etat_vehicule', '')
-        notes = request.POST.get('notes', '')
-        signature = request.POST.get('signature', '')
-        
-        # Créer l'activité de remise de clés
-        activite = Activite.objects.create(
-            chauffeur=chauffeur,
-            type_activite='remise',
-            date_heure=timezone.now(),
-            recette_jour=recette_jour if recette_jour else None,
-            etat_vehicule=etat_vehicule,
-            notes=notes,
-            signature=signature
-        )
-        
-        # Créer ou mettre à jour la recette du jour
-        if recette_jour:
-            recette, created = Recette.objects.get_or_create(
-                chauffeur=chauffeur,
-                date=date.today(),
-                defaults={'montant': recette_jour}
-            )
-            if not created:
-                recette.montant = recette_jour
-                recette.save()
-        
-        messages.success(request, 'Remise de clés enregistrée avec succès!')
+    today = date.today()
+    
+    # Vérifier si une prise a été faite aujourd'hui
+    prise_aujourdhui = PriseCles.objects.filter(chauffeur=chauffeur, date=today).first()
+    if not prise_aujourdhui:
+        messages.warning(request, 'Vous devez d\'abord prendre les clés avant de les remettre.')
         return redirect('dashboard_chauffeur')
     
-    return render(request, 'drivers/remise_cles.html', {'chauffeur': chauffeur})
+    # Vérifier si une remise a déjà été faite aujourd'hui
+    if RemiseCles.objects.filter(chauffeur=chauffeur, date=today).exists():
+        messages.warning(request, 'Vous avez déjà remis les clés aujourd\'hui.')
+        return redirect('dashboard_chauffeur')
+    
+    if request.method == 'POST':
+        recette_realisee = request.POST.get('recette_realisee')
+        plein_carburant = request.POST.get('plein_carburant') == 'on'
+        probleme_mecanique = request.POST.get('probleme_mecanique', 'Aucun')
+        signature = request.POST.get('signature', '')
+        
+        # Validation
+        if not recette_realisee or not signature:
+            messages.error(request, 'La recette réalisée et la signature sont obligatoires.')
+        else:
+            try:
+                recette_realisee = int(recette_realisee)
+                if recette_realisee < 0:
+                    raise ValueError()
+                
+                # Créer la remise de clés
+                remise = RemiseCles.objects.create(
+                    chauffeur=chauffeur,
+                    date=today,
+                    heure_remise=timezone.now().time(),
+                    recette_realisee=recette_realisee,
+                    plein_carburant=plein_carburant,
+                    probleme_mecanique=probleme_mecanique,
+                    signature=signature
+                )
+                
+                # Calculer le message motivant
+                type_message, message_motivant = remise.get_objectif_atteint()
+                
+                # Ajouter le message avec le bon type
+                if type_message == 'success':
+                    messages.success(request, message_motivant)
+                elif type_message == 'warning':
+                    messages.warning(request, message_motivant)
+                elif type_message == 'danger':
+                    messages.error(request, message_motivant)
+                else:
+                    messages.info(request, message_motivant)
+                
+                return redirect('dashboard_chauffeur')
+                
+            except ValueError:
+                messages.error(request, 'La recette réalisée doit être un nombre entier positif ou zéro.')
+    
+    context = {
+        'chauffeur': chauffeur,
+        'today': today,
+        'prise_aujourdhui': prise_aujourdhui,
+    }
+    return render(request, 'drivers/remettre_cles.html', context)
 
 
 @login_required
@@ -160,7 +220,7 @@ def signaler_panne(request):
         chauffeur = Chauffeur.objects.get(user=request.user)
     except Chauffeur.DoesNotExist:
         messages.error(request, 'Aucun chauffeur associé à votre compte.')
-        return redirect('index')
+        return redirect('drivers:index')
     
     if request.method == 'POST':
         description = request.POST.get('description')

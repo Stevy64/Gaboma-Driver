@@ -3,8 +3,119 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from drivers.models import Chauffeur
 
 
+class PriseCles(models.Model):
+    """Modèle pour représenter la prise de clés du matin"""
+    
+    chauffeur = models.ForeignKey(
+        Chauffeur, 
+        on_delete=models.CASCADE, 
+        verbose_name="Chauffeur"
+    )
+    date = models.DateField(verbose_name="Date")
+    heure_prise = models.TimeField(verbose_name="Heure de prise")
+    
+    # Objectif de la journée
+    objectif_recette = models.IntegerField(
+        validators=[MinValueValidator(0)],
+        verbose_name="Objectif de recette (FCFA)"
+    )
+    
+    # État du véhicule
+    plein_carburant = models.BooleanField(
+        default=False,
+        verbose_name="Plein de carburant"
+    )
+    
+    # Problèmes mécaniques
+    probleme_mecanique = models.CharField(
+        max_length=200,
+        default="Aucun",
+        verbose_name="Problème mécanique"
+    )
+    
+    # Signature électronique
+    signature = models.TextField(
+        verbose_name="Signature électronique"
+    )
+    
+    # Métadonnées
+    date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
+    
+    class Meta:
+        verbose_name = "Prise de clés"
+        verbose_name_plural = "Prises de clés"
+        ordering = ['-date', '-heure_prise']
+        unique_together = ['chauffeur', 'date']  # Une seule prise par jour par chauffeur
+    
+    def __str__(self):
+        return f"{self.chauffeur.nom_complet} - Prise {self.date} - {self.objectif_recette} FCFA"
+
+
+class RemiseCles(models.Model):
+    """Modèle pour représenter la remise de clés du soir"""
+    
+    chauffeur = models.ForeignKey(
+        Chauffeur, 
+        on_delete=models.CASCADE, 
+        verbose_name="Chauffeur"
+    )
+    date = models.DateField(verbose_name="Date")
+    heure_remise = models.TimeField(verbose_name="Heure de remise")
+    
+    # Recette réalisée
+    recette_realisee = models.IntegerField(
+        validators=[MinValueValidator(0)],
+        verbose_name="Recette réalisée (FCFA)"
+    )
+    
+    # État du véhicule
+    plein_carburant = models.BooleanField(
+        default=False,
+        verbose_name="Plein de carburant"
+    )
+    
+    # Problèmes mécaniques
+    probleme_mecanique = models.CharField(
+        max_length=200,
+        default="Aucun",
+        verbose_name="Problème mécanique"
+    )
+    
+    # Signature électronique
+    signature = models.TextField(
+        verbose_name="Signature électronique"
+    )
+    
+    # Métadonnées
+    date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
+    
+    class Meta:
+        verbose_name = "Remise de clés"
+        verbose_name_plural = "Remises de clés"
+        ordering = ['-date', '-heure_remise']
+        unique_together = ['chauffeur', 'date']  # Une seule remise par jour par chauffeur
+    
+    def __str__(self):
+        return f"{self.chauffeur.nom_complet} - Remise {self.date} - {self.recette_realisee} FCFA"
+    
+    def get_objectif_atteint(self):
+        """Calcule si l'objectif a été atteint"""
+        try:
+            prise = PriseCles.objects.get(chauffeur=self.chauffeur, date=self.date)
+            pourcentage = (self.recette_realisee / prise.objectif_recette) * 100
+            
+            if pourcentage >= 100:
+                return 'success', f"🎉 Bravo ! Objectif atteint avec succès ({pourcentage:.1f}%)"
+            elif pourcentage >= 90:
+                return 'warning', f"⚠️ Presque atteint ! Encore un petit effort ({pourcentage:.1f}%)"
+            else:
+                return 'danger', f"❌ Objectif non atteint. Courage, demain sera meilleur ! ({pourcentage:.1f}%)"
+        except PriseCles.DoesNotExist:
+            return 'info', "ℹ️ Aucun objectif défini pour cette journée"
+
+
 class Activite(models.Model):
-    """Modèle pour représenter une activité de prise/remise de clés"""
+    """Modèle pour représenter une activité de prise/remise de clés (legacy)"""
     
     TYPE_ACTIVITE_CHOICES = [
         ('prise', 'Prise de clés'),
@@ -70,8 +181,8 @@ class Activite(models.Model):
     date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
     
     class Meta:
-        verbose_name = "Activité"
-        verbose_name_plural = "Activités"
+        verbose_name = "Activité (Legacy)"
+        verbose_name_plural = "Activités (Legacy)"
         ordering = ['-date_heure']
     
     def __str__(self):
