@@ -1,4 +1,4 @@
-// Taxi App - JavaScript principal
+// Gaboma Drive - JavaScript principal
 
 document.addEventListener('DOMContentLoaded', function() {
     // Initialisation des tooltips Bootstrap

@@ -1,4 +1,4 @@
-# 🚀 Guide de Déploiement - Taxi App
+# 🚀 Guide de Déploiement - Gaboma Drive
 
 ## 📋 Prérequis
 
@@ -16,8 +16,8 @@
 
 ### 1. Cloner le dépôt
 ```bash
-git clone https://github.com/votre-username/taxi-app.git
-cd taxi-app
+git clone https://github.com/votre-username/gaboma-drive.git
+cd gaboma-drive
 ```
 
 ### 2. Environnement virtuel
@@ -142,16 +142,16 @@ sudo apt update
 sudo apt install python3 python3-pip python3-venv postgresql nginx
 
 # Cloner le projet
-git clone https://github.com/votre-username/taxi-app.git
-cd taxi-app
+git clone https://github.com/votre-username/gaboma-drive.git
+cd gaboma-drive
 ```
 
 ### 2. Configuration PostgreSQL
 ```sql
 -- Créer la base de données
-CREATE DATABASE taxi_app;
+CREATE DATABASE gaboma_drive;
 CREATE USER taxi_user WITH PASSWORD 'votre_mot_de_passe';
-GRANT ALL PRIVILEGES ON DATABASE taxi_app TO taxi_user;
+GRANT ALL PRIVILEGES ON DATABASE gaboma_drive TO taxi_user;
 ```
 
 ### 3. Configuration Django
@@ -163,7 +163,7 @@ ALLOWED_HOSTS = ['votre-domaine.com', 'votre-ip']
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'taxi_app',
+        'NAME': 'gaboma_drive',
         'USER': 'taxi_user',
         'PASSWORD': 'votre_mot_de_passe',
         'HOST': 'localhost',
@@ -178,7 +178,7 @@ DATABASES = {
 pip install gunicorn
 
 # Démarrer l'application
-gunicorn taxi_app.wsgi:application --bind 0.0.0.0:8000
+gunicorn gaboma_drive.wsgi:application --bind 0.0.0.0:8000
 ```
 
 ### 5. Configuration Nginx
@@ -194,7 +194,7 @@ server {
     }
 
     location /static/ {
-        alias /chemin/vers/taxi-app/staticfiles/;
+        alias /chemin/vers/gaboma-drive/staticfiles/;
     }
 }
 ```
@@ -231,10 +231,10 @@ python manage.py collectstatic --noinput
 ### Sauvegarde
 ```bash
 # Sauvegarder la base de données
-pg_dump taxi_app > backup_$(date +%Y%m%d).sql
+pg_dump gaboma_drive > backup_$(date +%Y%m%d).sql
 
 # Sauvegarder les fichiers
-tar -czf taxi_app_backup_$(date +%Y%m%d).tar.gz /chemin/vers/taxi-app/
+tar -czf gaboma_drive_backup_$(date +%Y%m%d).tar.gz /chemin/vers/gaboma-drive/
 ```
 
 ## 📞 Support
@@ -252,4 +252,4 @@ tar -czf taxi_app_backup_$(date +%Y%m%d).tar.gz /chemin/vers/taxi-app/
 
 ---
 
-**🚕 Application Taxi App - Prête pour la production !**
+**🚕 Application Gaboma Drive - Prête pour la production !**
