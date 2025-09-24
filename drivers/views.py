@@ -17,29 +17,40 @@ def index(request):
 
 def login_chauffeur(request):
     """Connexion des chauffeurs"""
+    print("Initiation de connexion...")
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
         
         print(f"Tentative de connexion: username={username}")
         
+        # Vérification basique des champs
         if not username or not password:
             messages.error(request, 'Veuillez remplir tous les champs.')
             return render(request, 'drivers/login_chauffeur.html')
         
+        # Authentification Django
         user = authenticate(request, username=username, password=password)
         print(f"Authentification: user={user}")
         
         if user is not None:
             try:
+                # Vérifier si l'utilisateur correspond à un chauffeur
                 chauffeur = Chauffeur.objects.get(user=user)
                 print(f"Chauffeur trouvé: {chauffeur.nom} {chauffeur.prenom}, actif: {chauffeur.actif}")
+                
                 if chauffeur.actif:
+                    # Connexion Django (met l'utilisateur en session)
                     login(request, user)
+                    
+                    # Message flash de bienvenue
                     messages.success(request, f'Bienvenue {chauffeur.prenom} {chauffeur.nom} !')
+                    
+                    # ✅ Redirection explicite vers le dashboard chauffeur
                     return redirect('drivers:dashboard_chauffeur')
                 else:
                     messages.error(request, 'Votre compte chauffeur est désactivé.')
+            
             except Chauffeur.DoesNotExist:
                 print("Aucun chauffeur associé à ce compte")
                 messages.error(request, 'Aucun chauffeur associé à ce compte.')
@@ -47,6 +58,8 @@ def login_chauffeur(request):
             print("Authentification échouée")
             messages.error(request, 'Nom d\'utilisateur ou mot de passe incorrect.')
     
+    # Si GET ou erreur: on recharge le template login
+    print(f"Fin de connexion: {request.method}")
     return render(request, 'drivers/login_chauffeur.html')
 
 
@@ -86,7 +99,7 @@ def creer_compte_chauffeur(request):
             return render(request, 'drivers/creer_compte.html')
         
         try:
-            # Créer l'utilisateur
+            # Créer l'utilisateur Django
             user = User.objects.create_user(
                 username=username,
                 email=email,
@@ -95,7 +108,7 @@ def creer_compte_chauffeur(request):
                 last_name=nom
             )
             
-            # Créer le chauffeur
+            # Créer le profil chauffeur lié
             chauffeur = Chauffeur.objects.create(
                 user=user,
                 nom=nom,
@@ -107,10 +120,12 @@ def creer_compte_chauffeur(request):
             
             messages.success(request, f'Compte créé avec succès ! Bienvenue {prenom} {nom} !')
             
-            # Connecter automatiquement l'utilisateur
+            # Authentifier puis connecter automatiquement l'utilisateur
             user = authenticate(username=username, password=password)
             if user:
                 login(request, user)
+                
+                # ✅ Redirection explicite vers le dashboard chauffeur
                 return redirect('drivers:dashboard_chauffeur')
             
         except Exception as e:
@@ -185,7 +200,7 @@ def prendre_cles(request):
     today = date.today()
     if PriseCles.objects.filter(chauffeur=chauffeur, date=today).exists():
         messages.warning(request, 'Vous avez déjà pris les clés aujourd\'hui.')
-        return redirect('dashboard_chauffeur')
+        return redirect('drivers:dashboard_chauffeur')
     
     if request.method == 'POST':
         objectif_recette = request.POST.get('objectif_recette')
@@ -214,7 +229,7 @@ def prendre_cles(request):
                 )
                 
                 messages.success(request, '✅ La journée peut commencer, bonne route !')
-                return redirect('dashboard_chauffeur')
+                return redirect('drivers:dashboard_chauffeur')
                 
             except ValueError:
                 messages.error(request, 'L\'objectif de recette doit être un nombre entier positif.')
@@ -237,12 +252,12 @@ def remettre_cles(request):
     prise_aujourdhui = PriseCles.objects.filter(chauffeur=chauffeur, date=today).first()
     if not prise_aujourdhui:
         messages.warning(request, 'Vous devez d\'abord prendre les clés avant de les remettre.')
-        return redirect('dashboard_chauffeur')
+        return redirect('drivers:dashboard_chauffeur')
     
     # Vérifier si une remise a déjà été faite aujourd'hui
     if RemiseCles.objects.filter(chauffeur=chauffeur, date=today).exists():
         messages.warning(request, 'Vous avez déjà remis les clés aujourd\'hui.')
-        return redirect('dashboard_chauffeur')
+        return redirect('drivers:dashboard_chauffeur')
     
     if request.method == 'POST':
         recette_realisee = request.POST.get('recette_realisee')
@@ -270,7 +285,7 @@ def remettre_cles(request):
                     signature=signature
                 )
                 
-                # Calculer le message motivant
+                # Calculer le message motivant (méthode à définir dans ton modèle RemiseCles)
                 type_message, message_motivant = remise.get_objectif_atteint()
                 
                 # Ajouter le message avec le bon type
@@ -283,7 +298,7 @@ def remettre_cles(request):
                 else:
                     messages.info(request, message_motivant)
                 
-                return redirect('dashboard_chauffeur')
+                return redirect('drivers:dashboard_chauffeur')
                 
             except ValueError:
                 messages.error(request, 'La recette réalisée doit être un nombre entier positif ou zéro.')
@@ -316,6 +331,6 @@ def signaler_panne(request):
         )
         
         messages.success(request, 'Panne signalée avec succès!')
-        return redirect('dashboard_chauffeur')
+        return redirect('drivers:dashboard_chauffeur')
     
     return render(request, 'drivers/signaler_panne.html', {'chauffeur': chauffeur})
