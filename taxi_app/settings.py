@@ -128,3 +128,10 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Après une connexion réussie
+LOGIN_REDIRECT_URL = 'drivers:dashboard_chauffeur'
+
+# Si un utilisateur non connecté tente d’accéder à une page protégée
+LOGIN_URL = 'drivers:login_chauffeur'
+LOGOUT_REDIRECT_URL = 'drivers:index'
