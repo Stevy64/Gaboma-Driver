@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.contrib import messages
 from django.http import JsonResponse
 from django.utils import timezone
@@ -20,27 +21,103 @@ def login_chauffeur(request):
         username = request.POST.get('username')
         password = request.POST.get('password')
         
-        # Validation des champs
+        print(f"Tentative de connexion: username={username}")
+        
         if not username or not password:
             messages.error(request, 'Veuillez remplir tous les champs.')
             return render(request, 'drivers/login_chauffeur.html')
         
         user = authenticate(request, username=username, password=password)
+        print(f"Authentification: user={user}")
+        
         if user is not None:
             try:
                 chauffeur = Chauffeur.objects.get(user=user)
+                print(f"Chauffeur trouvé: {chauffeur.nom} {chauffeur.prenom}, actif: {chauffeur.actif}")
                 if chauffeur.actif:
                     login(request, user)
-                    messages.success(request, f'✅ Connexion réussie ! Bienvenue {chauffeur.nom_complet}.')
+                    messages.success(request, f'Bienvenue {chauffeur.prenom} {chauffeur.nom} !')
                     return redirect('drivers:dashboard_chauffeur')
                 else:
-                    messages.error(request, '❌ Votre compte chauffeur est désactivé. Contactez l\'administrateur.')
+                    messages.error(request, 'Votre compte chauffeur est désactivé.')
             except Chauffeur.DoesNotExist:
-                messages.error(request, '❌ Aucun chauffeur associé à ce compte. Contactez l\'administrateur.')
+                print("Aucun chauffeur associé à ce compte")
+                messages.error(request, 'Aucun chauffeur associé à ce compte.')
         else:
-            messages.error(request, '❌ Nom d\'utilisateur ou mot de passe incorrect. Vérifiez vos identifiants.')
+            print("Authentification échouée")
+            messages.error(request, 'Nom d\'utilisateur ou mot de passe incorrect.')
     
     return render(request, 'drivers/login_chauffeur.html')
+
+
+def creer_compte_chauffeur(request):
+    """Création d'un compte chauffeur"""
+    if request.method == 'POST':
+        nom = request.POST.get('nom')
+        prenom = request.POST.get('prenom')
+        telephone = request.POST.get('telephone')
+        email = request.POST.get('email')
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        password_confirm = request.POST.get('password_confirm')
+        
+        print(f"Tentative de création: {username}")
+        
+        # Validation des champs
+        if not all([nom, prenom, telephone, email, username, password, password_confirm]):
+            messages.error(request, 'Veuillez remplir tous les champs.')
+            return render(request, 'drivers/creer_compte.html')
+        
+        if password != password_confirm:
+            messages.error(request, 'Les mots de passe ne correspondent pas.')
+            return render(request, 'drivers/creer_compte.html')
+        
+        if len(password) < 6:
+            messages.error(request, 'Le mot de passe doit contenir au moins 6 caractères.')
+            return render(request, 'drivers/creer_compte.html')
+        
+        # Vérifier si l'utilisateur existe déjà
+        if User.objects.filter(username=username).exists():
+            messages.error(request, 'Ce nom d\'utilisateur est déjà utilisé.')
+            return render(request, 'drivers/creer_compte.html')
+        
+        if User.objects.filter(email=email).exists():
+            messages.error(request, 'Cette adresse email est déjà utilisée.')
+            return render(request, 'drivers/creer_compte.html')
+        
+        try:
+            # Créer l'utilisateur
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password,
+                first_name=prenom,
+                last_name=nom
+            )
+            
+            # Créer le chauffeur
+            chauffeur = Chauffeur.objects.create(
+                user=user,
+                nom=nom,
+                prenom=prenom,
+                telephone=telephone,
+                email=email,
+                actif=True
+            )
+            
+            messages.success(request, f'Compte créé avec succès ! Bienvenue {prenom} {nom} !')
+            
+            # Connecter automatiquement l'utilisateur
+            user = authenticate(username=username, password=password)
+            if user:
+                login(request, user)
+                return redirect('drivers:dashboard_chauffeur')
+            
+        except Exception as e:
+            print(f"Erreur lors de la création: {e}")
+            messages.error(request, 'Une erreur est survenue lors de la création du compte.')
+    
+    return render(request, 'drivers/creer_compte.html')
 
 
 @login_required

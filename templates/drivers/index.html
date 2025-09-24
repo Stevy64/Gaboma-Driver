@@ -26,9 +26,14 @@
                             Connectez-vous pour gérer vos prises et remises de clés, 
                             signaler des pannes et consulter vos statistiques.
                         </p>
-                        <a href="{% url 'drivers:login_chauffeur' %}" class="btn btn-primary btn-lg">
-                            <i class="bi bi-box-arrow-in-right"></i> Connexion Chauffeur
-                        </a>
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'drivers:login_chauffeur' %}" class="btn btn-primary btn-lg">
+                                <i class="bi bi-box-arrow-in-right"></i> Connexion Chauffeur
+                            </a>
+                            <a href="{% url 'drivers:creer_compte' %}" class="btn btn-outline-primary">
+                                <i class="bi bi-person-plus"></i> Créer un compte
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>

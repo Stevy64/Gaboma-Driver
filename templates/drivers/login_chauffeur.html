@@ -34,7 +34,7 @@
                                 <i class="bi bi-person"></i>
                             </span>
                             <input type="text" class="form-control" id="username" name="username" required 
-                                   placeholder="Entrez votre nom d'utilisateur">
+                                   placeholder="Entrez votre nom d'utilisateur" value="chauffeur">
                         </div>
                     </div>
 
@@ -45,18 +45,13 @@
                                 <i class="bi bi-lock"></i>
                             </span>
                             <input type="password" class="form-control" id="password" name="password" required 
-                                   placeholder="Entrez votre mot de passe">
+                                   placeholder="Entrez votre mot de passe" value="chauffeur123">
                         </div>
                     </div>
 
                     <div class="d-grid">
                         <button type="submit" class="btn btn-primary btn-lg" id="loginBtn">
-                            <span id="loginText">
-                                <i class="bi bi-box-arrow-in-right"></i> Se connecter
-                            </span>
-                            <span id="loginSpinner" class="spinner-border spinner-border-sm d-none" role="status">
-                                <span class="visually-hidden">Chargement...</span>
-                            </span>
+                            <i class="bi bi-box-arrow-in-right"></i> Se connecter
                         </button>
                     </div>
                 </form>
@@ -75,19 +70,21 @@
 document.addEventListener('DOMContentLoaded', function() {
     const loginForm = document.getElementById('loginForm');
     const loginBtn = document.getElementById('loginBtn');
-    const loginText = document.getElementById('loginText');
-    const loginSpinner = document.getElementById('loginSpinner');
+    
+    console.log('Page de connexion chargée');
     
     // Animation du bouton lors de la soumission
     loginForm.addEventListener('submit', function(e) {
-        // Désactiver le bouton et afficher le spinner
-        loginBtn.disabled = true;
-        loginText.classList.add('d-none');
-        loginSpinner.classList.remove('d-none');
+        console.log('Formulaire soumis');
         
-        // Changer le style du bouton
-        loginBtn.classList.remove('btn-primary');
-        loginBtn.classList.add('btn-secondary');
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        
+        console.log('Données du formulaire:', { username, password });
+        
+        // Désactiver le bouton et afficher un spinner
+        loginBtn.disabled = true;
+        loginBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Connexion...';
         
         // Message de feedback
         console.log('Tentative de connexion en cours...');
@@ -104,29 +101,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Focus sur le premier champ
     document.getElementById('username').focus();
-    
-    // Validation en temps réel
-    const usernameInput = document.getElementById('username');
-    const passwordInput = document.getElementById('password');
-    
-    function validateForm() {
-        const isValid = usernameInput.value.trim() !== '' && passwordInput.value.trim() !== '';
-        loginBtn.disabled = !isValid;
-        
-        if (isValid) {
-            loginBtn.classList.remove('btn-secondary');
-            loginBtn.classList.add('btn-primary');
-        } else {
-            loginBtn.classList.remove('btn-primary');
-            loginBtn.classList.add('btn-secondary');
-        }
-    }
-    
-    usernameInput.addEventListener('input', validateForm);
-    passwordInput.addEventListener('input', validateForm);
-    
-    // Validation initiale
-    validateForm();
 });
 </script>
 {% endblock %}
