@@ -1,0 +1,247 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Dashboard Admin - Taxi App{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i class="bi bi-speedometer2"></i> Dashboard Administrateur
+        </h2>
+    </div>
+</div>
+
+<!-- Statistiques générales -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="bi bi-people text-primary" style="font-size: 2rem;"></i>
+                <h4 class="mt-2">{{ total_chauffeurs }}</h4>
+                <p class="text-muted mb-0">Chauffeurs actifs</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="bi bi-clock text-info" style="font-size: 2rem;"></i>
+                <h4 class="mt-2">{{ total_activites_aujourdhui }}</h4>
+                <p class="text-muted mb-0">Activités aujourd'hui</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="bi bi-currency-euro text-success" style="font-size: 2rem;"></i>
+                <h4 class="mt-2">{{ recettes_aujourdhui }}€</h4>
+                <p class="text-muted mb-0">Recettes aujourd'hui</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="bi bi-tools text-warning" style="font-size: 2rem;"></i>
+                <h4 class="mt-2">{{ pannes_en_cours }}</h4>
+                <p class="text-muted mb-0">Pannes en cours</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recettes et alertes -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-graph-up"></i> Recettes
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <h3 class="text-success">{{ recettes_aujourdhui }}€</h3>
+                        <p class="text-muted">Aujourd'hui</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h3 class="text-info">{{ recettes_semaine }}€</h3>
+                        <p class="text-muted">Cette semaine</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h3 class="text-primary">{{ recettes_mois }}€</h3>
+                        <p class="text-muted">Ce mois</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-exclamation-triangle"></i> Alertes
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if pannes_critiques > 0 %}
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    {{ pannes_critiques }} panne(s) critique(s)
+                </div>
+                {% endif %}
+                {% if pannes_en_cours > 0 %}
+                <div class="alert alert-warning">
+                    <i class="bi bi-tools"></i>
+                    {{ pannes_en_cours }} panne(s) en cours
+                </div>
+                {% endif %}
+                {% if pannes_critiques == 0 and pannes_en_cours == 0 %}
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle"></i>
+                    Aucune alerte
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Top chauffeurs du mois -->
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-trophy"></i> Top chauffeurs du mois
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if top_chauffeurs_mois %}
+                    <div class="list-group list-group-flush">
+                        {% for chauffeur in top_chauffeurs_mois %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ chauffeur.nom_complet }}</strong>
+                                <br>
+                                <small class="text-muted">{{ chauffeur.telephone }}</small>
+                            </div>
+                            <span class="badge bg-success rounded-pill">
+                                {{ chauffeur.total_recettes }}€
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">Aucune donnée ce mois</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Activités récentes -->
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-clock-history"></i> Activités récentes
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if activites_recentes %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Chauffeur</th>
+                                    <th>Type</th>
+                                    <th>Heure</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for activite in activites_recentes %}
+                                <tr>
+                                    <td>{{ activite.chauffeur.nom_complet }}</td>
+                                    <td>
+                                        {% if activite.type_activite == 'prise' %}
+                                            <span class="badge bg-success">Prise</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">Remise</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ activite.date_heure|date:"H:i" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">Aucune activité récente</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pannes récentes -->
+{% if pannes_recentes %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-tools"></i> Pannes récentes
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Chauffeur</th>
+                                <th>Sévérité</th>
+                                <th>Description</th>
+                                <th>Date</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for panne in pannes_recentes %}
+                            <tr>
+                                <td>{{ panne.chauffeur.nom_complet }}</td>
+                                <td>
+                                    {% if panne.severite == 'critique' %}
+                                        <span class="badge bg-dark">{{ panne.get_severite_display }}</span>
+                                    {% elif panne.severite == 'majeure' %}
+                                        <span class="badge bg-danger">{{ panne.get_severite_display }}</span>
+                                    {% elif panne.severite == 'moderee' %}
+                                        <span class="badge bg-warning">{{ panne.get_severite_display }}</span>
+                                    {% else %}
+                                        <span class="badge bg-success">{{ panne.get_severite_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ panne.description|truncatechars:50 }}</td>
+                                <td>{{ panne.date_creation|date:"d/m H:i" }}</td>
+                                <td>
+                                    {% if panne.statut == 'reparée' %}
+                                        <span class="badge bg-success">{{ panne.get_statut_display }}</span>
+                                    {% elif panne.statut == 'en_cours' %}
+                                        <span class="badge bg-warning">{{ panne.get_statut_display }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ panne.get_statut_display }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
