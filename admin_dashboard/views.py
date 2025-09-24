@@ -115,12 +115,22 @@ def statistiques_recettes(request):
         total=Sum('montant')
     ).order_by('date')
     
+    # Calcul des totaux
+    recette_totale = Recette.objects.filter(
+        date__gte=date_debut,
+        date__lte=date_fin
+    ).aggregate(Sum('montant'))['montant__sum'] or 0
+    
     context = {
         'periode': periode,
         'date_debut': date_debut,
         'date_fin': date_fin,
         'recettes_chauffeurs': recettes_chauffeurs,
         'recettes_par_jour': recettes_par_jour,
+        'recette_jour': recette_totale if periode == 'jour' else 0,
+        'recette_semaine': recette_totale if periode == 'semaine' else 0,
+        'recette_mois': recette_totale if periode == 'mois' else 0,
+        'recette_annee': recette_totale if periode == 'annee' else 0,
     }
     
     return render(request, 'admin_dashboard/statistiques_recettes.html', context)
@@ -136,7 +146,7 @@ def gestion_pannes(request):
     severite = request.GET.get('severite')
     
     if statut:
-        pannes = pannes.filter(statut=statut)
+        pannes = pannes.filter(resolue=(statut == 'resolue'))
     if severite:
         pannes = pannes.filter(severite=severite)
     

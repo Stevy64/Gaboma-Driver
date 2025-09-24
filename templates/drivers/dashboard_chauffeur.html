@@ -24,27 +24,37 @@
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0">
-                    <i class="bi bi-lightning"></i> Actions rapides
+                    <i class="bi bi-lightning"></i> Actions du jour
                 </h5>
             </div>
             <div class="card-body">
                 <div class="row g-3">
-                    {% if not activite_en_cours %}
+                    {% if peut_prendre_cles %}
                     <div class="col-md-6">
-                        <a href="{% url 'drivers:prise_cles' %}" class="btn btn-success btn-lg w-100">
+                        <a href="{% url 'drivers:prendre_cles' %}" class="btn btn-success btn-lg w-100">
                             <i class="bi bi-key-fill"></i> Prendre les clés
+                            <small class="d-block">Début de journée</small>
+                        </a>
+                    </div>
+                    {% elif peut_remettre_cles %}
+                    <div class="col-md-6">
+                        <a href="{% url 'drivers:remettre_cles' %}" class="btn btn-warning btn-lg w-100">
+                            <i class="bi bi-key"></i> Remettre les clés
+                            <small class="d-block">Fin de journée</small>
                         </a>
                     </div>
                     {% else %}
                     <div class="col-md-6">
-                        <a href="{% url 'drivers:remise_cles' %}" class="btn btn-warning btn-lg w-100">
-                            <i class="bi bi-key"></i> Rendre les clés
-                        </a>
+                        <div class="btn btn-secondary btn-lg w-100 disabled">
+                            <i class="bi bi-check-circle"></i> Journée terminée
+                            <small class="d-block">Clés prises et remises</small>
+                        </div>
                     </div>
                     {% endif %}
                     <div class="col-md-6">
                         <a href="{% url 'drivers:signaler_panne' %}" class="btn btn-danger btn-lg w-100">
                             <i class="bi bi-tools"></i> Signaler une panne
+                            <small class="d-block">Problème mécanique</small>
                         </a>
                     </div>
                 </div>
@@ -54,25 +64,41 @@
 </div>
 
 <!-- Statut actuel -->
-{% if activite_en_cours %}
 <div class="row mb-4">
     <div class="col-12">
-        <div class="alert alert-info">
-            <h5 class="alert-heading">
-                <i class="bi bi-info-circle"></i> Activité en cours
-            </h5>
+        {% if prise_aujourdhui %}
+        <div class="alert alert-success">
+            <h6><i class="bi bi-check-circle"></i> Clés prises aujourd'hui</h6>
             <p class="mb-0">
-                Vous avez pris les clés le {{ activite_en_cours.date_heure|date:"d/m/Y à H:i" }}.
-                {% if activite_en_cours.carburant_litres %}
-                    Carburant : {{ activite_en_cours.carburant_litres }}L
-                {% elif activite_en_cours.carburant_pourcentage %}
-                    Carburant : {{ activite_en_cours.carburant_pourcentage }}%
+                <strong>Heure :</strong> {{ prise_aujourdhui.heure_prise|time:"H:i" }}<br>
+                <strong>Objectif :</strong> {{ prise_aujourdhui.objectif_recette }} FCFA<br>
+                <strong>Carburant :</strong> {% if prise_aujourdhui.plein_carburant %}Plein{% else %}À faire{% endif %}<br>
+                {% if prise_aujourdhui.probleme_mecanique != "Aucun" %}
+                <strong>Problème :</strong> {{ prise_aujourdhui.probleme_mecanique }}
                 {% endif %}
             </p>
         </div>
+        {% endif %}
+        
+        {% if remise_aujourdhui %}
+        <div class="alert alert-info">
+            <h6><i class="bi bi-check-circle-fill"></i> Clés remises aujourd'hui</h6>
+            <p class="mb-0">
+                <strong>Heure :</strong> {{ remise_aujourdhui.heure_remise|time:"H:i" }}<br>
+                <strong>Recette :</strong> {{ remise_aujourdhui.recette_realisee }} FCFA<br>
+                <strong>Carburant :</strong> {% if remise_aujourdhui.plein_carburant %}Plein{% else %}À faire{% endif %}
+            </p>
+        </div>
+        {% endif %}
+        
+        {% if not prise_aujourdhui and not remise_aujourdhui %}
+        <div class="alert alert-light">
+            <h6><i class="bi bi-clock"></i> Aucune activité aujourd'hui</h6>
+            <p class="mb-0">Commencez votre journée en prenant les clés !</p>
+        </div>
+        {% endif %}
     </div>
 </div>
-{% endif %}
 
 <div class="row">
     <!-- Activités récentes -->

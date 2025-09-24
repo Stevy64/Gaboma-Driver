@@ -1,0 +1,81 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Classements - Admin{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-trophy"></i> Classements des Chauffeurs
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6>Top 3 du jour</h6>
+                        <div class="list-group">
+                            {% for chauffeur in top_jour %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ chauffeur.nom_complet }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ chauffeur.recette }} FCFA</small>
+                                </div>
+                                <span class="badge bg-primary rounded-pill">{{ forloop.counter }}</span>
+                            </div>
+                            {% empty %}
+                            <div class="list-group-item text-muted">
+                                Aucune donnée disponible
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <h6>Top 3 de la semaine</h6>
+                        <div class="list-group">
+                            {% for chauffeur in top_semaine %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ chauffeur.nom_complet }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ chauffeur.recette }} FCFA</small>
+                                </div>
+                                <span class="badge bg-success rounded-pill">{{ forloop.counter }}</span>
+                            </div>
+                            {% empty %}
+                            <div class="list-group-item text-muted">
+                                Aucune donnée disponible
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <h6>Top 3 du mois</h6>
+                        <div class="list-group">
+                            {% for chauffeur in top_mois %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ chauffeur.nom_complet }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ chauffeur.recette }} FCFA</small>
+                                </div>
+                                <span class="badge bg-warning rounded-pill">{{ forloop.counter }}</span>
+                            </div>
+                            {% empty %}
+                            <div class="list-group-item text-muted">
+                                Aucune donnée disponible
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

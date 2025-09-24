@@ -7,7 +7,7 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('login/', views.login_chauffeur, name='login_chauffeur'),
     path('dashboard/', views.dashboard_chauffeur, name='dashboard_chauffeur'),
-    path('prise-cles/', views.prise_cles, name='prise_cles'),
-    path('remise-cles/', views.remise_cles, name='remise_cles'),
+    path('prendre-cles/', views.prendre_cles, name='prendre_cles'),
+    path('remettre-cles/', views.remettre_cles, name='remettre_cles'),
     path('signaler-panne/', views.signaler_panne, name='signaler_panne'),
 ]

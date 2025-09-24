@@ -1,5 +1,23 @@
 from django.contrib import admin
-from .models import Activite, Panne, Recette
+from .models import Activite, Panne, Recette, PriseCles, RemiseCles
+
+
+@admin.register(PriseCles)
+class PriseClesAdmin(admin.ModelAdmin):
+    list_display = ('chauffeur', 'date', 'heure_prise', 'objectif_recette', 'plein_carburant')
+    list_filter = ('date', 'plein_carburant', 'chauffeur')
+    search_fields = ('chauffeur__nom', 'chauffeur__prenom', 'probleme_mecanique')
+    date_hierarchy = 'date'
+    readonly_fields = ('date_creation',)
+
+
+@admin.register(RemiseCles)
+class RemiseClesAdmin(admin.ModelAdmin):
+    list_display = ('chauffeur', 'date', 'heure_remise', 'recette_realisee', 'plein_carburant')
+    list_filter = ('date', 'plein_carburant', 'chauffeur')
+    search_fields = ('chauffeur__nom', 'chauffeur__prenom', 'probleme_mecanique')
+    date_hierarchy = 'date'
+    readonly_fields = ('date_creation',)
 
 
 @admin.register(Activite)
