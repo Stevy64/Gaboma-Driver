@@ -50,9 +50,7 @@
                     </div>
 
                     <div class="d-grid">
-                        <button type="submit" class="btn btn-primary btn-lg" id="loginBtn">
-                            <i class="bi bi-box-arrow-in-right"></i> Se connecter
-                        </button>
+                        <input type="submit" class="btn btn-primary btn-lg" id="loginBtn" value="Se connecter">
                     </div>
                 </form>
 
@@ -88,6 +86,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Message de feedback
         console.log('Tentative de connexion en cours...');
+        
+        // Ne pas empêcher la soumission du formulaire
+        // e.preventDefault(); // Commenté pour permettre la soumission normale
     });
     
     // Auto-masquer les alertes après 5 secondes
