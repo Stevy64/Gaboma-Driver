@@ -1,4 +1,4 @@
-# 🚕 Taxi App - Application de Suivi d'Activité
+# 🚕 Gaboma Drive - Application de Suivi d'Activité
 
 Application Django complète pour la gestion des chauffeurs de taxi avec système de prise/remise de clés et suivi des performances.
 
@@ -43,8 +43,8 @@ Application Django complète pour la gestion des chauffeurs de taxi avec systèm
 ### Installation
 ```bash
 # Cloner le dépôt
-git clone https://github.com/votre-username/taxi-app.git
-cd taxi-app
+git clone https://github.com/votre-username/gaboma-drive.git
+cd gaboma-drive
 
 # Créer un environnement virtuel
 python -m venv venv
@@ -142,7 +142,7 @@ DATABASES = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'taxi_app',
+        'NAME': 'gaboma_drive',
         'USER': 'your_user',
         'PASSWORD': 'your_password',
         'HOST': 'localhost',
@@ -193,7 +193,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 COPY . .
-CMD ["gunicorn", "taxi_app.wsgi:application"]
+CMD ["gunicorn", "gaboma_drive.wsgi:application"]
 ```
 
 ## 🤝 Contribution

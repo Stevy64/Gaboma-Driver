@@ -1,8 +1,8 @@
-# 🚀 Instructions pour GitHub - Taxi App
+# 🚀 Instructions pour GitHub - Gaboma Drive
 
 ## ✅ Code nettoyé et prêt !
 
-Votre application Taxi App est maintenant **complètement nettoyée** et prête pour GitHub.
+Votre application Gaboma Drive est maintenant **complètement nettoyée** et prête pour GitHub.
 
 ## 📋 Ce qui a été fait
 
@@ -61,7 +61,7 @@ git status
 ### 2. Pousser vers GitHub
 ```bash
 # Si c'est la première fois
-git remote add origin https://github.com/votre-username/taxi-app.git
+git remote add origin https://github.com/votre-username/gaboma-drive.git
 git push -u origin main
 
 # Si le remote existe déjà
@@ -94,13 +94,13 @@ python manage.py runserver
 ## 📁 Structure finale du projet
 
 ```
-taxi_app/
+gaboma_drive/
 ├── README.md                    # Documentation principale
 ├── DEPLOYMENT.md               # Guide de déploiement
 ├── requirements.txt            # Dépendances Python
 ├── .gitignore                  # Fichiers à ignorer
 ├── manage.py                   # Script de gestion Django
-├── taxi_app/                   # Configuration principale
+├── gaboma_drive/                   # Configuration principale
 │   ├── settings.py
 │   ├── urls.py
 │   └── wsgi.py
@@ -129,7 +129,7 @@ taxi_app/
 
 ## 🎉 Résultat final
 
-**Votre application Taxi App est maintenant :**
+**Votre application Gaboma Drive est maintenant :**
 - ✅ **Fonctionnelle** : Toutes les fonctionnalités marchent
 - ✅ **Nettoyée** : Aucun fichier temporaire ou de test
 - ✅ **Documentée** : README et guides complets
@@ -145,4 +145,4 @@ taxi_app/
 
 ---
 
-**🎯 Votre application Taxi App est prête ! Bon déploiement ! 🚕**
+**🎯 Votre application Gaboma Drive est prête ! Bon déploiement ! 🚕**
