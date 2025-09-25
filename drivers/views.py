@@ -1001,7 +1001,7 @@ def demander_modification(request):
                 'probleme_mecanique': activite.probleme_mecanique,
             }
             nouvelles_donnees = {
-                'objectif_recette': int(request.POST.get('nouveau_objectif_recette', 0)),
+                'objectif_recette': int(float(request.POST.get('nouveau_objectif_recette', 0))),
                 'plein_carburant': request.POST.get('nouveau_plein_carburant') == 'on',
                 'probleme_mecanique': request.POST.get('nouveau_probleme_mecanique', ''),
             }
