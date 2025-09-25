@@ -7,7 +7,7 @@ from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
 from datetime import datetime, date, time, timedelta
 from .models import Chauffeur
-from activities.models import Activite, Recette, Panne, PriseCles, RemiseCles
+from activities.models import PriseCles, RemiseCles
 from django.template.loader import render_to_string
 import weasyprint
 
@@ -19,12 +19,9 @@ def index(request):
 
 def login_chauffeur(request):
     """Connexion des chauffeurs"""
-    print("Initiation de connexion...")
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
-        
-        print(f"Tentative de connexion: username={username}")
         
         # Vérification basique des champs
         if not username or not password:
@@ -33,13 +30,11 @@ def login_chauffeur(request):
         
         # Authentification Django
         user = authenticate(request, username=username, password=password)
-        print(f"Authentification: user={user}")
         
         if user is not None:
             try:
                 # Vérifier si l'utilisateur correspond à un chauffeur
                 chauffeur = Chauffeur.objects.get(user=user)
-                print(f"Chauffeur trouvé: {chauffeur.nom} {chauffeur.prenom}, actif: {chauffeur.actif}")
                 
                 if chauffeur.actif:
                     # Connexion Django (met l'utilisateur en session)
@@ -54,14 +49,11 @@ def login_chauffeur(request):
                     messages.error(request, 'Votre compte chauffeur est désactivé.')
             
             except Chauffeur.DoesNotExist:
-                print("Aucun chauffeur associé à ce compte")
                 messages.error(request, 'Aucun chauffeur associé à ce compte.')
         else:
-            print("Authentification échouée")
             messages.error(request, 'Nom d\'utilisateur ou mot de passe incorrect.')
     
     # Si GET ou erreur: on recharge le template login
-    print(f"Fin de connexion: {request.method}")
     return render(request, 'drivers/login_chauffeur.html')
 
 
@@ -76,7 +68,6 @@ def creer_compte_chauffeur(request):
         password = request.POST.get('password')
         password_confirm = request.POST.get('password_confirm')
         
-        print(f"Tentative de création: {username}")
         
         # Validation des champs
         if not all([nom, prenom, telephone, email, username, password, password_confirm]):
@@ -131,7 +122,6 @@ def creer_compte_chauffeur(request):
                 return redirect('drivers:dashboard_chauffeur')
             
         except Exception as e:
-            print(f"Erreur lors de la création: {e}")
             messages.error(request, 'Une erreur est survenue lors de la création du compte.')
     
     return render(request, 'drivers/creer_compte.html')

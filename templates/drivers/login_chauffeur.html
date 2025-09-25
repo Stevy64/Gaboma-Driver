@@ -69,23 +69,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const loginForm = document.getElementById('loginForm');
     const loginBtn = document.getElementById('loginBtn');
     
-    console.log('Page de connexion chargée');
     
     // Animation du bouton lors de la soumission
     loginForm.addEventListener('submit', function(e) {
-        console.log('Formulaire soumis');
         
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
         
-        console.log('Données du formulaire:', { username, password });
         
         // Désactiver le bouton et afficher un spinner
         loginBtn.disabled = true;
         loginBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Connexion...';
         
         // Message de feedback
-        console.log('Tentative de connexion en cours...');
     });
     
     // Les alertes sont maintenant gérées par le système persistant
