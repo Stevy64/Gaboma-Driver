@@ -1,5 +1,58 @@
 // Gaboma Drive - JavaScript principal
 
+// Fonction pour initialiser les alertes persistantes
+function initPersistentAlerts() {
+    var alerts = document.querySelectorAll('.alert-persistent');
+    
+    alerts.forEach(function(alert) {
+        var autoDismissTime = parseInt(alert.getAttribute('data-auto-dismiss')) || 60000; // 60 secondes par défaut
+        var progressBar = alert.querySelector('.alert-progress-bar');
+        var closeButton = alert.querySelector('.btn-close');
+        
+        // Animation de la barre de progression
+        if (progressBar) {
+            progressBar.style.animationDuration = (autoDismissTime / 1000) + 's';
+        }
+        
+        // Auto-dismiss après le temps spécifié
+        var dismissTimer = setTimeout(function() {
+            dismissAlert(alert);
+        }, autoDismissTime);
+        
+        // Fermeture manuelle
+        if (closeButton) {
+            closeButton.addEventListener('click', function() {
+                clearTimeout(dismissTimer);
+                dismissAlert(alert);
+            });
+        }
+        
+        // Pause sur hover
+        alert.addEventListener('mouseenter', function() {
+            if (progressBar) {
+                progressBar.style.animationPlayState = 'paused';
+            }
+        });
+        
+        alert.addEventListener('mouseleave', function() {
+            if (progressBar) {
+                progressBar.style.animationPlayState = 'running';
+            }
+        });
+    });
+}
+
+// Fonction pour fermer une alerte avec animation
+function dismissAlert(alert) {
+    alert.classList.add('fade-out');
+    
+    setTimeout(function() {
+        if (alert.parentNode) {
+            alert.parentNode.removeChild(alert);
+        }
+    }, 500); // Correspond à la durée de l'animation fadeOut
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Initialisation des tooltips Bootstrap
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
@@ -13,14 +66,8 @@ document.addEventListener('DOMContentLoaded', function() {
         return new bootstrap.Popover(popoverTriggerEl);
     });
 
-    // Auto-dismiss des alertes après 5 secondes
-    setTimeout(function() {
-        var alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
-        alerts.forEach(function(alert) {
-            var bsAlert = new bootstrap.Alert(alert);
-            bsAlert.close();
-        });
-    }, 5000);
+    // Gestion des alertes persistantes
+    initPersistentAlerts();
 
     // Confirmation pour les actions importantes
     var confirmButtons = document.querySelectorAll('[data-confirm]');

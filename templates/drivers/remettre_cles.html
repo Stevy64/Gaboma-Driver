@@ -38,8 +38,8 @@
                                id="recette_realisee" 
                                name="recette_realisee" 
                                min="0" 
-                               step="100"
-                               placeholder="Ex: 45000"
+                               step="1"
+                               placeholder="Ex: 20000"
                                required>
                         <div class="form-text">Montant total de la recette de la journée</div>
                     </div>
@@ -92,9 +92,7 @@
                         <a href="{% url 'drivers:dashboard_chauffeur' %}" class="btn btn-secondary me-md-2">
                             <i class="bi bi-arrow-left"></i> Annuler
                         </a>
-                        <button type="submit" class="btn btn-warning btn-lg">
-                            <i class="bi bi-check-circle"></i> Valider la remise de clés
-                        </button>
+                        <input type="submit" class="btn btn-warning btn-lg" value="Valider la remise de clés">
                     </div>
                 </form>
             </div>
@@ -128,10 +126,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const objectif = {{ prise_aujourdhui.objectif_recette|default:0 }};
     
     function validateForm() {
-        const recette = parseInt(recetteInput.value);
+        const recetteValue = recetteInput.value.trim();
         const signature = signatureInput.value.trim();
+
+        // Vérifier que l'objectif est un nombre valide et positif
+        const recette = parseInt(recetteValue);
+        const isValidNumber = !isNaN(recette) && recette >= 0;
         
-        if (recette >= 0 && signature.length > 0) {
+        if (isValidNumber && signature.length > 0) {
             return true;
         }
         return false;
@@ -139,7 +141,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Mise à jour du bouton de validation
     function updateSubmitButton() {
-        const submitBtn = document.querySelector('button[type="submit"]');
+        const submitBtn = document.querySelector('input[type="submit"]');
         if (validateForm()) {
             submitBtn.disabled = false;
             submitBtn.classList.remove('btn-secondary');

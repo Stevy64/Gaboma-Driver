@@ -1,0 +1,173 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Nouvelle Activité - Gaboma Drive{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <!-- Messages d'alerte -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    <i class="bi bi-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-plus-circle"></i> Nouvelle Activité
+                </h4>
+                <p class="mb-0 mt-2">Choisissez le type d'activité que vous souhaitez enregistrer</p>
+            </div>
+            <div class="card-body p-4">
+                <!-- État actuel -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            <h6><i class="bi bi-info-circle"></i> État de votre journée</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <strong>Prise de clés :</strong>
+                                    {% if prise_aujourdhui %}
+                                        <span class="badge bg-success">Effectuée à {{ prise_aujourdhui.heure_prise|time:"H:i" }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Non effectuée</span>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Remise de clés :</strong>
+                                    {% if remise_aujourdhui %}
+                                        <span class="badge bg-success">Effectuée à {{ remise_aujourdhui.heure_remise|time:"H:i" }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Non effectuée</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions disponibles -->
+                <div class="row g-4">
+                    <!-- Prendre les clés -->
+                    {% if peut_prendre_cles %}
+                    <div class="col-md-6">
+                        <div class="card h-100 border-success">
+                            <div class="card-body text-center">
+                                <div class="mb-3">
+                                    <i class="bi bi-key-fill text-success" style="font-size: 3rem;"></i>
+                                </div>
+                                <h5 class="card-title text-success">Prendre les clés</h5>
+                                <p class="card-text">Commencez votre journée de travail en prenant les clés du véhicule.</p>
+                                <ul class="list-unstyled text-start">
+                                    <li><i class="bi bi-check text-success"></i> Définir l'objectif de recette</li>
+                                    <li><i class="bi bi-check text-success"></i> Vérifier l'état du carburant</li>
+                                    <li><i class="bi bi-check text-success"></i> Signer électroniquement</li>
+                                </ul>
+                                <a href="{% url 'drivers:prendre_cles' %}" class="btn btn-success btn-lg w-100">
+                                    <i class="bi bi-key-fill"></i> Prendre les clés
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Remettre les clés -->
+                    {% if peut_remettre_cles %}
+                    <div class="col-md-6">
+                        <div class="card h-100 border-warning">
+                            <div class="card-body text-center">
+                                <div class="mb-3">
+                                    <i class="bi bi-key text-warning" style="font-size: 3rem;"></i>
+                                </div>
+                                <h5 class="card-title text-warning">Remettre les clés</h5>
+                                <p class="card-text">Terminez votre journée en remettant les clés et enregistrant vos résultats.</p>
+                                <ul class="list-unstyled text-start">
+                                    <li><i class="bi bi-check text-warning"></i> Enregistrer la recette réalisée</li>
+                                    <li><i class="bi bi-check text-warning"></i> Vérifier l'état du carburant</li>
+                                    <li><i class="bi bi-check text-warning"></i> Signer électroniquement</li>
+                                </ul>
+                                <a href="{% url 'drivers:remettre_cles' %}" class="btn btn-warning btn-lg w-100">
+                                    <i class="bi bi-key"></i> Remettre les clés
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Voir l'activité du mois -->
+                    <div class="col-md-6">
+                        <div class="card h-100 border-info">
+                            <div class="card-body text-center">
+                                <div class="mb-3">
+                                    <i class="bi bi-calendar-month text-info" style="font-size: 3rem;"></i>
+                                </div>
+                                <h5 class="card-title text-info">Voir l'activité du mois</h5>
+                                <p class="card-text">Consultez votre activité mensuelle et annuelle avec calendrier détaillé.</p>
+                                <ul class="list-unstyled text-start">
+                                    <li><i class="bi bi-check text-info"></i> Calendrier mensuel</li>
+                                    <li><i class="bi bi-check text-info"></i> Statistiques détaillées</li>
+                                    <li><i class="bi bi-check text-info"></i> Vue annuelle</li>
+                                </ul>
+                                <a href="{% url 'drivers:activite_mensuelle' %}" class="btn btn-info btn-lg w-100">
+                                    <i class="bi bi-calendar-month"></i> Voir l'activité
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Journée terminée -->
+                    {% if not peut_prendre_cles and not peut_remettre_cles %}
+                    <div class="col-md-6">
+                        <div class="card h-100 border-secondary">
+                            <div class="card-body text-center">
+                                <div class="mb-3">
+                                    <i class="bi bi-check-circle text-secondary" style="font-size: 3rem;"></i>
+                                </div>
+                                <h5 class="card-title text-secondary">Journée terminée</h5>
+                                <p class="card-text">Vous avez déjà effectué toutes les activités de la journée.</p>
+                                <div class="alert alert-light">
+                                    <small>
+                                        <strong>Prise :</strong> {{ prise_aujourdhui.heure_prise|time:"H:i" }}<br>
+                                        <strong>Remise :</strong> {{ remise_aujourdhui.heure_remise|time:"H:i" }}
+                                    </small>
+                                </div>
+                                <a href="{% url 'drivers:dashboard_chauffeur' %}" class="btn btn-secondary btn-lg w-100">
+                                    <i class="bi bi-arrow-left"></i> Retour au dashboard
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Actions rapides -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'drivers:dashboard_chauffeur' %}" class="btn btn-outline-primary">
+                                <i class="bi bi-arrow-left"></i> Retour au dashboard
+                            </a>
+                            <a href="{% url 'drivers:index' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-house"></i> Accueil
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Les alertes sont maintenant gérées par le système persistant
+    console.log('Page de nouvelle activité chargée');
+});
+</script>
+{% endblock %}

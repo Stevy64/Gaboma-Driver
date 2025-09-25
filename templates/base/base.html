@@ -75,6 +75,13 @@
                                 <i class="bi bi-person-circle"></i> {{ user.get_full_name|default:user.username }}
                             </a>
                             <ul class="dropdown-menu">
+                                {% if not user.is_staff %}
+                                    <!-- Menu spécifique aux chauffeurs -->
+                                    <li><a class="dropdown-item" href="{% url 'drivers:nouvelle_activite' %}">
+                                        <i class="bi bi-plus-circle"></i> Nouvelle Activité
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                {% endif %}
                                 <li><a class="dropdown-item" href="{% url 'admin:logout' %}">
                                     <i class="bi bi-box-arrow-right"></i> Déconnexion
                                 </a></li>
@@ -101,9 +108,17 @@
     {% if messages %}
         <div class="container mt-3">
             {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show alert-persistent" role="alert" data-auto-dismiss="60000">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <i class="bi bi-{% if message.tags == 'success' %}check-circle-fill{% elif message.tags == 'error' or message.tags == 'danger' %}exclamation-triangle-fill{% elif message.tags == 'warning' %}exclamation-triangle-fill{% else %}info-circle-fill{% endif %} me-2"></i>
+                            {{ message }}
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+                    </div>
+                    <div class="alert-progress">
+                        <div class="alert-progress-bar"></div>
+                    </div>
                 </div>
             {% endfor %}
         </div>

@@ -1,0 +1,451 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Activité Mensuelle - {{ chauffeur.nom_complet }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .calendar-container {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    
+    .calendar-header {
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        color: white;
+        padding: 20px;
+        text-align: center;
+    }
+    
+    .calendar-nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .calendar-nav a {
+        color: white;
+        text-decoration: none;
+        padding: 8px 16px;
+        border-radius: 5px;
+        background: rgba(255, 255, 255, 0.2);
+        transition: background 0.3s;
+    }
+    
+    .calendar-nav a:hover {
+        background: rgba(255, 255, 255, 0.3);
+        color: white;
+    }
+    
+    .calendar-title {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin: 0;
+    }
+    
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 1px;
+        background: #dee2e6;
+    }
+    
+    .calendar-day-header {
+        background: #f8f9fa;
+        padding: 10px;
+        text-align: center;
+        font-weight: bold;
+        color: #495057;
+        border-bottom: 2px solid #dee2e6;
+    }
+    
+    .calendar-day {
+        background: white;
+        min-height: 120px;
+        padding: 8px;
+        border: 1px solid #dee2e6;
+        position: relative;
+        transition: all 0.3s;
+    }
+    
+    .calendar-day:hover {
+        background: #f8f9fa;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .calendar-day.empty {
+        background: #f8f9fa;
+        color: #adb5bd;
+    }
+    
+    .calendar-day.today {
+        background: #e3f2fd;
+        border: 2px solid #2196f3;
+    }
+    
+    .calendar-day.actif {
+        background: #e8f5e8;
+        border-left: 4px solid #28a745;
+    }
+    
+    .calendar-day.complet {
+        background: #d4edda;
+        border-left: 4px solid #28a745;
+    }
+    
+    .day-number {
+        font-weight: bold;
+        font-size: 1.1rem;
+        margin-bottom: 5px;
+    }
+    
+    .day-activity {
+        font-size: 0.8rem;
+        line-height: 1.2;
+    }
+    
+    .activity-badge {
+        display: inline-block;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 0.7rem;
+        font-weight: bold;
+        margin: 1px 0;
+    }
+    
+    .badge-prise {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+    
+    .badge-remise {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .badge-complet {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .performance-indicator {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+    }
+    
+    .performance-excellent { background: #28a745; }
+    .performance-good { background: #ffc107; }
+    .performance-poor { background: #dc3545; }
+    .performance-none { background: #6c757d; }
+    
+    .stats-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .stat-item {
+        text-align: center;
+        padding: 15px;
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        color: white;
+        border-radius: 8px;
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+    
+    .year-chart {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .month-bar {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 5px;
+        transition: background 0.3s;
+    }
+    
+    .month-bar:hover {
+        background: #e9ecef;
+    }
+    
+    .month-bar.current {
+        background: #e3f2fd;
+        border-left: 4px solid #2196f3;
+    }
+    
+    .month-name {
+        width: 80px;
+        font-weight: bold;
+        color: #495057;
+    }
+    
+    .month-bar-fill {
+        flex: 1;
+        height: 20px;
+        background: linear-gradient(90deg, #28a745, #20c997);
+        border-radius: 10px;
+        margin: 0 10px;
+        position: relative;
+    }
+    
+    .month-bar-fill.inactive {
+        background: #e9ecef;
+    }
+    
+    .month-amount {
+        width: 100px;
+        text-align: right;
+        font-weight: bold;
+        color: #495057;
+    }
+    
+    .month-days {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-left: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête avec navigation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2>
+                    <i class="bi bi-calendar-month"></i> 
+                    Activité Mensuelle - {{ mois_nom }} {{ annee }}
+                </h2>
+                <div class="btn-group" role="group">
+                    <a href="{% url 'drivers:dashboard_chauffeur' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-arrow-left"></i> Retour au Dashboard
+                    </a>
+                    <a href="{% url 'drivers:nouvelle_activite' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-plus-circle"></i> Nouvelle Activité
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques du mois -->
+    <div class="stats-grid">
+        <div class="stat-item">
+            <div class="stat-value">{{ total_mois|floatformat:0 }}</div>
+            <div class="stat-label">Total Recettes (FCFA)</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value">{{ jours_travailles }}</div>
+            <div class="stat-label">Jours Travaillés</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value">{{ moyenne_journaliere|floatformat:0 }}</div>
+            <div class="stat-label">Moyenne Journalière (FCFA)</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value">{{ total_annee|floatformat:0 }}</div>
+            <div class="stat-label">Total Année (FCFA)</div>
+        </div>
+    </div>
+
+    <!-- Calendrier du mois -->
+    <div class="calendar-container">
+        <div class="calendar-header">
+            <div class="calendar-nav">
+                <a href="?mois={{ mois|add:-1 }}&annee={{ annee }}">
+                    <i class="bi bi-chevron-left"></i> Mois précédent
+                </a>
+                <h3 class="calendar-title">{{ mois_nom }} {{ annee }}</h3>
+                <a href="?mois={{ mois|add:1 }}&annee={{ annee }}">
+                    Mois suivant <i class="bi bi-chevron-right"></i>
+                </a>
+            </div>
+        </div>
+        
+        <div class="calendar-grid">
+            <!-- En-têtes des jours -->
+            <div class="calendar-day-header">Lun</div>
+            <div class="calendar-day-header">Mar</div>
+            <div class="calendar-day-header">Mer</div>
+            <div class="calendar-day-header">Jeu</div>
+            <div class="calendar-day-header">Ven</div>
+            <div class="calendar-day-header">Sam</div>
+            <div class="calendar-day-header">Dim</div>
+            
+            <!-- Jours du calendrier -->
+            {% for semaine in calendrier %}
+                {% for jour in semaine %}
+                    {% if jour %}
+                        <div class="calendar-day {% if jour.actif %}actif{% endif %} {% if jour.complet %}complet{% endif %} {% if jour.date == today %}today{% endif %}">
+                            <div class="day-number">{{ jour.jour }}</div>
+                            
+                            <!-- Indicateur de performance -->
+                            <div class="performance-indicator 
+                                {% if jour.performance >= 100 %}performance-excellent
+                                {% elif jour.performance >= 90 %}performance-good
+                                {% elif jour.performance > 0 %}performance-poor
+                                {% else %}performance-none{% endif %}">
+                            </div>
+                            
+                            <div class="day-activity">
+                                {% if jour.prise %}
+                                    <div class="activity-badge badge-prise">
+                                        <i class="bi bi-key-fill"></i> Prise
+                                    </div>
+                                {% endif %}
+                                
+                                {% if jour.remise %}
+                                    <div class="activity-badge badge-remise">
+                                        <i class="bi bi-key"></i> Remise
+                                    </div>
+                                {% endif %}
+                                
+                                {% if jour.complet %}
+                                    <div class="activity-badge badge-complet">
+                                        <i class="bi bi-check-circle"></i> Complet
+                                    </div>
+                                {% endif %}
+                                
+                                {% if jour.recette > 0 %}
+                                    <div style="font-size: 0.7rem; color: #28a745; font-weight: bold;">
+                                        {{ jour.recette|floatformat:0 }} FCFA
+                                    </div>
+                                {% endif %}
+                                
+                                {% if jour.objectif > 0 %}
+                                    <div style="font-size: 0.6rem; color: #6c757d;">
+                                        Objectif: {{ jour.objectif|floatformat:0 }}
+                                    </div>
+                                {% endif %}
+                                
+                                {% if jour.performance > 0 %}
+                                    <div style="font-size: 0.6rem; color: #495057;">
+                                        {{ jour.performance }}%
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="calendar-day empty"></div>
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Vue annuelle -->
+    <div class="year-chart mt-4">
+        <h4><i class="bi bi-graph-up"></i> Vue Annuelle - {{ annee }}</h4>
+        <p class="text-muted">Comparaison des recettes par mois</p>
+        
+        {% for stat in stats_par_mois %}
+        <div class="month-bar {% if stat.mois == mois %}current{% endif %}">
+            <div class="month-name">{{ stat.nom_mois }}</div>
+            <div class="month-bar-fill {% if not stat.actif %}inactive{% endif %}" 
+                 style="width: {% if stat.actif %}{% widthratio stat.total total_annee 100 %}{% else %}0{% endif %}%">
+            </div>
+            <div class="month-amount">
+                {% if stat.actif %}
+                    {{ stat.total|floatformat:0 }} FCFA
+                    <span class="month-days">({{ stat.jours }}j)</span>
+                {% else %}
+                    -
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Légende -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="stats-card">
+                <h5><i class="bi bi-info-circle"></i> Légende</h5>
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="performance-indicator performance-excellent me-2"></div>
+                            <span>Performance ≥ 100%</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="performance-indicator performance-good me-2"></div>
+                            <span>Performance 90-99%</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="performance-indicator performance-poor me-2"></div>
+                            <span>Performance < 90%</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="performance-indicator performance-none me-2"></div>
+                            <span>Aucune activité</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Animation des barres de progression
+    const monthBars = document.querySelectorAll('.month-bar-fill');
+    monthBars.forEach((bar, index) => {
+        setTimeout(() => {
+            bar.style.transition = 'width 1s ease-in-out';
+        }, index * 100);
+    });
+    
+    // Animation des cartes de statistiques
+    const statItems = document.querySelectorAll('.stat-item');
+    statItems.forEach((item, index) => {
+        setTimeout(() => {
+            item.style.transform = 'scale(1.05)';
+            setTimeout(() => {
+                item.style.transform = 'scale(1)';
+            }, 200);
+        }, index * 150);
+    });
+});
+</script>
+{% endblock %}

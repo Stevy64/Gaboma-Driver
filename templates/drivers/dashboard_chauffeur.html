@@ -11,9 +11,40 @@
                 <i class="bi bi-speedometer2"></i> 
                 Bonjour {{ chauffeur.prenom }} !
             </h2>
-            <span class="badge bg-success fs-6">
-                <i class="bi bi-person-check"></i> Chauffeur actif
-            </span>
+            <div class="d-flex align-items-center gap-3">
+                <!-- Bouton d'export PDF avec menu déroulant -->
+                <div class="dropdown">
+                    <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-printer"></i> Exporter
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a class="dropdown-item" href="{% url 'drivers:exporter_pdf' %}" target="_blank">
+                                <i class="bi bi-file-pdf text-danger"></i> Télécharger PDF
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item" href="#" onclick="partagerWhatsApp()">
+                                <i class="bi bi-whatsapp text-success"></i> Partager sur WhatsApp
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="#" onclick="partagerGmail()">
+                                <i class="bi bi-envelope text-primary"></i> Envoyer par Gmail
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="#" onclick="partagerTelegram()">
+                                <i class="bi bi-telegram text-info"></i> Partager sur Telegram
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <span class="badge bg-success fs-6">
+                    <i class="bi bi-person-check"></i> Chauffeur actif
+                </span>
+            </div>
         </div>
     </div>
 </div>
@@ -52,9 +83,9 @@
                     </div>
                     {% endif %}
                     <div class="col-md-6">
-                        <a href="{% url 'drivers:signaler_panne' %}" class="btn btn-danger btn-lg w-100">
-                            <i class="bi bi-tools"></i> Signaler une panne
-                            <small class="d-block">Problème mécanique</small>
+                        <a href="{% url 'drivers:activite_mensuelle' %}" class="btn btn-info btn-lg w-100">
+                            <i class="bi bi-calendar-month"></i> Voir l'activité du mois
+                            <small class="d-block">Calendrier et statistiques</small>
                         </a>
                     </div>
                 </div>
@@ -137,15 +168,23 @@
                                     </td>
                                     <td>
                                         {% if activite.type_activite == 'prise' %}
-                                            {% if activite.carburant_litres %}
-                                                {{ activite.carburant_litres }}L
-                                            {% elif activite.carburant_pourcentage %}
-                                                {{ activite.carburant_pourcentage }}%
-                                            {% endif %}
+                                            <strong>Objectif:</strong> {{ activite.objectif_recette|floatformat:0 }} FCFA<br>
+                                            <small class="text-muted">
+                                                <i class="bi bi-fuel-pump"></i> 
+                                                {% if activite.plein_carburant %}Plein{% else %}À faire{% endif %}
+                                                {% if activite.probleme_mecanique != 'Aucun' %}
+                                                    | <i class="bi bi-exclamation-triangle"></i> {{ activite.probleme_mecanique }}
+                                                {% endif %}
+                                            </small>
                                         {% else %}
-                                            {% if activite.recette_jour %}
-                                                {{ activite.recette_jour }}€
-                                            {% endif %}
+                                            <strong>Recette:</strong> {{ activite.recette_realisee|floatformat:0 }} FCFA<br>
+                                            <small class="text-muted">
+                                                <i class="bi bi-fuel-pump"></i> 
+                                                {% if activite.plein_carburant %}Plein{% else %}À faire{% endif %}
+                                                {% if activite.probleme_mecanique != 'Aucun' %}
+                                                    | <i class="bi bi-exclamation-triangle"></i> {{ activite.probleme_mecanique }}
+                                                {% endif %}
+                                            </small>
                                         {% endif %}
                                     </td>
                                 </tr>
@@ -170,22 +209,114 @@
             </div>
             <div class="card-body">
                 {% if recettes_semaine %}
+                    <!-- Statistiques de la semaine -->
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <div class="text-center">
+                                <h6 class="text-muted mb-1">Total</h6>
+                                <h4 class="text-success mb-0">{{ total_semaine|floatformat:0 }} FCFA</h4>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center">
+                                <h6 class="text-muted mb-1">Moyenne</h6>
+                                <h4 class="text-primary mb-0">{{ moyenne_semaine|floatformat:0 }} FCFA</h4>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Liste des recettes -->
                     <div class="list-group list-group-flush">
                         {% for recette in recettes_semaine %}
                         <div class="list-group-item d-flex justify-content-between align-items-center">
-                            <span>{{ recette.date|date:"d/m" }}</span>
-                            <span class="badge bg-success rounded-pill">{{ recette.montant }}€</span>
+                            <div>
+                                <span class="fw-bold">{{ recette.date|date:"d/m" }}</span>
+                                <small class="text-muted d-block">
+                                    {{ recette.heure_remise|time:"H:i" }}
+                                </small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-success rounded-pill">{{ recette.recette_realisee|floatformat:0 }} FCFA</span>
+                                {% if recette.plein_carburant %}
+                                    <i class="bi bi-fuel-pump-fill text-success ms-1" title="Plein effectué"></i>
+                                {% endif %}
+                            </div>
                         </div>
                         {% endfor %}
                     </div>
-                    <div class="mt-3 text-center">
-                        <strong>Total : {{ recettes_semaine|length }} jour(s)</strong>
-                    </div>
                 {% else %}
-                    <p class="text-muted text-center">Aucune recette cette semaine</p>
+                    <div class="text-center">
+                        <i class="bi bi-graph-up text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-2">Aucune recette cette semaine</p>
+                        <small class="text-muted">Commencez à enregistrer vos activités !</small>
+                    </div>
                 {% endif %}
             </div>
         </div>
     </div>
 </div>
+
+
+<script>
+// Fonctions de partage sur les réseaux sociaux
+function partagerWhatsApp() {
+    const message = `🚕 *Rapport d'Activité - Gaboma Drive*\n\n` +
+                   `Bonjour ! Voici mon rapport d'activité de la semaine.\n` +
+                   `📊 Total recettes: {{ total_semaine|floatformat:0 }} FCFA\n` +
+                   `📈 Moyenne journalière: {{ moyenne_semaine|floatformat:0 }} FCFA\n` +
+                   `📅 Jours travaillés: {{ recettes_semaine|length }}/7\n\n` +
+                   `Téléchargez le rapport complet en PDF :\n` +
+                   `{{ request.build_absolute_uri }}{% url 'drivers:exporter_pdf' %}`;
+    
+    const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
+}
+
+function partagerGmail() {
+    const subject = `Rapport d'Activité - {{ chauffeur.prenom }} {{ chauffeur.nom }} - Semaine du {{ today|date:"d/m/Y" }}`;
+    const body = `Bonjour,\n\n` +
+                `Veuillez trouver ci-joint mon rapport d'activité de la semaine.\n\n` +
+                `📊 Résumé de la semaine :\n` +
+                `• Total recettes: {{ total_semaine|floatformat:0 }} FCFA\n` +
+                `• Moyenne journalière: {{ moyenne_semaine|floatformat:0 }} FCFA\n` +
+                `• Jours travaillés: {{ recettes_semaine|length }}/7\n\n` +
+                `Le rapport complet en PDF est disponible ici :\n` +
+                `{{ request.build_absolute_uri }}{% url 'drivers:exporter_pdf' %}\n\n` +
+                `Cordialement,\n` +
+                `{{ chauffeur.prenom }} {{ chauffeur.nom }}\n` +
+                `Chauffeur - Gaboma Drive`;
+    
+    const url = `https://mail.google.com/mail/?view=cm&fs=1&to=&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.open(url, '_blank');
+}
+
+function partagerTelegram() {
+    const message = `🚕 *Rapport d'Activité - Gaboma Drive*\n\n` +
+                   `📊 *Résumé de la semaine :*\n` +
+                   `• Total recettes: {{ total_semaine|floatformat:0 }} FCFA\n` +
+                   `• Moyenne journalière: {{ moyenne_semaine|floatformat:0 }} FCFA\n` +
+                   `• Jours travaillés: {{ recettes_semaine|length }}/7\n\n` +
+                   `📄 *Rapport complet :*\n` +
+                   `{{ request.build_absolute_uri }}{% url 'drivers:exporter_pdf' %}\n\n` +
+                   `_Généré automatiquement par Gaboma Drive_`;
+    
+    const url = `https://t.me/share/url?url=${encodeURIComponent('{{ request.build_absolute_uri }}{% url "drivers:exporter_pdf" %}')}&text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
+}
+
+// Animation du bouton d'export
+document.addEventListener('DOMContentLoaded', function() {
+    const exportBtn = document.querySelector('[data-bs-toggle="dropdown"]');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', function() {
+            this.classList.add('btn-primary');
+            this.classList.remove('btn-outline-primary');
+            setTimeout(() => {
+                this.classList.remove('btn-primary');
+                this.classList.add('btn-outline-primary');
+            }, 200);
+        });
+    }
+});
+</script>
 {% endblock %}

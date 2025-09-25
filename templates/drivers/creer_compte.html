@@ -122,9 +122,7 @@
                     </div>
 
                     <div class="d-grid">
-                        <button type="submit" class="btn btn-success btn-lg" id="createBtn">
-                            <i class="bi bi-person-plus"></i> Créer mon compte
-                        </button>
+                        <input type="submit" class="btn btn-success btn-lg" id="createBtn" value="Créer mon compte">
                     </div>
                 </form>
 
@@ -173,14 +171,7 @@ document.addEventListener('DOMContentLoaded', function() {
         createBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Création en cours...';
     });
     
-    // Auto-masquer les alertes après 5 secondes
-    const alerts = document.querySelectorAll('.alert');
-    alerts.forEach(function(alert) {
-        setTimeout(function() {
-            const bsAlert = new bootstrap.Alert(alert);
-            bsAlert.close();
-        }, 5000);
-    });
+    // Les alertes sont maintenant gérées par le système persistant
     
     // Focus sur le premier champ
     document.getElementById('nom').focus();

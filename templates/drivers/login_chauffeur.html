@@ -88,14 +88,7 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Tentative de connexion en cours...');
     });
     
-    // Auto-masquer les alertes après 5 secondes
-    const alerts = document.querySelectorAll('.alert');
-    alerts.forEach(function(alert) {
-        setTimeout(function() {
-            const bsAlert = new bootstrap.Alert(alert);
-            bsAlert.close();
-        }, 5000);
-    });
+    // Les alertes sont maintenant gérées par le système persistant
     
     // Focus sur le premier champ
     document.getElementById('username').focus();
