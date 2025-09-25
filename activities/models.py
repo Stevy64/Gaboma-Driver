@@ -290,3 +290,80 @@ class Recette(models.Model):
     
     def __str__(self):
         return f"{self.chauffeur.nom_complet} - {self.date} - {self.montant}€"
+
+
+class DemandeModification(models.Model):
+    """Modèle pour les demandes de modification d'activité"""
+    
+    STATUT_CHOICES = [
+        ('en_attente', 'En attente'),
+        ('approuvee', 'Approuvée'),
+        ('rejetee', 'Rejetée'),
+    ]
+    
+    TYPE_ACTIVITE_CHOICES = [
+        ('prise', 'Prise de clés'),
+        ('remise', 'Remise de clés'),
+    ]
+    
+    chauffeur = models.ForeignKey(
+        Chauffeur, 
+        on_delete=models.CASCADE, 
+        verbose_name="Chauffeur"
+    )
+    
+    type_activite = models.CharField(
+        max_length=10,
+        choices=TYPE_ACTIVITE_CHOICES,
+        verbose_name="Type d'activité"
+    )
+    
+    date_activite = models.DateField(verbose_name="Date de l'activité")
+    
+    # Données originales
+    donnees_originales = models.JSONField(verbose_name="Données originales")
+    
+    # Nouvelles données proposées
+    nouvelles_donnees = models.JSONField(verbose_name="Nouvelles données")
+    
+    # Raison de la modification
+    raison = models.TextField(verbose_name="Raison de la modification")
+    
+    # Statut de la demande
+    statut = models.CharField(
+        max_length=15,
+        choices=STATUT_CHOICES,
+        default='en_attente',
+        verbose_name="Statut"
+    )
+    
+    # Admin qui a traité la demande
+    admin_traite = models.ForeignKey(
+        'auth.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Admin qui a traité"
+    )
+    
+    # Commentaire de l'admin
+    commentaire_admin = models.TextField(
+        blank=True,
+        verbose_name="Commentaire de l'admin"
+    )
+    
+    # Métadonnées
+    date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
+    date_traitement = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Date de traitement"
+    )
+    
+    class Meta:
+        verbose_name = "Demande de modification"
+        verbose_name_plural = "Demandes de modification"
+        ordering = ['-date_creation']
+    
+    def __str__(self):
+        return f"{self.chauffeur.nom_complet} - {self.get_type_activite_display()} - {self.date_activite} - {self.get_statut_display()}"

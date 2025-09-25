@@ -149,9 +149,18 @@ def dashboard_chauffeur(request):
         date=today
     ).first()
     
+    # Vérifier l'heure actuelle (heure du Gabon)
+    from django.utils import timezone
+    now = timezone.now()
+    current_hour = now.hour
+    
     # Déterminer les actions possibles
-    peut_prendre_cles = not prise_aujourdhui
+    # Nouvelle activité possible à partir de 3h du matin
+    peut_prendre_cles = not prise_aujourdhui and current_hour >= 3
     peut_remettre_cles = prise_aujourdhui and not remise_aujourdhui
+    
+    # Si c'est après 3h et qu'il n'y a pas d'activité du jour, permettre nouvelle activité
+    nouvelle_activite_possible = not prise_aujourdhui and current_hour >= 3
     
     # Récupérer l'historique des 7 derniers jours
     week_start = today - timezone.timedelta(days=7)
@@ -210,6 +219,8 @@ def dashboard_chauffeur(request):
         'remise_aujourdhui': remise_aujourdhui,
         'peut_prendre_cles': peut_prendre_cles,
         'peut_remettre_cles': peut_remettre_cles,
+        'nouvelle_activite_possible': nouvelle_activite_possible,
+        'current_hour': current_hour,
         'prises_recentes': prises_recentes,
         'remises_recentes': remises_recentes,
         'activites_recentes': activites_recentes,
@@ -636,3 +647,197 @@ def creer_calendrier_mensuel(annee, mois, prises, remises):
         calendrier_semaines.append(semaine_data)
     
     return calendrier_semaines
+
+
+@login_required
+def demander_modification(request):
+    """Demander la modification d'une activité"""
+    try:
+        chauffeur = Chauffeur.objects.get(user=request.user)
+    except Chauffeur.DoesNotExist:
+        messages.error(request, 'Aucun chauffeur associé à votre compte.')
+        return redirect('drivers:index')
+    
+    if request.method == 'POST':
+        type_activite = request.POST.get('type_activite')
+        date_activite_str = request.POST.get('date_activite')
+        raison = request.POST.get('raison')
+        
+        if not all([type_activite, date_activite_str, raison]):
+            messages.error(request, 'Veuillez remplir tous les champs.')
+            return render(request, 'drivers/demander_modification.html')
+        
+        try:
+            date_activite = datetime.strptime(date_activite_str, '%Y-%m-%d').date()
+        except ValueError:
+            messages.error(request, 'Format de date invalide.')
+            return render(request, 'drivers/demander_modification.html')
+        
+        # Récupérer l'activité existante
+        if type_activite == 'prise':
+            activite = PriseCles.objects.filter(chauffeur=chauffeur, date=date_activite).first()
+        else:
+            activite = RemiseCles.objects.filter(chauffeur=chauffeur, date=date_activite).first()
+        
+        if not activite:
+            messages.error(request, 'Aucune activité trouvée pour cette date.')
+            return render(request, 'drivers/demander_modification.html')
+        
+        # Préparer les données originales et nouvelles
+        donnees_originales = {}
+        nouvelles_donnees = {}
+        
+        if type_activite == 'prise':
+            donnees_originales = {
+                'objectif_recette': activite.objectif_recette,
+                'plein_carburant': activite.plein_carburant,
+                'probleme_mecanique': activite.probleme_mecanique,
+            }
+            nouvelles_donnees = {
+                'objectif_recette': int(request.POST.get('nouveau_objectif_recette', 0)),
+                'plein_carburant': request.POST.get('nouveau_plein_carburant') == 'on',
+                'probleme_mecanique': request.POST.get('nouveau_probleme_mecanique', ''),
+            }
+        else:
+            donnees_originales = {
+                'recette_realisee': activite.recette_realisee,
+                'plein_carburant': activite.plein_carburant,
+                'probleme_mecanique': activite.probleme_mecanique,
+            }
+            nouvelles_donnees = {
+                'recette_realisee': int(request.POST.get('nouveau_recette_realisee', 0)),
+                'plein_carburant': request.POST.get('nouveau_plein_carburant') == 'on',
+                'probleme_mecanique': request.POST.get('nouveau_probleme_mecanique', ''),
+            }
+        
+        # Créer la demande
+        from activities.models import DemandeModification
+        demande = DemandeModification.objects.create(
+            chauffeur=chauffeur,
+            type_activite=type_activite,
+            date_activite=date_activite,
+            donnees_originales=donnees_originales,
+            nouvelles_donnees=nouvelles_donnees,
+            raison=raison
+        )
+        
+        messages.success(request, 'Votre demande de modification a été envoyée à l\'administrateur.')
+        return redirect('drivers:dashboard_chauffeur')
+    
+    # Récupérer les activités récentes pour le formulaire
+    today = date.today()
+    prises_recentes = PriseCles.objects.filter(
+        chauffeur=chauffeur,
+        date__gte=today - timedelta(days=30)
+    ).order_by('-date')[:10]
+    
+    remises_recentes = RemiseCles.objects.filter(
+        chauffeur=chauffeur,
+        date__gte=today - timedelta(days=30)
+    ).order_by('-date')[:10]
+    
+    context = {
+        'prises_recentes': prises_recentes,
+        'remises_recentes': remises_recentes,
+    }
+    
+    return render(request, 'drivers/demander_modification.html', context)
+
+
+@login_required
+def mes_demandes(request):
+    """Voir les demandes de modification du chauffeur"""
+    try:
+        chauffeur = Chauffeur.objects.get(user=request.user)
+    except Chauffeur.DoesNotExist:
+        messages.error(request, 'Aucun chauffeur associé à votre compte.')
+        return redirect('drivers:index')
+    
+    from activities.models import DemandeModification
+    demandes = DemandeModification.objects.filter(
+        chauffeur=chauffeur
+    ).order_by('-date_creation')
+    
+    context = {
+        'demandes': demandes,
+    }
+    
+    return render(request, 'drivers/mes_demandes.html', context)
+
+
+@login_required
+def mon_compte(request):
+    """Modifier les informations du compte chauffeur"""
+    try:
+        chauffeur = Chauffeur.objects.get(user=request.user)
+    except Chauffeur.DoesNotExist:
+        messages.error(request, 'Aucun chauffeur associé à votre compte.')
+        return redirect('drivers:index')
+    
+    if request.method == 'POST':
+        # Récupérer les données du formulaire
+        nom = request.POST.get('nom', '').strip()
+        prenom = request.POST.get('prenom', '').strip()
+        telephone = request.POST.get('telephone', '').strip()
+        email = request.POST.get('email', '').strip()
+        nouveau_password = request.POST.get('nouveau_password', '').strip()
+        confirmer_password = request.POST.get('confirmer_password', '').strip()
+        
+        # Validation des champs obligatoires
+        if not all([nom, prenom, telephone, email]):
+            messages.error(request, 'Veuillez remplir tous les champs obligatoires.')
+            return render(request, 'drivers/mon_compte.html', {'chauffeur': chauffeur})
+        
+        # Validation de l'email
+        if '@' not in email or '.' not in email.split('@')[1]:
+            messages.error(request, 'Veuillez saisir une adresse email valide.')
+            return render(request, 'drivers/mon_compte.html', {'chauffeur': chauffeur})
+        
+        # Validation du téléphone (format basique)
+        if len(telephone) < 8:
+            messages.error(request, 'Le numéro de téléphone doit contenir au moins 8 chiffres.')
+            return render(request, 'drivers/mon_compte.html', {'chauffeur': chauffeur})
+        
+        # Mise à jour des informations du chauffeur
+        chauffeur.nom = nom
+        chauffeur.prenom = prenom
+        chauffeur.telephone = telephone
+        chauffeur.email = email
+        chauffeur.save()
+        
+        # Mise à jour de l'email de l'utilisateur Django
+        user = chauffeur.user
+        user.email = email
+        user.first_name = prenom
+        user.last_name = nom
+        user.save()
+        
+        # Gestion du changement de mot de passe
+        if nouveau_password:
+            if len(nouveau_password) < 6:
+                messages.error(request, 'Le mot de passe doit contenir au moins 6 caractères.')
+                return render(request, 'drivers/mon_compte.html', {'chauffeur': chauffeur})
+            
+            if nouveau_password != confirmer_password:
+                messages.error(request, 'Les mots de passe ne correspondent pas.')
+                return render(request, 'drivers/mon_compte.html', {'chauffeur': chauffeur})
+            
+            # Changer le mot de passe
+            user.set_password(nouveau_password)
+            user.save()
+            
+            # Reconnecter l'utilisateur avec le nouveau mot de passe
+            from django.contrib.auth import login
+            login(request, user)
+            
+            messages.success(request, 'Vos informations et votre mot de passe ont été mis à jour avec succès.')
+        else:
+            messages.success(request, 'Vos informations ont été mises à jour avec succès.')
+        
+        return redirect('drivers:dashboard_chauffeur')
+    
+    context = {
+        'chauffeur': chauffeur,
+    }
+    
+    return render(request, 'drivers/mon_compte.html', context)

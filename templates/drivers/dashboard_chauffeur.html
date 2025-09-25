@@ -12,18 +12,49 @@
                 Bonjour {{ chauffeur.prenom }} !
             </h2>
             <div class="d-flex align-items-center gap-3">
-                <!-- Bouton d'export PDF avec menu déroulant -->
+                <!-- Menu principal avec toutes les options -->
                 <div class="dropdown">
                     <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-printer"></i> Exporter
+                        <i class="bi bi-gear"></i> Menu
                     </button>
                     <ul class="dropdown-menu">
+                        <li>
+                            <h6 class="dropdown-header">
+                                <i class="bi bi-person"></i> Mon compte
+                            </h6>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'drivers:mon_compte' %}">
+                                <i class="bi bi-person-gear text-primary"></i> Modifier mon compte
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <h6 class="dropdown-header">
+                                <i class="bi bi-pencil-square"></i> Modifications
+                            </h6>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'drivers:demander_modification' %}">
+                                <i class="bi bi-pencil-square text-warning"></i> Demander modification
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'drivers:mes_demandes' %}">
+                                <i class="bi bi-list-check text-info"></i> Mes demandes
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <h6 class="dropdown-header">
+                                <i class="bi bi-printer"></i> Export
+                            </h6>
+                        </li>
                         <li>
                             <a class="dropdown-item" href="{% url 'drivers:exporter_pdf' %}" target="_blank">
                                 <i class="bi bi-file-pdf text-danger"></i> Télécharger PDF
                             </a>
                         </li>
-                        <li><hr class="dropdown-divider"></li>
                         <li>
                             <a class="dropdown-item" href="#" onclick="partagerWhatsApp()">
                                 <i class="bi bi-whatsapp text-success"></i> Partager sur WhatsApp
@@ -72,6 +103,13 @@
                         <a href="{% url 'drivers:remettre_cles' %}" class="btn btn-warning btn-lg w-100">
                             <i class="bi bi-key"></i> Remettre les clés
                             <small class="d-block">Fin de journée</small>
+                        </a>
+                    </div>
+                    {% elif nouvelle_activite_possible %}
+                    <div class="col-md-6">
+                        <a href="{% url 'drivers:prendre_cles' %}" class="btn btn-primary btn-lg w-100">
+                            <i class="bi bi-plus-circle"></i> Nouvelle activité
+                            <small class="d-block">Disponible à partir de 3h</small>
                         </a>
                     </div>
                     {% else %}

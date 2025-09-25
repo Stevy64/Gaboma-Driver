@@ -1,0 +1,220 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Demander modification - Gaboma Drive{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10 col-lg-8">
+        <div class="card shadow">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="mb-0">
+                    <i class="bi bi-pencil-square"></i> Demander une modification d'activité
+                </h4>
+                <small>Remplissez ce formulaire pour demander la modification d'une activité existante</small>
+            </div>
+            <div class="card-body">
+                <form method="post" id="modificationForm">
+                    {% csrf_token %}
+                    
+                    <!-- Type d'activité -->
+                    <div class="mb-3">
+                        <label for="type_activite" class="form-label">
+                            <i class="bi bi-list-ul"></i> Type d'activité à modifier *
+                        </label>
+                        <select class="form-select form-select-lg" id="type_activite" name="type_activite" required>
+                            <option value="">Sélectionnez le type d'activité</option>
+                            <option value="prise">Prise de clés</option>
+                            <option value="remise">Remise de clés</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Date de l'activité -->
+                    <div class="mb-3">
+                        <label for="date_activite" class="form-label">
+                            <i class="bi bi-calendar"></i> Date de l'activité *
+                        </label>
+                        <input type="date" 
+                               class="form-control form-control-lg" 
+                               id="date_activite" 
+                               name="date_activite" 
+                               required>
+                    </div>
+                    
+                    <!-- Raison de la modification -->
+                    <div class="mb-3">
+                        <label for="raison" class="form-label">
+                            <i class="bi bi-chat-text"></i> Raison de la modification *
+                        </label>
+                        <textarea class="form-control" 
+                                  id="raison" 
+                                  name="raison" 
+                                  rows="4" 
+                                  placeholder="Expliquez pourquoi vous souhaitez modifier cette activité..."
+                                  required></textarea>
+                    </div>
+                    
+                    <!-- Nouvelles données (sera rempli dynamiquement) -->
+                    <div id="nouvelles-donnees" style="display: none;">
+                        <h5 class="mb-3">Nouvelles données</h5>
+                        
+                        <!-- Pour prise de clés -->
+                        <div id="donnees-prise" style="display: none;">
+                            <div class="mb-3">
+                                <label for="nouveau_objectif_recette" class="form-label">
+                                    <i class="bi bi-target"></i> Nouvel objectif de recette (FCFA)
+                                </label>
+                                <input type="number" 
+                                       class="form-control" 
+                                       id="nouveau_objectif_recette" 
+                                       name="nouveau_objectif_recette" 
+                                       min="0" 
+                                       step="1">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" 
+                                           type="checkbox" 
+                                           id="nouveau_plein_carburant" 
+                                           name="nouveau_plein_carburant">
+                                    <label class="form-check-label" for="nouveau_plein_carburant">
+                                        <i class="bi bi-fuel-pump"></i> Plein de carburant
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="nouveau_probleme_mecanique" class="form-label">
+                                    <i class="bi bi-tools"></i> Problème mécanique
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="nouveau_probleme_mecanique" 
+                                       name="nouveau_probleme_mecanique" 
+                                       placeholder="Décrivez le problème mécanique...">
+                            </div>
+                        </div>
+                        
+                        <!-- Pour remise de clés -->
+                        <div id="donnees-remise" style="display: none;">
+                            <div class="mb-3">
+                                <label for="nouveau_recette_realisee" class="form-label">
+                                    <i class="bi bi-currency-dollar"></i> Nouvelle recette réalisée (FCFA)
+                                </label>
+                                <input type="number" 
+                                       class="form-control" 
+                                       id="nouveau_recette_realisee" 
+                                       name="nouveau_recette_realisee" 
+                                       min="0" 
+                                       step="1">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" 
+                                           type="checkbox" 
+                                           id="nouveau_plein_carburant_remise" 
+                                           name="nouveau_plein_carburant">
+                                    <label class="form-check-label" for="nouveau_plein_carburant_remise">
+                                        <i class="bi bi-fuel-pump"></i> Plein de carburant
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="nouveau_probleme_mecanique_remise" class="form-label">
+                                    <i class="bi bi-tools"></i> Problème mécanique
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="nouveau_probleme_mecanique_remise" 
+                                       name="nouveau_probleme_mecanique" 
+                                       placeholder="Décrivez le problème mécanique...">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Boutons -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'drivers:dashboard_chauffeur' %}" class="btn btn-secondary btn-lg me-md-2">
+                            <i class="bi bi-arrow-left"></i> Annuler
+                        </a>
+                        <input type="submit" class="btn btn-warning btn-lg" id="submitBtn" value="Envoyer la demande">
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Activités récentes pour référence -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">Prises de clés récentes</h6>
+                    </div>
+                    <div class="card-body">
+                        {% for prise in prises_recentes %}
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>{{ prise.date|date:"d/m/Y" }} - {{ prise.heure_prise|time:"H:i" }}</span>
+                            <span class="badge bg-success">{{ prise.objectif_recette }} FCFA</span>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted">Aucune prise de clés récente</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">Remises de clés récentes</h6>
+                    </div>
+                    <div class="card-body">
+                        {% for remise in remises_recentes %}
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>{{ remise.date|date:"d/m/Y" }} - {{ remise.heure_remise|time:"H:i" }}</span>
+                            <span class="badge bg-warning">{{ remise.recette_realisee }} FCFA</span>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted">Aucune remise de clés récente</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const typeActivite = document.getElementById('type_activite');
+    const nouvellesDonnees = document.getElementById('nouvelles-donnees');
+    const donneesPrise = document.getElementById('donnees-prise');
+    const donneesRemise = document.getElementById('donnees-remise');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    typeActivite.addEventListener('change', function() {
+        if (this.value) {
+            nouvellesDonnees.style.display = 'block';
+            
+            if (this.value === 'prise') {
+                donneesPrise.style.display = 'block';
+                donneesRemise.style.display = 'none';
+            } else if (this.value === 'remise') {
+                donneesPrise.style.display = 'none';
+                donneesRemise.style.display = 'block';
+            }
+        } else {
+            nouvellesDonnees.style.display = 'none';
+        }
+    });
+    
+    // Animation du bouton lors de la soumission
+    document.getElementById('modificationForm').addEventListener('submit', function(e) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Envoi en cours...';
+    });
+});
+</script>
+{% endblock %}

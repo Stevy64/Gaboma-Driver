@@ -1,0 +1,265 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Mon compte - Gaboma Drive{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-person-gear"></i> Modifier mon compte
+                </h4>
+                <small>Mettez à jour vos informations personnelles</small>
+            </div>
+            <div class="card-body">
+                <form method="post" id="compteForm">
+                    {% csrf_token %}
+                    
+                    <!-- Informations personnelles -->
+                    <h5 class="mb-3">
+                        <i class="bi bi-person"></i> Informations personnelles
+                    </h5>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="nom" class="form-label">
+                                    <i class="bi bi-person"></i> Nom *
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="nom" 
+                                       name="nom" 
+                                       value="{{ chauffeur.nom }}"
+                                       required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="prenom" class="form-label">
+                                    <i class="bi bi-person"></i> Prénom *
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="prenom" 
+                                       name="prenom" 
+                                       value="{{ chauffeur.prenom }}"
+                                       required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="telephone" class="form-label">
+                                    <i class="bi bi-telephone"></i> Téléphone *
+                                </label>
+                                <input type="tel" 
+                                       class="form-control" 
+                                       id="telephone" 
+                                       name="telephone" 
+                                       value="{{ chauffeur.telephone }}"
+                                       placeholder="Ex: +241 01 23 45 67 89"
+                                       required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">
+                                    <i class="bi bi-envelope"></i> Email *
+                                </label>
+                                <input type="email" 
+                                       class="form-control" 
+                                       id="email" 
+                                       name="email" 
+                                       value="{{ chauffeur.email }}"
+                                       placeholder="exemple@email.com"
+                                       required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <!-- Changement de mot de passe -->
+                    <h5 class="mb-3">
+                        <i class="bi bi-lock"></i> Changement de mot de passe
+                    </h5>
+                    <p class="text-muted small">
+                        <i class="bi bi-info-circle"></i> 
+                        Laissez ces champs vides si vous ne souhaitez pas changer votre mot de passe.
+                    </p>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="nouveau_password" class="form-label">
+                                    <i class="bi bi-key"></i> Nouveau mot de passe
+                                </label>
+                                <input type="password" 
+                                       class="form-control" 
+                                       id="nouveau_password" 
+                                       name="nouveau_password"
+                                       placeholder="Minimum 6 caractères">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="confirmer_password" class="form-label">
+                                    <i class="bi bi-key-fill"></i> Confirmer le mot de passe
+                                </label>
+                                <input type="password" 
+                                       class="form-control" 
+                                       id="confirmer_password" 
+                                       name="confirmer_password"
+                                       placeholder="Répétez le mot de passe">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Informations du compte -->
+                    <hr>
+                    
+                    <h5 class="mb-3">
+                        <i class="bi bi-info-circle"></i> Informations du compte
+                    </h5>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Nom d'utilisateur</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       value="{{ chauffeur.user.username }}"
+                                       disabled>
+                                <small class="text-muted">Le nom d'utilisateur ne peut pas être modifié</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Statut du compte</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        {% if chauffeur.actif %}
+                                            <i class="bi bi-check-circle text-success"></i>
+                                        {% else %}
+                                            <i class="bi bi-x-circle text-danger"></i>
+                                        {% endif %}
+                                    </span>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           value="{% if chauffeur.actif %}Actif{% else %}Inactif{% endif %}"
+                                           disabled>
+                                </div>
+                                <small class="text-muted">Le statut est géré par l'administrateur</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Date de création</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       value="{{ chauffeur.user.date_joined|date:'d/m/Y H:i' }}"
+                                       disabled>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Dernière connexion</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       value="{% if chauffeur.user.last_login %}{{ chauffeur.user.last_login|date:'d/m/Y H:i' }}{% else %}Jamais{% endif %}"
+                                       disabled>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Boutons -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'drivers:dashboard_chauffeur' %}" class="btn btn-secondary btn-lg me-md-2">
+                            <i class="bi bi-arrow-left"></i> Annuler
+                        </a>
+                        <input type="submit" class="btn btn-primary btn-lg" id="submitBtn" value="Mettre à jour">
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Informations de sécurité -->
+        <div class="card mt-4">
+            <div class="card-header bg-warning text-dark">
+                <h6 class="mb-0">
+                    <i class="bi bi-shield-check"></i> Conseils de sécurité
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li>Choisissez un mot de passe fort avec au moins 6 caractères</li>
+                    <li>Utilisez une combinaison de lettres, chiffres et symboles</li>
+                    <li>Ne partagez jamais vos identifiants de connexion</li>
+                    <li>Déconnectez-vous toujours après utilisation</li>
+                    <li>Contactez l'administrateur en cas de problème</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('compteForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const nouveauPassword = document.getElementById('nouveau_password');
+    const confirmerPassword = document.getElementById('confirmer_password');
+    
+    // Validation du mot de passe en temps réel
+    function validatePassword() {
+        const password = nouveauPassword.value;
+        const confirm = confirmerPassword.value;
+        
+        if (password && confirm) {
+            if (password !== confirm) {
+                confirmerPassword.setCustomValidity('Les mots de passe ne correspondent pas');
+            } else if (password.length < 6) {
+                nouveauPassword.setCustomValidity('Le mot de passe doit contenir au moins 6 caractères');
+            } else {
+                nouveauPassword.setCustomValidity('');
+                confirmerPassword.setCustomValidity('');
+            }
+        } else {
+            nouveauPassword.setCustomValidity('');
+            confirmerPassword.setCustomValidity('');
+        }
+    }
+    
+    nouveauPassword.addEventListener('input', validatePassword);
+    confirmerPassword.addEventListener('input', validatePassword);
+    
+    // Animation du bouton lors de la soumission
+    form.addEventListener('submit', function(e) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Mise à jour...';
+    });
+    
+    // Formatage automatique du téléphone
+    const telephone = document.getElementById('telephone');
+    telephone.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length > 0) {
+            if (value.startsWith('241')) {
+                value = '+241 ' + value.substring(3);
+            } else if (value.startsWith('01') || value.startsWith('02') || value.startsWith('03') || value.startsWith('04') || value.startsWith('05') || value.startsWith('06') || value.startsWith('07') || value.startsWith('08') || value.startsWith('09')) {
+                value = '+241 ' + value;
+            }
+        }
+        e.target.value = value;
+    });
+});
+</script>
+{% endblock %}
