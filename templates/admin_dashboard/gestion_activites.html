@@ -1,0 +1,405 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Gestion des Activités - Gaboma Drive{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête de la page -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0 text-gray-800">
+                        <i class="fas fa-tasks me-2"></i>Gestion des Activités
+                    </h1>
+                    <p class="text-muted mb-0">Consultez et gérez toutes les activités des chauffeurs</p>
+                </div>
+                <div>
+                    <a href="{% url 'admin_dashboard:dashboard_admin' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Retour au Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-filter me-2"></i>Filtres de Recherche
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="chauffeur" class="form-label">Chauffeur</label>
+                            <select class="form-select" id="chauffeur" name="chauffeur">
+                                <option value="">Tous les chauffeurs</option>
+                                {% for chauffeur in chauffeurs %}
+                                    <option value="{{ chauffeur.id }}" 
+                                            {% if filtres.chauffeur_id == chauffeur.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ chauffeur.nom_complet }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="date_debut" class="form-label">Date de début</label>
+                            <input type="date" class="form-control" id="date_debut" name="date_debut" 
+                                   value="{{ filtres.date_debut }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="date_fin" class="form-label">Date de fin</label>
+                            <input type="date" class="form-control" id="date_fin" name="date_fin" 
+                                   value="{{ filtres.date_fin }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="type_activite" class="form-label">Type d'activité</label>
+                            <select class="form-select" id="type_activite" name="type_activite">
+                                <option value="">Tous les types</option>
+                                <option value="prise" {% if filtres.type_activite == 'prise' %}selected{% endif %}>Prise de clés</option>
+                                <option value="remise" {% if filtres.type_activite == 'remise' %}selected{% endif %}>Remise de clés</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search me-1"></i>Filtrer
+                            </button>
+                            <a href="{% url 'admin_dashboard:gestion_activites' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>Effacer les filtres
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Prises de Clés
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_prises }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-key fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Total Remises de Clés
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_remises }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-hand-holding fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Recettes Totales
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ recettes_totales|floatformat:0 }} FCFA</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-money-bill-wave fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des activités -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-list me-2"></i>Liste des Activités
+                        </h5>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="showPrises()">
+                                <i class="fas fa-key me-1"></i>Prises
+                            </button>
+                            <button type="button" class="btn btn-outline-success btn-sm" onclick="showRemises()">
+                                <i class="fas fa-hand-holding me-1"></i>Remises
+                            </button>
+                            <button type="button" class="btn btn-primary btn-sm" onclick="showAll()">
+                                <i class="fas fa-list me-1"></i>Toutes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Prises de clés -->
+                    <div id="prises-section">
+                        <h6 class="text-primary mb-3">
+                            <i class="fas fa-key me-2"></i>Prises de Clés ({{ total_prises }})
+                        </h6>
+                        {% if prises %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Chauffeur</th>
+                                            <th>Date</th>
+                                            <th>Heure</th>
+                                            <th>Objectif (FCFA)</th>
+                                            <th>Carburant</th>
+                                            <th>Problème</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for prise in prises %}
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar-sm bg-primary rounded-circle d-flex align-items-center justify-content-center me-2">
+                                                        <span class="text-white fw-bold">{{ prise.chauffeur.prenom|first }}</span>
+                                                    </div>
+                                                    <div>
+                                                        <div class="fw-bold">{{ prise.chauffeur.nom_complet }}</div>
+                                                        <small class="text-muted">{{ prise.chauffeur.telephone }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>{{ prise.date|date:"d/m/Y" }}</td>
+                                            <td>{{ prise.heure_prise|time:"H:i" }}</td>
+                                            <td>
+                                                <span class="badge bg-info">{{ prise.objectif_recette|floatformat:0 }} FCFA</span>
+                                            </td>
+                                            <td>
+                                                {% if prise.plein_carburant %}
+                                                    <span class="badge bg-success">Plein</span>
+                                                {% else %}
+                                                    <span class="badge bg-warning">Partiel</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if prise.probleme_mecanique != 'Aucun' %}
+                                                    <span class="badge bg-danger">{{ prise.probleme_mecanique }}</span>
+                                                {% else %}
+                                                    <span class="badge bg-success">Aucun</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'admin_dashboard:activites_chauffeur' prise.chauffeur.id %}" 
+                                                   class="btn btn-primary btn-sm" title="Voir détails">
+                                                    <i class="fas fa-eye me-1"></i>Voir
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-key fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">Aucune prise de clés trouvée pour les critères sélectionnés.</p>
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Pagination pour les prises -->
+                        {% if prises_paginator.num_pages > 1 %}
+                        <nav aria-label="Pagination des prises">
+                            <ul class="pagination justify-content-center mt-3">
+                                {% if prises.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?prises_page={{ prises.previous_page_number }}{% if filtres.chauffeur_id %}&chauffeur={{ filtres.chauffeur_id }}{% endif %}{% if filtres.date_debut %}&date_debut={{ filtres.date_debut }}{% endif %}{% if filtres.date_fin %}&date_fin={{ filtres.date_fin }}{% endif %}">Précédent</a>
+                                    </li>
+                                {% endif %}
+                                
+                                {% for num in prises_paginator.page_range %}
+                                    {% if prises.number == num %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ num }}</span>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?prises_page={{ num }}{% if filtres.chauffeur_id %}&chauffeur={{ filtres.chauffeur_id }}{% endif %}{% if filtres.date_debut %}&date_debut={{ filtres.date_debut }}{% endif %}{% if filtres.date_fin %}&date_fin={{ filtres.date_fin }}{% endif %}">{{ num }}</a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if prises.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?prises_page={{ prises.next_page_number }}{% if filtres.chauffeur_id %}&chauffeur={{ filtres.chauffeur_id }}{% endif %}{% if filtres.date_debut %}&date_debut={{ filtres.date_debut }}{% endif %}{% if filtres.date_fin %}&date_fin={{ filtres.date_fin }}{% endif %}">Suivant</a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    </div>
+
+                    <!-- Remises de clés -->
+                    <div id="remises-section" style="display: none;">
+                        <h6 class="text-success mb-3">
+                            <i class="fas fa-hand-holding me-2"></i>Remises de Clés ({{ total_remises }})
+                        </h6>
+                        {% if remises %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Chauffeur</th>
+                                            <th>Date</th>
+                                            <th>Heure</th>
+                                            <th>Recette (FCFA)</th>
+                                            <th>Carburant</th>
+                                            <th>Problème</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for remise in remises %}
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar-sm bg-success rounded-circle d-flex align-items-center justify-content-center me-2">
+                                                        <span class="text-white fw-bold">{{ remise.chauffeur.prenom|first }}</span>
+                                                    </div>
+                                                    <div>
+                                                        <div class="fw-bold">{{ remise.chauffeur.nom_complet }}</div>
+                                                        <small class="text-muted">{{ remise.chauffeur.telephone }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>{{ remise.date|date:"d/m/Y" }}</td>
+                                            <td>{{ remise.heure_remise|time:"H:i" }}</td>
+                                            <td>
+                                                <span class="badge bg-success">{{ remise.recette_realisee|floatformat:0 }} FCFA</span>
+                                            </td>
+                                            <td>
+                                                {% if remise.plein_carburant %}
+                                                    <span class="badge bg-success">Plein</span>
+                                                {% else %}
+                                                    <span class="badge bg-warning">Partiel</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if remise.probleme_mecanique != 'Aucun' %}
+                                                    <span class="badge bg-danger">{{ remise.probleme_mecanique }}</span>
+                                                {% else %}
+                                                    <span class="badge bg-success">Aucun</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'admin_dashboard:activites_chauffeur' remise.chauffeur.id %}" 
+                                                   class="btn btn-primary btn-sm" title="Voir détails">
+                                                    <i class="fas fa-eye me-1"></i>Voir
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-hand-holding fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">Aucune remise de clés trouvée pour les critères sélectionnés.</p>
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Pagination pour les remises -->
+                        {% if remises_paginator.num_pages > 1 %}
+                        <nav aria-label="Pagination des remises">
+                            <ul class="pagination justify-content-center mt-3">
+                                {% if remises.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?remises_page={{ remises.previous_page_number }}{% if filtres.chauffeur_id %}&chauffeur={{ filtres.chauffeur_id }}{% endif %}{% if filtres.date_debut %}&date_debut={{ filtres.date_debut }}{% endif %}{% if filtres.date_fin %}&date_fin={{ filtres.date_fin }}{% endif %}">Précédent</a>
+                                    </li>
+                                {% endif %}
+                                
+                                {% for num in remises_paginator.page_range %}
+                                    {% if remises.number == num %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ num }}</span>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?remises_page={{ num }}{% if filtres.chauffeur_id %}&chauffeur={{ filtres.chauffeur_id }}{% endif %}{% if filtres.date_debut %}&date_debut={{ filtres.date_debut }}{% endif %}{% if filtres.date_fin %}&date_fin={{ filtres.date_fin }}{% endif %}">{{ num }}</a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if remises.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?remises_page={{ remises.next_page_number }}{% if filtres.chauffeur_id %}&chauffeur={{ filtres.chauffeur_id }}{% endif %}{% if filtres.date_debut %}&date_debut={{ filtres.date_debut }}{% endif %}{% if filtres.date_fin %}&date_fin={{ filtres.date_fin }}{% endif %}">Suivant</a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showPrises() {
+    document.getElementById('prises-section').style.display = 'block';
+    document.getElementById('remises-section').style.display = 'none';
+}
+
+function showRemises() {
+    document.getElementById('prises-section').style.display = 'none';
+    document.getElementById('remises-section').style.display = 'block';
+}
+
+function showAll() {
+    document.getElementById('prises-section').style.display = 'block';
+    document.getElementById('remises-section').style.display = 'block';
+}
+</script>
+
+<style>
+.avatar-sm {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+}
+
+.border-left-primary {
+    border-left: 0.25rem solid #4e73df !important;
+}
+
+.border-left-success {
+    border-left: 0.25rem solid #1cc88a !important;
+}
+
+.border-left-info {
+    border-left: 0.25rem solid #36b9cc !important;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,400 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Activités de {{ chauffeur.nom_complet }} - Gaboma Drive{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête de la page -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0 text-gray-800">
+                        <i class="fas fa-user me-2"></i>Activités de {{ chauffeur.nom_complet }}
+                    </h1>
+                    <p class="text-muted mb-0">Détail des activités et performances du chauffeur</p>
+                </div>
+                <div>
+                    <a href="{% url 'admin_dashboard:gestion_activites' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Retour aux Activités
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informations du chauffeur -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-2">
+                            <div class="avatar-lg bg-primary rounded-circle d-flex align-items-center justify-content-center mx-auto">
+                                <span class="text-white fw-bold" style="font-size: 2rem;">{{ chauffeur.prenom|first }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h4 class="mb-1">{{ chauffeur.nom_complet }}</h4>
+                            <p class="text-muted mb-1">
+                                <i class="fas fa-phone me-1"></i>{{ chauffeur.telephone }}
+                            </p>
+                            <p class="text-muted mb-0">
+                                <i class="fas fa-envelope me-1"></i>{{ chauffeur.email }}
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <div class="fw-bold text-primary">{{ total_prises }}</div>
+                                    <small class="text-muted">Prises</small>
+                                </div>
+                                <div class="col-4">
+                                    <div class="fw-bold text-success">{{ total_remises }}</div>
+                                    <small class="text-muted">Remises</small>
+                                </div>
+                                <div class="col-4">
+                                    <div class="fw-bold text-info">{{ performance_moyenne|floatformat:1 }}%</div>
+                                    <small class="text-muted">Performance</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Recettes Totales
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ recettes_totales|floatformat:0 }} FCFA</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-money-bill-wave fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Objectifs Totaux
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ objectifs_totaux|floatformat:0 }} FCFA</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-target fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Performance Moyenne
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ performance_moyenne|floatformat:1 }}%</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Jours Travaillés
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_remises }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performances par jour -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>Performances par Jour
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if performances %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Objectif (FCFA)</th>
+                                        <th>Réalisé (FCFA)</th>
+                                        <th>Performance</th>
+                                        <th>Statut</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for perf in performances %}
+                                    <tr>
+                                        <td>{{ perf.date|date:"d/m/Y" }}</td>
+                                        <td>{{ perf.objectif|floatformat:0 }}</td>
+                                        <td>{{ perf.realise|floatformat:0 }}</td>
+                                        <td>
+                                            <div class="progress" style="height: 20px;">
+                                                <div class="progress-bar bg-{{ perf.statut }}" 
+                                                     role="progressbar" 
+                                                     style="width: {{ perf.pourcentage }}%"
+                                                     aria-valuenow="{{ perf.pourcentage }}" 
+                                                     aria-valuemin="0" 
+                                                     aria-valuemax="100">
+                                                    {{ perf.pourcentage|floatformat:1 }}%
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if perf.statut == 'success' %}
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check me-1"></i>Objectif atteint
+                                                </span>
+                                            {% elif perf.statut == 'warning' %}
+                                                <span class="badge bg-warning">
+                                                    <i class="fas fa-exclamation-triangle me-1"></i>Proche de l'objectif
+                                                </span>
+                                            {% elif perf.statut == 'danger' %}
+                                                <span class="badge bg-danger">
+                                                    <i class="fas fa-times me-1"></i>Objectif non atteint
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-info">
+                                                    <i class="fas fa-info me-1"></i>Sans objectif
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Aucune performance enregistrée pour ce chauffeur.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Détail des activités -->
+    <div class="row">
+        <!-- Prises de clés -->
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-key me-2"></i>Prises de Clés ({{ total_prises }})
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if prises %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Heure</th>
+                                        <th>Objectif</th>
+                                        <th>Carburant</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for prise in prises %}
+                                    <tr>
+                                        <td>{{ prise.date|date:"d/m/Y" }}</td>
+                                        <td>{{ prise.heure_prise|time:"H:i" }}</td>
+                                        <td>{{ prise.objectif_recette|floatformat:0 }} FCFA</td>
+                                        <td>
+                                            {% if prise.plein_carburant %}
+                                                <span class="badge bg-success">Plein</span>
+                                            {% else %}
+                                                <span class="badge bg-warning">Partiel</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-3">
+                            <i class="fas fa-key fa-2x text-muted mb-2"></i>
+                            <p class="text-muted mb-0">Aucune prise de clés enregistrée</p>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Pagination pour les prises -->
+                    {% if prises_paginator.num_pages > 1 %}
+                    <nav aria-label="Pagination des prises">
+                        <ul class="pagination pagination-sm justify-content-center mt-3">
+                            {% if prises.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?prises_page={{ prises.previous_page_number }}">Précédent</a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for num in prises_paginator.page_range %}
+                                {% if prises.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?prises_page={{ num }}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if prises.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?prises_page={{ prises.next_page_number }}">Suivant</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Remises de clés -->
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-hand-holding me-2"></i>Remises de Clés ({{ total_remises }})
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if remises %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Heure</th>
+                                        <th>Recette</th>
+                                        <th>Carburant</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for remise in remises %}
+                                    <tr>
+                                        <td>{{ remise.date|date:"d/m/Y" }}</td>
+                                        <td>{{ remise.heure_remise|time:"H:i" }}</td>
+                                        <td>{{ remise.recette_realisee|floatformat:0 }} FCFA</td>
+                                        <td>
+                                            {% if remise.plein_carburant %}
+                                                <span class="badge bg-success">Plein</span>
+                                            {% else %}
+                                                <span class="badge bg-warning">Partiel</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-3">
+                            <i class="fas fa-hand-holding fa-2x text-muted mb-2"></i>
+                            <p class="text-muted mb-0">Aucune remise de clés enregistrée</p>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Pagination pour les remises -->
+                    {% if remises_paginator.num_pages > 1 %}
+                    <nav aria-label="Pagination des remises">
+                        <ul class="pagination pagination-sm justify-content-center mt-3">
+                            {% if remises.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?remises_page={{ remises.previous_page_number }}">Précédent</a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for num in remises_paginator.page_range %}
+                                {% if remises.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?remises_page={{ num }}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if remises.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?remises_page={{ remises.next_page_number }}">Suivant</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.avatar-lg {
+    width: 80px;
+    height: 80px;
+}
+
+.border-left-primary {
+    border-left: 0.25rem solid #4e73df !important;
+}
+
+.border-left-info {
+    border-left: 0.25rem solid #36b9cc !important;
+}
+
+.border-left-success {
+    border-left: 0.25rem solid #1cc88a !important;
+}
+
+.border-left-warning {
+    border-left: 0.25rem solid #f6c23e !important;
+}
+</style>
+{% endblock %}

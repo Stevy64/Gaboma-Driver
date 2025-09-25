@@ -1,0 +1,393 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Gestion des Demandes de Modification - Gaboma Drive{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête de la page -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0 text-gray-800">
+                        <i class="fas fa-edit me-2"></i>Gestion des Demandes de Modification
+                    </h1>
+                    <p class="text-muted mb-0">Approuvez ou rejetez les demandes de modification d'activité</p>
+                </div>
+                <div>
+                    <a href="{% url 'admin_dashboard:dashboard_admin' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Retour au Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                En Attente
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ demandes_en_attente }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Approuvées
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ demandes_approuvees }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Rejetées
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ demandes_rejetees }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-times fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Total
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_demandes }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-list fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-filter me-2"></i>Filtres
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="statut" class="form-label">Statut</label>
+                            <select class="form-select" id="statut" name="statut">
+                                <option value="">Tous les statuts</option>
+                                <option value="en_attente" {% if filtres.statut == 'en_attente' %}selected{% endif %}>En attente</option>
+                                <option value="approuvee" {% if filtres.statut == 'approuvee' %}selected{% endif %}>Approuvée</option>
+                                <option value="rejetee" {% if filtres.statut == 'rejetee' %}selected{% endif %}>Rejetée</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="chauffeur" class="form-label">Chauffeur</label>
+                            <select class="form-select" id="chauffeur" name="chauffeur">
+                                <option value="">Tous les chauffeurs</option>
+                                {% for chauffeur in chauffeurs %}
+                                    <option value="{{ chauffeur.id }}" 
+                                            {% if filtres.chauffeur_id == chauffeur.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ chauffeur.nom_complet }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search me-1"></i>Filtrer
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des demandes -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list me-2"></i>Liste des Demandes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if demandes %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Chauffeur</th>
+                                        <th>Type d'Activité</th>
+                                        <th>Date</th>
+                                        <th>Statut</th>
+                                        <th>Date de Demande</th>
+                                        <th>Raison</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for demande in demandes %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-sm bg-primary rounded-circle d-flex align-items-center justify-content-center me-2">
+                                                    <span class="text-white fw-bold">{{ demande.chauffeur.prenom|first }}</span>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-bold">{{ demande.chauffeur.nom_complet }}</div>
+                                                    <small class="text-muted">{{ demande.chauffeur.telephone }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if demande.type_activite == 'prise' %}
+                                                <span class="badge bg-info">
+                                                    <i class="fas fa-key me-1"></i>Prise de clés
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-hand-holding me-1"></i>Remise de clés
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ demande.date_activite|date:"d/m/Y" }}</td>
+                                        <td>
+                                            {% if demande.statut == 'en_attente' %}
+                                                <span class="badge bg-warning">
+                                                    <i class="fas fa-clock me-1"></i>En attente
+                                                </span>
+                                            {% elif demande.statut == 'approuvee' %}
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check me-1"></i>Approuvée
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-danger">
+                                                    <i class="fas fa-times me-1"></i>Rejetée
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ demande.date_creation|date:"d/m/Y H:i" }}</td>
+                                        <td>
+                                            <span class="text-truncate d-inline-block" style="max-width: 200px;" 
+                                                  title="{{ demande.raison }}">
+                                                {{ demande.raison|truncatechars:50 }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex gap-2">
+                                                <a href="{% url 'admin_dashboard:traiter_demande_modification' demande.id %}" 
+                                                   class="btn btn-primary btn-sm" title="Traiter la demande">
+                                                    <i class="fas fa-edit me-1"></i>Traiter
+                                                </a>
+                                                {% if demande.statut == 'en_attente' %}
+                                                    <button type="button" class="btn btn-success btn-sm" 
+                                                            onclick="traiterDemande({{ demande.id }}, 'approuver')" 
+                                                            title="Approuver rapidement">
+                                                        <i class="fas fa-check me-1"></i>Approuver
+                                                    </button>
+                                                    <button type="button" class="btn btn-danger btn-sm" 
+                                                            onclick="traiterDemande({{ demande.id }}, 'rejeter')" 
+                                                            title="Rejeter rapidement">
+                                                        <i class="fas fa-times me-1"></i>Rejeter
+                                                    </button>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-edit fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Aucune demande trouvée</h5>
+                            <p class="text-muted">Il n'y a actuellement aucune demande de modification pour les critères sélectionnés.</p>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Pagination -->
+                    {% if paginator.num_pages > 1 %}
+                    <nav aria-label="Pagination des demandes">
+                        <ul class="pagination justify-content-center mt-4">
+                            {% if demandes.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ demandes.previous_page_number }}{% if filtres.statut %}&statut={{ filtres.statut }}{% endif %}{% if filtres.chauffeur_id %}&chauffeur={{ filtres.chauffeur_id }}{% endif %}">Précédent</a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for num in paginator.page_range %}
+                                {% if demandes.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}{% if filtres.statut %}&statut={{ filtres.statut }}{% endif %}{% if filtres.chauffeur_id %}&chauffeur={{ filtres.chauffeur_id }}{% endif %}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if demandes.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ demandes.next_page_number }}{% if filtres.statut %}&statut={{ filtres.statut }}{% endif %}{% if filtres.chauffeur_id %}&chauffeur={{ filtres.chauffeur_id }}{% endif %}">Suivant</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de traitement rapide -->
+<div class="modal fade" id="modalTraitement" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Traiter la demande</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formTraitement" method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" id="demandeId" name="demande_id">
+                    <input type="hidden" id="actionDemande" name="action">
+                    
+                    <div class="mb-3">
+                        <label for="commentaire" class="form-label">Commentaire (optionnel)</label>
+                        <textarea class="form-control" id="commentaire" name="commentaire" rows="3" 
+                                  placeholder="Ajoutez un commentaire pour expliquer votre décision..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" onclick="confirmerTraitement()">Confirmer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function traiterDemande(demandeId, action) {
+    document.getElementById('demandeId').value = demandeId;
+    document.getElementById('actionDemande').value = action;
+    
+    const modal = new bootstrap.Modal(document.getElementById('modalTraitement'));
+    modal.show();
+}
+
+function confirmerTraitement() {
+    const demandeId = document.getElementById('demandeId').value;
+    const action = document.getElementById('actionDemande').value;
+    const commentaire = document.getElementById('commentaire').value;
+    
+    // Créer un formulaire dynamique pour soumettre la requête POST
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `/admin-dashboard/demandes-modification/${demandeId}/traiter/`;
+    
+    // Ajouter le token CSRF
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = 'csrfmiddlewaretoken';
+    csrfInput.value = '{{ csrf_token }}';
+    form.appendChild(csrfInput);
+    
+    // Ajouter l'action
+    const actionInput = document.createElement('input');
+    actionInput.type = 'hidden';
+    actionInput.name = 'action';
+    actionInput.value = action;
+    form.appendChild(actionInput);
+    
+    // Ajouter le commentaire
+    const commentaireInput = document.createElement('input');
+    commentaireInput.type = 'hidden';
+    commentaireInput.name = 'commentaire';
+    commentaireInput.value = commentaire;
+    form.appendChild(commentaireInput);
+    
+    // Ajouter le formulaire au DOM et le soumettre
+    document.body.appendChild(form);
+    form.submit();
+}
+
+// Auto-refresh toutes les 30 secondes pour les demandes en attente
+{% if filtres.statut == 'en_attente' or not filtres.statut %}
+setInterval(function() {
+    if (document.visibilityState === 'visible') {
+        location.reload();
+    }
+}, 30000);
+{% endif %}
+</script>
+
+<style>
+.avatar-sm {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+}
+
+.border-left-warning {
+    border-left: 0.25rem solid #f6c23e !important;
+}
+
+.border-left-success {
+    border-left: 0.25rem solid #1cc88a !important;
+}
+
+.border-left-danger {
+    border-left: 0.25rem solid #e74a3b !important;
+}
+
+.border-left-info {
+    border-left: 0.25rem solid #36b9cc !important;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,257 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Traiter la Demande de Modification - Gaboma Drive{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête de la page -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0 text-gray-800">
+                        <i class="fas fa-edit me-2"></i>Traiter la Demande de Modification
+                    </h1>
+                    <p class="text-muted mb-0">Examinez et traitez la demande de modification d'activité</p>
+                </div>
+                <div>
+                    <a href="{% url 'admin_dashboard:gestion_demandes_modification' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Retour aux Demandes
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Informations de la demande -->
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Informations de la Demande
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-sm-4"><strong>Chauffeur:</strong></div>
+                        <div class="col-sm-8">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-sm bg-primary rounded-circle d-flex align-items-center justify-content-center me-2">
+                                    <span class="text-white fw-bold">{{ demande.chauffeur.prenom|first }}</span>
+                                </div>
+                                <div>
+                                    <div class="fw-bold">{{ demande.chauffeur.nom_complet }}</div>
+                                    <small class="text-muted">{{ demande.chauffeur.telephone }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-sm-4"><strong>Type d'activité:</strong></div>
+                        <div class="col-sm-8">
+                            {% if demande.type_activite == 'prise' %}
+                                <span class="badge bg-info">
+                                    <i class="fas fa-key me-1"></i>Prise de clés
+                                </span>
+                            {% else %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-hand-holding me-1"></i>Remise de clés
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-sm-4"><strong>Date d'activité:</strong></div>
+                        <div class="col-sm-8">{{ demande.date_activite|date:"d/m/Y" }}</div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-sm-4"><strong>Statut:</strong></div>
+                        <div class="col-sm-8">
+                            {% if demande.statut == 'en_attente' %}
+                                <span class="badge bg-warning">
+                                    <i class="fas fa-clock me-1"></i>En attente
+                                </span>
+                            {% elif demande.statut == 'approuvee' %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check me-1"></i>Approuvée
+                                </span>
+                            {% else %}
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-times me-1"></i>Rejetée
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-sm-4"><strong>Date de demande:</strong></div>
+                        <div class="col-sm-8">{{ demande.date_creation|date:"d/m/Y H:i" }}</div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-sm-4"><strong>Raison:</strong></div>
+                        <div class="col-sm-8">{{ demande.raison }}</div>
+                    </div>
+                    
+                    {% if demande.admin_traite %}
+                    <div class="row mb-3">
+                        <div class="col-sm-4"><strong>Traité par:</strong></div>
+                        <div class="col-sm-8">{{ demande.admin_traite.get_full_name|default:demande.admin_traite.username }}</div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-sm-4"><strong>Date de traitement:</strong></div>
+                        <div class="col-sm-8">{{ demande.date_traitement|date:"d/m/Y H:i" }}</div>
+                    </div>
+                    
+                    {% if demande.commentaire_admin %}
+                    <div class="row mb-3">
+                        <div class="col-sm-4"><strong>Commentaire admin:</strong></div>
+                        <div class="col-sm-8">{{ demande.commentaire_admin }}</div>
+                    </div>
+                    {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Données actuelles vs nouvelles données -->
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-exchange-alt me-2"></i>Comparaison des Données
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if activite_actuelle %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Champ</th>
+                                        <th>Valeur Actuelle</th>
+                                        <th>Nouvelle Valeur</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for champ, nouvelle_valeur in demande.nouvelles_donnees.items %}
+                                    <tr>
+                                        <td><strong>{{ champ|title }}</strong></td>
+                                        <td>
+                                            {% if champ == 'objectif_recette' %}
+                                                {{ activite_actuelle.objectif_recette|floatformat:0 }} FCFA
+                                            {% elif champ == 'recette_realisee' %}
+                                                {{ activite_actuelle.recette_realisee|floatformat:0 }} FCFA
+                                            {% elif champ == 'plein_carburant' %}
+                                                {% if activite_actuelle.plein_carburant %}
+                                                    <span class="badge bg-success">Oui</span>
+                                                {% else %}
+                                                    <span class="badge bg-warning">Non</span>
+                                                {% endif %}
+                                            {% else %}
+                                                {% if champ == 'probleme_mecanique' %}
+                                                    {{ activite_actuelle.probleme_mecanique|default:"N/A" }}
+                                                {% elif champ == 'signature' %}
+                                                    {{ activite_actuelle.signature|truncatechars:50|default:"N/A" }}
+                                                {% else %}
+                                                    N/A
+                                                {% endif %}
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if champ == 'objectif_recette' %}
+                                                <span class="badge bg-info">{{ nouvelle_valeur|floatformat:0 }} FCFA</span>
+                                            {% elif champ == 'recette_realisee' %}
+                                                <span class="badge bg-success">{{ nouvelle_valeur|floatformat:0 }} FCFA</span>
+                                            {% elif champ == 'plein_carburant' %}
+                                                {% if nouvelle_valeur %}
+                                                    <span class="badge bg-success">Oui</span>
+                                                {% else %}
+                                                    <span class="badge bg-warning">Non</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="badge bg-primary">{{ nouvelle_valeur }}</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            L'activité concernée n'a pas été trouvée. Il est possible qu'elle ait été supprimée.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions de traitement -->
+    {% if demande.statut == 'en_attente' %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-cogs me-2"></i>Actions de Traitement
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="commentaire" class="form-label">Commentaire (optionnel)</label>
+                            <textarea class="form-control" id="commentaire" name="commentaire" rows="3" 
+                                      placeholder="Ajoutez un commentaire pour expliquer votre décision..."></textarea>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <button type="submit" name="action" value="rejeter" class="btn btn-danger me-2"
+                                        onclick="return confirm('Êtes-vous sûr de vouloir rejeter cette demande ?')">
+                                    <i class="fas fa-times me-1"></i>Rejeter la Demande
+                                </button>
+                            </div>
+                            <div>
+                                <button type="submit" name="action" value="approuver" class="btn btn-success"
+                                        onclick="return confirm('Êtes-vous sûr de vouloir approuver cette demande ? Les modifications seront appliquées immédiatement.')">
+                                    <i class="fas fa-check me-1"></i>Approuver la Demande
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                Cette demande a déjà été traitée le {{ demande.date_traitement|date:"d/m/Y à H:i" }} 
+                par {{ demande.admin_traite.get_full_name|default:demande.admin_traite.username }}.
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.avatar-sm {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+}
+</style>
+{% endblock %}

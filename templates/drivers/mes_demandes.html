@@ -179,6 +179,41 @@
 </div>
 {% endfor %}
 
+<!-- Pagination des demandes -->
+{% if demandes_paginator.num_pages > 1 %}
+<div class="row mt-4">
+    <div class="col-12">
+        <nav aria-label="Pagination des demandes">
+            <ul class="pagination justify-content-center">
+                {% if demandes.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ demandes.previous_page_number }}">Précédent</a>
+                    </li>
+                {% endif %}
+                
+                {% for num in demandes_paginator.page_range %}
+                    {% if demandes.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if demandes.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ demandes.next_page_number }}">Suivant</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+</div>
+{% endif %}
+
 <div class="row mt-4">
     <div class="col-12">
         <div class="d-grid gap-2 d-md-flex justify-content-md-end">

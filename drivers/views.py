@@ -289,7 +289,12 @@ def dashboard_chauffeur(request):
     
     # Tri par date/heure décroissante (plus récent en premier)
     activites_recentes.sort(key=lambda x: x['date_heure'], reverse=True)
-    activites_recentes = activites_recentes[:10]  # Limitation à 10 activités pour l'affichage
+    
+    # Pagination des activités récentes
+    from django.core.paginator import Paginator
+    paginator = Paginator(activites_recentes, 10)  # 10 activités par page
+    page_number = request.GET.get('page')
+    activites_page = paginator.get_page(page_number)
     
     # =============================================================================
     # CALCUL DES STATISTIQUES DE LA SEMAINE
@@ -333,7 +338,8 @@ def dashboard_chauffeur(request):
         # Données historiques
         'prises_recentes': prises_recentes,
         'remises_recentes': remises_recentes,
-        'activites_recentes': activites_recentes,
+        'activites_recentes': activites_page,
+        'activites_paginator': paginator,
         
         # Statistiques de la semaine
         'recettes_semaine': recettes_semaine,
@@ -1079,13 +1085,21 @@ def mes_demandes(request):
     
     # Récupération de toutes les demandes du chauffeur, triées par date de création (plus récentes en premier)
     from activities.models import DemandeModification
+    from django.core.paginator import Paginator
+    
     demandes = DemandeModification.objects.filter(
         chauffeur=chauffeur
     ).order_by('-date_creation')
     
+    # Pagination des demandes
+    paginator = Paginator(demandes, 15)  # 15 demandes par page
+    page_number = request.GET.get('page')
+    demandes_page = paginator.get_page(page_number)
+    
     # Préparation du contexte pour le template
     context = {
-        'demandes': demandes,
+        'demandes': demandes_page,
+        'demandes_paginator': paginator,
     }
     
     # Affichage de la liste des demandes

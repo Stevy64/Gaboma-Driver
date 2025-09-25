@@ -13,74 +13,74 @@
 </div>
 
 <!-- Statistiques générales -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <i class="bi bi-people text-primary" style="font-size: 2rem;"></i>
-                <h4 class="mt-2">{{ total_chauffeurs }}</h4>
-                <p class="text-muted mb-0">Chauffeurs actifs</p>
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card text-center h-100">
+            <div class="card-body p-3">
+                <i class="bi bi-people text-primary" style="font-size: 1.5rem;"></i>
+                <h5 class="mt-2 mb-1">{{ total_chauffeurs }}</h5>
+                <p class="text-muted mb-0 small">Chauffeurs actifs</p>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <i class="bi bi-clock text-info" style="font-size: 2rem;"></i>
-                <h4 class="mt-2">{{ total_activites_aujourdhui }}</h4>
-                <p class="text-muted mb-0">Activités aujourd'hui</p>
+    <div class="col-6 col-md-3">
+        <div class="card text-center h-100">
+            <div class="card-body p-3">
+                <i class="bi bi-clock text-info" style="font-size: 1.5rem;"></i>
+                <h5 class="mt-2 mb-1">{{ total_activites_aujourdhui }}</h5>
+                <p class="text-muted mb-0 small">Activités aujourd'hui</p>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <i class="bi bi-currency-euro text-success" style="font-size: 2rem;"></i>
-                <h4 class="mt-2">{{ recettes_aujourdhui }}€</h4>
-                <p class="text-muted mb-0">Recettes aujourd'hui</p>
+    <div class="col-6 col-md-3">
+        <div class="card text-center h-100">
+            <div class="card-body p-3">
+                <i class="fas fa-coins text-success" style="font-size: 1.5rem;"></i>
+                <h5 class="mt-2 mb-1">{{ recettes_aujourdhui|floatformat:0 }} FCFA</h5>
+                <p class="text-muted mb-0 small">Recettes aujourd'hui</p>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <i class="bi bi-tools text-warning" style="font-size: 2rem;"></i>
-                <h4 class="mt-2">{{ pannes_en_cours }}</h4>
-                <p class="text-muted mb-0">Pannes en cours</p>
+    <div class="col-6 col-md-3">
+        <div class="card text-center h-100">
+            <div class="card-body p-3">
+                <i class="bi bi-tools text-warning" style="font-size: 1.5rem;"></i>
+                <h5 class="mt-2 mb-1">{{ pannes_en_cours }}</h5>
+                <p class="text-muted mb-0 small">Pannes en cours</p>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Recettes et alertes -->
-<div class="row mb-4">
-    <div class="col-md-8">
-        <div class="card">
+<div class="row g-3 mb-4">
+    <div class="col-12 col-lg-8">
+        <div class="card h-100">
             <div class="card-header">
                 <h5 class="mb-0">
                     <i class="bi bi-graph-up"></i> Recettes
                 </h5>
             </div>
             <div class="card-body">
-                <div class="row text-center">
-                    <div class="col-md-4">
-                        <h3 class="text-success">{{ recettes_aujourdhui }}€</h3>
-                        <p class="text-muted">Aujourd'hui</p>
+                <div class="row text-center g-3">
+                    <div class="col-4 col-md-4">
+                        <h4 class="text-success mb-1">{{ recettes_aujourdhui|floatformat:0 }} FCFA</h4>
+                        <p class="text-muted small mb-0">Aujourd'hui</p>
                     </div>
-                    <div class="col-md-4">
-                        <h3 class="text-info">{{ recettes_semaine }}€</h3>
-                        <p class="text-muted">Cette semaine</p>
+                    <div class="col-4 col-md-4">
+                        <h4 class="text-info mb-1">{{ recettes_semaine|floatformat:0 }} FCFA</h4>
+                        <p class="text-muted small mb-0">Cette semaine</p>
                     </div>
-                    <div class="col-md-4">
-                        <h3 class="text-primary">{{ recettes_mois }}€</h3>
-                        <p class="text-muted">Ce mois</p>
+                    <div class="col-4 col-md-4">
+                        <h4 class="text-primary mb-1">{{ recettes_mois|floatformat:0 }} FCFA</h4>
+                        <p class="text-muted small mb-0">Ce mois</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card">
+    <div class="col-12 col-lg-4">
+        <div class="card h-100">
             <div class="card-header">
                 <h5 class="mb-0">
                     <i class="bi bi-exclamation-triangle"></i> Alertes
@@ -88,18 +88,24 @@
             </div>
             <div class="card-body">
                 {% if pannes_critiques > 0 %}
-                <div class="alert alert-danger">
+                <div class="alert alert-danger mb-2">
                     <i class="bi bi-exclamation-triangle"></i>
                     {{ pannes_critiques }} panne(s) critique(s)
                 </div>
                 {% endif %}
                 {% if pannes_en_cours > 0 %}
-                <div class="alert alert-warning">
+                <div class="alert alert-warning mb-2">
                     <i class="bi bi-tools"></i>
                     {{ pannes_en_cours }} panne(s) en cours
                 </div>
                 {% endif %}
-                {% if pannes_critiques == 0 and pannes_en_cours == 0 %}
+                {% if demandes_en_attente > 0 %}
+                <div class="alert alert-warning mb-2">
+                    <i class="bi bi-clock"></i>
+                    {{ demandes_en_attente }} demande(s) de modification en attente
+                </div>
+                {% endif %}
+                {% if pannes_critiques == 0 and pannes_en_cours == 0 and demandes_en_attente == 0 %}
                 <div class="alert alert-success">
                     <i class="bi bi-check-circle"></i>
                     Aucune alerte
@@ -110,10 +116,10 @@
     </div>
 </div>
 
-<div class="row">
+<div class="row g-3">
     <!-- Top chauffeurs du mois -->
-    <div class="col-lg-6">
-        <div class="card">
+    <div class="col-12 col-lg-6">
+        <div class="card h-100">
             <div class="card-header">
                 <h5 class="mb-0">
                     <i class="bi bi-trophy"></i> Top chauffeurs du mois
@@ -127,10 +133,10 @@
                             <div>
                                 <strong>{{ chauffeur.nom_complet }}</strong>
                                 <br>
-                                <small class="text-muted">{{ chauffeur.telephone }}</small>
+                                <small class="text-muted d-none d-sm-block">{{ chauffeur.telephone }}</small>
                             </div>
                             <span class="badge bg-success rounded-pill">
-                                {{ chauffeur.total_recettes }}€
+                                {{ chauffeur.total_recettes|floatformat:0 }} FCFA
                             </span>
                         </div>
                         {% endfor %}
@@ -143,8 +149,8 @@
     </div>
 
     <!-- Activités récentes -->
-    <div class="col-lg-6">
-        <div class="card">
+    <div class="col-12 col-lg-6">
+        <div class="card h-100">
             <div class="card-header">
                 <h5 class="mb-0">
                     <i class="bi bi-clock-history"></i> Activités récentes
@@ -157,22 +163,31 @@
                             <thead>
                                 <tr>
                                     <th>Chauffeur</th>
-                                    <th>Type</th>
+                                    <th class="d-none d-sm-table-cell">Type</th>
                                     <th>Heure</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for activite in activites_recentes %}
                                 <tr>
-                                    <td>{{ activite.chauffeur.nom_complet }}</td>
                                     <td>
+                                        <div class="d-flex flex-column">
+                                            <span class="fw-bold">{{ activite.chauffeur.nom_complet }}</span>
+                                            <span class="badge bg-{% if activite.type_activite == 'prise' %}success{% else %}warning{% endif %} d-sm-none">
+                                                {% if activite.type_activite == 'prise' %}Prise{% else %}Remise{% endif %}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="d-none d-sm-table-cell">
                                         {% if activite.type_activite == 'prise' %}
                                             <span class="badge bg-success">Prise</span>
                                         {% else %}
                                             <span class="badge bg-warning">Remise</span>
                                         {% endif %}
                                     </td>
-                                    <td>{{ activite.date_heure|date:"H:i" }}</td>
+                                    <td class="fw-bold">
+                                        <i class="fas fa-clock me-1"></i>{{ activite.date_heure|date:"H:i" }}
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -244,4 +259,57 @@
     </div>
 </div>
 {% endif %}
+
+<!-- Nouvelles fonctionnalités -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-cogs me-2"></i> Gestion des Activités et Demandes
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card border-primary h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-tasks fa-3x text-primary mb-3"></i>
+                                <h5 class="card-title">Gestion des Activités</h5>
+                                <p class="card-text">Consultez toutes les activités des chauffeurs avec filtres avancés.</p>
+                                <a href="{% url 'admin_dashboard:gestion_activites' %}" class="btn btn-primary">
+                                    <i class="fas fa-eye me-1"></i>Voir les Activités
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-warning h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-edit fa-3x text-warning mb-3"></i>
+                                <h5 class="card-title">Demandes de Modification</h5>
+                                <p class="card-text">Approuvez ou rejetez les demandes de modification d'activité.</p>
+                                <a href="{% url 'admin_dashboard:gestion_demandes_modification' %}" class="btn btn-warning">
+                                    <i class="fas fa-list me-1"></i>Gérer les Demandes
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-info h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-chart-line fa-3x text-info mb-3"></i>
+                                <h5 class="card-title">Statistiques Avancées</h5>
+                                <p class="card-text">Analysez les performances et les tendances des chauffeurs.</p>
+                                <a href="{% url 'admin_dashboard:statistiques_recettes' %}" class="btn btn-info">
+                                    <i class="fas fa-chart-bar me-1"></i>Voir les Stats
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

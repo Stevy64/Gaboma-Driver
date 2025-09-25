@@ -230,6 +230,37 @@
                             </tbody>
                         </table>
                     </div>
+                    
+                    <!-- Pagination des activités récentes -->
+                    {% if activites_paginator.num_pages > 1 %}
+                    <nav aria-label="Pagination des activités">
+                        <ul class="pagination pagination-sm justify-content-center mt-3">
+                            {% if activites_recentes.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ activites_recentes.previous_page_number }}">Précédent</a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for num in activites_paginator.page_range %}
+                                {% if activites_recentes.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if activites_recentes.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ activites_recentes.next_page_number }}">Suivant</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
                 {% else %}
                     <p class="text-muted text-center">Aucune activité récente</p>
                 {% endif %}
