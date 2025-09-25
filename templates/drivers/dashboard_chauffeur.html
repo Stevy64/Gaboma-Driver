@@ -257,8 +257,9 @@
                         </div>
                         <div class="col-6">
                             <div class="text-center">
-                                <h6 class="text-muted mb-1">Moyenne</h6>
+                                <h6 class="text-muted mb-1">Moyenne/jour</h6>
                                 <h4 class="text-primary mb-0">{{ moyenne_semaine|floatformat:0 }} FCFA</h4>
+                                <small class="text-muted">{{ nombre_jours_travailles }} jour{{ nombre_jours_travailles|pluralize }} travaillé{{ nombre_jours_travailles|pluralize }}</small>
                             </div>
                         </div>
                     </div>
