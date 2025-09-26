@@ -1,0 +1,134 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Erreur Serveur - Gaboma Drive{% endblock %}
+
+{% block content %}
+<div class="container-fluid min-vh-100 d-flex align-items-center justify-content-center py-4">
+    <div class="row justify-content-center w-100">
+        <div class="col-lg-6 col-md-8 col-sm-10 text-center">
+            <!-- Icône de voiture en panne technique -->
+            <div class="mb-3">
+                <i class="bi bi-tools text-danger error-tools-icon"></i>
+                <div class="mt-2">
+                    <i class="bi bi-car-front-fill text-secondary error-car-icon"></i>
+                </div>
+            </div>
+            
+            <!-- Message d'erreur -->
+            <div class="error-content">
+                <h1 class="display-2 fw-bold text-danger mb-2">500</h1>
+                <h2 class="h4 text-dark mb-3">Erreur Serveur</h2>
+                <p class="text-muted mb-3">
+                    Désolé, une erreur interne s'est produite sur notre serveur.
+                </p>
+                <small class="text-muted">
+                    Notre équipe technique travaille déjà sur la réparation !
+                </small>
+                
+                <!-- Actions -->
+                <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
+                    <a href="{% url 'drivers:index' %}" class="btn btn-primary">
+                        <i class="bi bi-house me-2"></i>Retour à l'accueil
+                    </a>
+                    <button onclick="window.location.reload()" class="btn btn-outline-primary">
+                        <i class="bi bi-arrow-clockwise me-2"></i>Réessayer
+                    </button>
+                </div>
+                
+                <!-- Informations supplémentaires -->
+                <div class="mt-4">
+                    <div class="card border-0 bg-light">
+                        <div class="card-body py-3">
+                            <h6 class="card-title text-dark mb-2">
+                                <i class="bi bi-info-circle me-2"></i>Que faire maintenant ?
+                            </h6>
+                            <ul class="list-unstyled text-start mb-0 small">
+                                <li class="mb-1">
+                                    <i class="bi bi-check-circle text-success me-2"></i>
+                                    Attendez quelques minutes et réessayez
+                                </li>
+                                <li class="mb-1">
+                                    <i class="bi bi-check-circle text-success me-2"></i>
+                                    Contactez le support technique si le problème persiste
+                                </li>
+                                <li class="mb-0">
+                                    <i class="bi bi-check-circle text-success me-2"></i>
+                                    Retournez à la page d'accueil pour continuer votre travail
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.error-content {
+    animation: fadeInUp 0.8s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Icônes responsives */
+.error-tools-icon {
+    font-size: 3rem;
+    animation: rotate 3s infinite linear;
+}
+
+.error-car-icon {
+    font-size: 2.5rem;
+    animation: smoke 2s infinite ease-in-out;
+}
+
+/* Responsive pour petits écrans */
+@media (max-width: 768px) {
+    .error-tools-icon {
+        font-size: 2.5rem;
+    }
+    
+    .error-car-icon {
+        font-size: 2rem;
+    }
+    
+    .display-2 {
+        font-size: 3rem !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .error-tools-icon {
+        font-size: 2rem;
+    }
+    
+    .error-car-icon {
+        font-size: 1.5rem;
+    }
+    
+    .display-2 {
+        font-size: 2.5rem !important;
+    }
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes smoke {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 0.3; }
+}
+</style>
+{% endblock %}

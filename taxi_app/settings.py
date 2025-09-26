@@ -189,3 +189,13 @@ LOGIN_URL = 'drivers:login_chauffeur'
 
 # Redirection après déconnexion
 LOGOUT_REDIRECT_URL = 'drivers:index'
+
+# =============================================================================
+# PAGES D'ERREUR PERSONNALISÉES - Gestion esthétique des erreurs
+# =============================================================================
+
+# Configuration des pages d'erreur personnalisées
+# Ces templates seront utilisés automatiquement par Django pour les erreurs HTTP
+# 403.html : Accès refusé (Permission Denied)
+# 404.html : Page non trouvée (Not Found)
+# 500.html : Erreur serveur interne (Internal Server Error)
