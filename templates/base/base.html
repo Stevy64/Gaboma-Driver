@@ -57,6 +57,16 @@
                                     <i class="bi bi-trophy"></i> Classements
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'admin_dashboard:gestion_activites' %}">
+                                    <i class="fas fa-tasks"></i> Activités
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'admin_dashboard:gestion_demandes_modification' %}">
+                                    <i class="fas fa-edit"></i> Demandes
+                                </a>
+                            </li>
                         {% else %}
                             <!-- Menu Chauffeur -->
                             <li class="nav-item">

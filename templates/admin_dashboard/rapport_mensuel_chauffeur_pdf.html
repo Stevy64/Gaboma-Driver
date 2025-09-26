@@ -364,7 +364,8 @@
             <div class="info-item">
                 <strong>Recette moyenne/jour:</strong><br>
                 {% if jours_travailles > 0 %}
-                    {{ recettes_totales|div:jours_travailles|floatformat:0 }} FCFA
+                    {% widthratio recettes_totales jours_travailles 1 as moyenne_recette %}
+                    {{ moyenne_recette|floatformat:0 }} FCFA
                 {% else %}
                     0 FCFA
                 {% endif %}
@@ -372,7 +373,8 @@
             <div class="info-item">
                 <strong>Objectif moyen/jour:</strong><br>
                 {% if jours_travailles > 0 %}
-                    {{ objectifs_totaux|div:jours_travailles|floatformat:0 }} FCFA
+                    {% widthratio objectifs_totaux jours_travailles 1 as moyenne_objectif %}
+                    {{ moyenne_objectif|floatformat:0 }} FCFA
                 {% else %}
                     0 FCFA
                 {% endif %}
