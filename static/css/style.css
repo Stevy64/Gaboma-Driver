@@ -34,16 +34,45 @@
 
 /* Brand moderne */
 .modern-brand {
-    font-weight: 700;
+    font-weight: 300; /* Plus fin et léger */
     font-size: 1.4rem;
     color: white !important;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     transition: all 0.3s ease;
+    letter-spacing: 0.5px; /* Espacement des lettres pour un look plus élégant */
 }
 
 .modern-brand:hover {
     transform: translateY(-1px);
     text-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* Style spécifique pour le texte du logo */
+.modern-brand .brand-text {
+    font-weight: 200; /* Encore plus fin */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    letter-spacing: 1px;
+}
+
+/* Indicateur de position active dans la navigation */
+.modern-navbar .nav-link.active {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border-radius: 8px;
+    font-weight: 500;
+    position: relative;
+}
+
+.modern-navbar .nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
 }
 
 /* Menu hamburger moderne */
@@ -308,9 +337,17 @@
     
     .modern-navbar .nav-link i,
     .modern-navbar .nav-link.dropdown-toggle i {
-        font-size: 1rem !important;
+        font-size: 0.9rem !important;
         margin-bottom: 0 !important;
-        margin-right: 0.5rem !important;
+        margin-right: 0.4rem !important;
+    }
+    
+    /* Réduire la taille de police des titres de menu pour les grands écrans */
+    .modern-navbar .nav-link,
+    .modern-navbar .nav-link.dropdown-toggle {
+        font-size: 0.85rem !important;
+        font-weight: 400 !important;
+        padding: 0.4rem 0.8rem !important;
     }
     
     .modern-navbar .nav-link:hover,

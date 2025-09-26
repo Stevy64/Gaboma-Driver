@@ -96,30 +96,30 @@
         box-shadow: 0 4px 8px rgba(33, 150, 243, 0.2);
     }
     
-    /* Couleurs de performance pour les cellules actives */
-    .calendar-day.actif.performance-excellent {
+    /* Couleurs de performance pour toutes les cellules */
+    .calendar-day.performance-excellent {
         background: linear-gradient(135deg, #d4edda, #c3e6cb);
         border: 1px solid #28a745;
     }
     
-    .calendar-day.actif.performance-bien {
+    .calendar-day.performance-bien {
         background: linear-gradient(135deg, #d1ecf1, #bee5eb);
         border: 1px solid #17a2b8;
     }
     
-    .calendar-day.actif.performance-moyen {
+    .calendar-day.performance-moyen {
         background: linear-gradient(135deg, #fff3cd, #ffeaa7);
         border: 1px solid #ffc107;
     }
     
-    .calendar-day.actif.performance-faible {
+    .calendar-day.performance-faible {
         background: linear-gradient(135deg, #f8d7da, #f5c6cb);
         border: 1px solid #dc3545;
     }
     
-    .calendar-day.actif:not(.performance-excellent):not(.performance-bien):not(.performance-moyen):not(.performance-faible) {
-        background: linear-gradient(135deg, #e8f5e8, #d4edda);
-        border: 1px solid #28a745;
+    .calendar-day.performance-none {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border: 1px solid #6c757d;
     }
     
     .day-number {
@@ -271,26 +271,33 @@
         }
         
         .calendar-day {
-            min-height: 90px;
+            min-height: 100px;
             padding: 2px;
             border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
         
         .calendar-day.empty {
             border-radius: 6px;
+            min-height: 100px;
         }
         
         .day-number {
             font-size: 0.7rem;
+            flex-shrink: 0;
         }
         
         .day-chauffeur {
             font-size: 0.6rem;
+            flex-shrink: 0;
         }
         
         .day-revenue {
             font-size: 0.65rem;
             padding: 1px 2px;
+            flex-shrink: 0;
         }
         
         .day-performance {
@@ -298,6 +305,7 @@
             padding: 1px 2px;
             margin-top: 1px;
             margin-bottom: 1px;
+            flex-shrink: 0;
         }
         
         .day-click-hint {
@@ -602,7 +610,7 @@
             {% for semaine in calendrier %}
                 {% for jour_data in semaine %}
                     {% if jour_data %}
-                        <div class="calendar-day {% if jour_data.date == today %}today{% endif %} {% if jour_data.actif %}actif{% endif %} {% if jour_data.complet %}complet{% endif %} {% if jour_data.performance >= 100 %}performance-excellent{% elif jour_data.performance >= 80 %}performance-bien{% elif jour_data.performance >= 60 %}performance-moyen{% elif jour_data.performance > 0 %}performance-faible{% endif %}">
+                        <div class="calendar-day {% if jour_data.date == today %}today{% endif %} {% if jour_data.actif %}actif{% endif %} {% if jour_data.complet %}complet{% endif %} {% if jour_data.performance >= 100 %}performance-excellent{% elif jour_data.performance >= 80 %}performance-bien{% elif jour_data.performance >= 60 %}performance-moyen{% elif jour_data.performance > 0 %}performance-faible{% else %}performance-none{% endif %}">
                             <div class="day-number">{{ jour_data.jour }}</div>
                             
                             {% if jour_data.actif %}

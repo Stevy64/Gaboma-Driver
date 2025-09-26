@@ -82,4 +82,5 @@ urlpatterns = [
     
     # Gestion du compte chauffeur
     path('mon-compte/', views.mon_compte, name='mon_compte'),
+    path('logout/', views.logout_chauffeur, name='logout_chauffeur'),
 ]

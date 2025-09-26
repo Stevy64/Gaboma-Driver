@@ -4,7 +4,7 @@
 
 # Django core imports - Imports de base de Django
 from django.shortcuts import render, redirect  # Rendu de templates et redirections
-from django.contrib.auth import login, authenticate  # Authentification des utilisateurs
+from django.contrib.auth import login, authenticate, logout  # Authentification des utilisateurs
 from django.contrib.auth.decorators import login_required  # Décorateur pour protéger les vues
 from django.contrib.auth.models import User  # Modèle utilisateur Django
 from django.contrib import messages  # Système de messages flash
@@ -32,20 +32,41 @@ except ImportError:
 # VUE D'ACCUEIL - Page principale de l'application
 # =============================================================================
 
+def logout_chauffeur(request):
+    """
+    Vue de déconnexion pour les chauffeurs
+    
+    Cette vue déconnecte l'utilisateur et le redirige vers la page d'accueil
+    avec un message de confirmation.
+    
+    Args:
+        request: Objet HttpRequest de l'utilisateur
+        
+    Returns:
+        HttpResponse: Redirection vers la page d'accueil
+    """
+    logout(request)
+    messages.success(request, 'Vous avez été déconnecté avec succès.')
+    return redirect('drivers:index')
+
 def index(request):
     """
     Vue d'accueil de l'application Gaboma Drive
     
     Cette vue affiche la page d'accueil avec les options de connexion
-    pour les chauffeurs et les administrateurs.
+    pour les chauffeurs uniquement. L'accès admin se fait via une URL séparée.
     
     Args:
         request: Objet HttpRequest contenant les données de la requête
         
     Returns:
-        HttpResponse: Rendu du template index.html
+        HttpResponse: Rendu du template index.html avec l'année courante
     """
-    return render(request, 'drivers/index.html')
+    from datetime import datetime
+    context = {
+        'current_year': datetime.now().year
+    }
+    return render(request, 'drivers/index.html', context)
 
 
 # =============================================================================
@@ -436,9 +457,8 @@ def prendre_cles(request):
                     Panne.objects.create(
                         chauffeur=chauffeur,
                         description=probleme_mecanique,
-                        date_signalement=today,
-                        severite='moyenne',  # Par défaut
-                        resolue=False
+                        severite='moderee',  # Par défaut (modérée au lieu de moyenne)
+                        statut='signalee'  # Statut par défaut
                     )
                 
                 # Message de succès avec emoji pour la motivation
@@ -533,9 +553,8 @@ def remettre_cles(request):
                     Panne.objects.create(
                         chauffeur=chauffeur,
                         description=probleme_mecanique,
-                        date_signalement=today,
-                        severite='moyenne',  # Par défaut
-                        resolue=False
+                        severite='moderee',  # Par défaut (modérée au lieu de moyenne)
+                        statut='signalee'  # Statut par défaut
                     )
                 
                 # Calcul du message motivant basé sur la performance

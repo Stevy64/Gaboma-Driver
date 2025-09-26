@@ -10,11 +10,11 @@
             <h1 class="display-4 text-primary">
                 <i class="bi bi-taxi-front"></i> Gaboma Drive
             </h1>
-            <p class="lead">Application de suivi d'activité pour chauffeurs de taxi</p>
+            <p class="lead">Application de suivi d'activité dans le domaine du transport au Gabon</p>
         </div>
 
-        <div class="row g-4">
-            <!-- Connexion Chauffeur -->
+        <!-- Connexion Chauffeur -->
+        <div class="row justify-content-center">
             <div class="col-md-6">
                 <div class="card h-100 shadow-sm">
                     <div class="card-body text-center p-5">
@@ -34,25 +34,6 @@
                                 <i class="bi bi-person-plus"></i> Créer un compte
                             </a>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Connexion Admin -->
-            <div class="col-md-6">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body text-center p-5">
-                        <div class="mb-4">
-                            <i class="bi bi-gear-fill text-success" style="font-size: 4rem;"></i>
-                        </div>
-                        <h3 class="card-title">Administrateur</h3>
-                        <p class="card-text text-muted">
-                            Accédez au tableau de bord pour suivre l'activité globale, 
-                            gérer les chauffeurs et consulter les statistiques.
-                        </p>
-                        <a href="{% url 'admin:login' %}" class="btn btn-success btn-lg">
-                            <i class="bi bi-shield-check"></i> Connexion Admin
-                        </a>
                     </div>
                 </div>
             </div>
@@ -89,4 +70,44 @@
         </div>
     </div>
 </div>
+
+<!-- Footer -->
+<footer class="bg-light border-top mt-5 py-4">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-taxi-front text-primary me-2" style="font-size: 1.5rem;"></i>
+                    <div>
+                        <h6 class="mb-0 text-dark fw-bold">Gaboma Drive</h6>
+                        <small class="text-muted">Transport au Gabon</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <div class="d-flex justify-content-md-end align-items-center gap-3">
+                    <small class="text-muted">
+                        <i class="bi bi-envelope me-1"></i>support@gabomadrive.ga
+                    </small>
+                    <small class="text-muted">
+                        <i class="bi bi-telephone me-1"></i>+241 XX XX XX XX
+                    </small>
+                </div>
+            </div>
+        </div>
+        <hr class="my-3 text-muted">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <small class="text-muted">
+                    &copy; {{ current_year }} Gaboma Drive. Tous droits réservés.
+                </small>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <small class="text-muted">
+                    Développé avec <i class="bi bi-heart-fill text-danger"></i> pour le Gabon
+                </small>
+            </div>
+        </div>
+    </div>
+</footer>
 {% endblock %}

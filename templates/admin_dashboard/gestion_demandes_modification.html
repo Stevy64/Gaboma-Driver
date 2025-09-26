@@ -235,6 +235,11 @@
                                                         <i class="bi bi-times me-1"></i>Rejeter
                                                     </button>
                                                 {% endif %}
+                                                <a href="{% url 'admin_dashboard:supprimer_demande_modification' demande.id %}" 
+                                                   class="btn btn-outline-danger btn-sm" title="Supprimer la demande" 
+                                                   onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette demande de modification ?')">
+                                                    <i class="bi bi-trash me-1"></i>Suppr.
+                                                </a>
                                             </div>
                                         </td>
                                     </tr>
@@ -364,6 +369,7 @@ setInterval(function() {
 }, 30000);
 {% endif %}
 </script>
+
 
 <style>
 .avatar-sm {

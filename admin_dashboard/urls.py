@@ -27,4 +27,15 @@ urlpatterns = [
     # =============================================================================
     path('demandes-modification/', views.gestion_demandes_modification, name='gestion_demandes_modification'),
     path('demandes-modification/<int:demande_id>/traiter/', views.traiter_demande_modification, name='traiter_demande_modification'),
+    
+    # =============================================================================
+    # FONCTIONNALITÉS DE SUPPRESSION - Gestion des données
+    # =============================================================================
+    path('supprimer-activite/<int:activite_id>/<str:type_activite>/', views.supprimer_activite, name='supprimer_activite'),
+    path('supprimer-toutes-activites/', views.supprimer_toutes_activites, name='supprimer_toutes_activites'),
+    path('supprimer-demande-modification/<int:demande_id>/', views.supprimer_demande_modification, name='supprimer_demande_modification'),
+    path('reinitialiser-demandes-modification/', views.reinitialiser_demandes_modification, name='reinitialiser_demandes_modification'),
+    path('supprimer-panne/<int:panne_id>/', views.supprimer_panne, name='supprimer_panne'),
+    path('supprimer-toutes-pannes/', views.supprimer_toutes_pannes, name='supprimer_toutes_pannes'),
+    path('logout/', views.logout_admin, name='logout_admin'),
 ]

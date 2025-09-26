@@ -557,19 +557,6 @@ function initializeApp() {
     // Initialisation des alertes persistantes
     initPersistentAlerts();
     
-    // Initialisation des composants Bootstrap
-    initBootstrapComponents();
-    
-    // Initialisation des formulaires
-    initFormValidation();
-    initAutoFormatting();
-    
-    // Initialisation de l'horloge
-    initRealTimeClock();
-    
-    // Initialisation de l'auto-save
-    initAutoSave();
-    
     console.log('🚗 Gaboma Drive - Application initialisée avec succès');
 }
 

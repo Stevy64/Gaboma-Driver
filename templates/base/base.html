@@ -25,7 +25,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top modern-navbar{% if user.is_staff and '/admin-dashboard/' in request.path %} admin-navbar{% endif %}">
         <div class="container">
             <a class="navbar-brand modern-brand" href="{% url 'drivers:index' %}">
-                <i class="bi bi-taxi-front"></i> Gaboma Drive
+                <i class="bi bi-taxi-front"></i> <span class="brand-text">Gaboma Drive</span>
             </a>
             
             <!-- Menu Toggle Moderne -->
@@ -43,37 +43,37 @@
                         {% if user.is_staff %}
                             <!-- Menu Admin -->
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'admin_dashboard:dashboard_admin' %}">
+                                <a class="nav-link{% if '/admin-dashboard/' == request.path %} active{% endif %}" href="{% url 'admin_dashboard:dashboard_admin' %}">
                                     <i class="bi bi-speedometer2"></i> Dashboard
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'admin_dashboard:liste_chauffeurs' %}">
+                                <a class="nav-link{% if '/admin-dashboard/chauffeurs/' in request.path %} active{% endif %}" href="{% url 'admin_dashboard:liste_chauffeurs' %}">
                                     <i class="bi bi-people"></i> Chauffeurs
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'admin_dashboard:statistiques_recettes' %}">
+                                <a class="nav-link{% if '/admin-dashboard/recettes/' in request.path %} active{% endif %}" href="{% url 'admin_dashboard:statistiques_recettes' %}">
                                     <i class="bi bi-graph-up"></i> Recettes
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'admin_dashboard:calendrier_activites' %}">
+                                <a class="nav-link{% if '/admin-dashboard/calendrier/' in request.path %} active{% endif %}" href="{% url 'admin_dashboard:calendrier_activites' %}">
                                     <i class="bi bi-calendar3"></i> Calendrier
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'admin_dashboard:classements' %}">
+                                <a class="nav-link{% if '/admin-dashboard/classements/' in request.path %} active{% endif %}" href="{% url 'admin_dashboard:classements' %}">
                                     <i class="bi bi-trophy"></i> Classements
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'admin_dashboard:gestion_activites' %}">
+                                <a class="nav-link{% if '/admin-dashboard/activites/' in request.path %} active{% endif %}" href="{% url 'admin_dashboard:gestion_activites' %}">
                                     <i class="bi bi-list-task"></i> Activités
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'admin_dashboard:gestion_demandes_modification' %}">
+                                <a class="nav-link{% if '/admin-dashboard/demandes-modification/' in request.path %} active{% endif %}" href="{% url 'admin_dashboard:gestion_demandes_modification' %}">
                                     <i class="bi bi-clipboard-check"></i> Demandes
                                 </a>
                             </li>
@@ -83,7 +83,7 @@
                                     <i class="bi bi-person-circle"></i> Profil
                                 </a>
                                 <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="{% url 'admin:logout' %}">
+                                    <li><a class="dropdown-item" href="{% url 'admin_dashboard:logout_admin' %}">
                                         <i class="bi bi-box-arrow-right"></i> Déconnexion
                                     </a></li>
                                 </ul>
@@ -91,32 +91,32 @@
                         {% else %}
                             <!-- Menu Chauffeur -->
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'drivers:dashboard_chauffeur' %}">
+                                <a class="nav-link{% if '/dashboard/' == request.path %} active{% endif %}" href="{% url 'drivers:dashboard_chauffeur' %}">
                                     <i class="bi bi-speedometer2"></i> Dashboard
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'drivers:nouvelle_activite' %}">
+                                <a class="nav-link{% if '/nouvelle-activite/' in request.path %} active{% endif %}" href="{% url 'drivers:nouvelle_activite' %}">
                                     <i class="bi bi-plus-circle"></i> Nouvelle Activité
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'drivers:activite_mensuelle' %}">
+                                <a class="nav-link{% if '/activite-mensuelle/' in request.path %} active{% endif %}" href="{% url 'drivers:activite_mensuelle' %}">
                                     <i class="bi bi-calendar3"></i> Activité Mensuelle
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'drivers:demander_modification' %}">
+                                <a class="nav-link{% if '/demander-modification/' in request.path %} active{% endif %}" href="{% url 'drivers:demander_modification' %}">
                                     <i class="bi bi-pencil-square"></i> Demande Modification
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'drivers:mes_demandes' %}">
+                                <a class="nav-link{% if '/mes-demandes/' in request.path %} active{% endif %}" href="{% url 'drivers:mes_demandes' %}">
                                     <i class="bi bi-list-check"></i> Mes Demandes
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'drivers:mon_compte' %}">
+                                <a class="nav-link{% if '/mon-compte/' in request.path %} active{% endif %}" href="{% url 'drivers:mon_compte' %}">
                                     <i class="bi bi-person-gear"></i> Mon Compte
                                 </a>
                             </li>
@@ -126,7 +126,7 @@
                                     <i class="bi bi-person-circle"></i> Profil
                                 </a>
                                 <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="{% url 'admin:logout' %}">
+                                    <li><a class="dropdown-item" href="{% url 'drivers:logout_chauffeur' %}">
                                         <i class="bi bi-box-arrow-right"></i> Déconnexion
                                     </a></li>
                                 </ul>

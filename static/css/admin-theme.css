@@ -33,6 +33,49 @@
     box-shadow: 0 6px 25px rgba(0, 0, 0, 0.3);
 }
 
+/* Brand moderne pour admin */
+.modern-navbar.admin-navbar .modern-brand {
+    font-weight: 300 !important; /* Plus fin et léger */
+    font-size: 1.4rem;
+    color: white !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+    letter-spacing: 0.5px; /* Espacement des lettres pour un look plus élégant */
+}
+
+.modern-navbar.admin-navbar .modern-brand:hover {
+    transform: translateY(-1px);
+    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* Style spécifique pour le texte du logo admin */
+.modern-navbar.admin-navbar .modern-brand .brand-text {
+    font-weight: 200 !important; /* Encore plus fin */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    letter-spacing: 1px;
+}
+
+/* Indicateur de position active dans la navigation admin */
+.modern-navbar.admin-navbar .nav-link.active {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border-radius: 8px;
+    font-weight: 500;
+    position: relative;
+}
+
+.modern-navbar.admin-navbar .nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+}
+
 /* Menu mobile admin en grille - UNIQUEMENT pour les petits écrans */
 @media (max-width: 991.98px) {
     .modern-navbar.admin-navbar .navbar-collapse {
@@ -244,10 +287,18 @@
     
     .modern-navbar.admin-navbar .nav-link i,
     .modern-navbar.admin-navbar .nav-link.dropdown-toggle i {
-        font-size: 1rem !important;
+        font-size: 0.9rem !important;
         margin-bottom: 0 !important;
-        margin-right: 0.5rem !important;
+        margin-right: 0.4rem !important;
         color: rgba(255, 255, 255, 0.9) !important;
+    }
+    
+    /* Réduire la taille de police des titres de menu admin pour les grands écrans */
+    .modern-navbar.admin-navbar .nav-link,
+    .modern-navbar.admin-navbar .nav-link.dropdown-toggle {
+        font-size: 0.85rem !important;
+        font-weight: 400 !important;
+        padding: 0.4rem 0.8rem !important;
     }
     
     .modern-navbar.admin-navbar .nav-link:hover,

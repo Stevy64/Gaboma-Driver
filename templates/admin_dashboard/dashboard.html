@@ -169,6 +169,69 @@
     </div>
 </div>
 
+<!-- Problèmes mécaniques récents -->
+{% if pannes_recentes %}
+<div class="row g-3 mt-3">
+    <div class="col-12">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-exclamation-triangle"></i> Problèmes mécaniques récents
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Chauffeur</th>
+                                <th class="d-none d-sm-table-cell">Description</th>
+                                <th>Sévérité</th>
+                                <th>Statut</th>
+                                <th class="d-none d-sm-table-cell">Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for panne in pannes_recentes %}
+                            <tr>
+                                <td>
+                                    <span class="fw-bold">{{ panne.chauffeur.nom_complet }}</span>
+                                </td>
+                                <td class="d-none d-sm-table-cell">
+                                    <span class="text-muted">{{ panne.description|truncatechars:50 }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if panne.severite == 'critique' %}danger{% elif panne.severite == 'majeure' %}warning{% elif panne.severite == 'moderee' %}info{% else %}secondary{% endif %}">
+                                        {{ panne.get_severite_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if panne.statut == 'reparée' %}success{% elif panne.statut == 'en_cours' %}warning{% elif panne.statut == 'signalee' %}primary{% else %}secondary{% endif %}">
+                                        {{ panne.get_statut_display }}
+                                    </span>
+                                </td>
+                                <td class="d-none d-sm-table-cell">
+                                    <small class="text-muted">{{ panne.date_creation|date:"d/m/Y" }}</small>
+                                </td>
+                                <td>
+                                    <a href="{% url 'admin_dashboard:supprimer_panne' panne.id %}" 
+                                       class="btn btn-outline-danger btn-sm" title="Supprimer la panne" 
+                                       onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette panne ?')">
+                                        <i class="bi bi-trash me-1"></i>Suppr.
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <div class="row g-3">
     <!-- Activités récentes -->
     <div class="col-12">

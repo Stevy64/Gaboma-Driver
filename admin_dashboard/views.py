@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth import logout
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Sum, Count, Avg, Q
@@ -18,6 +19,23 @@ try:
 except ImportError:
     OPENPYXL_AVAILABLE = False
 
+
+def logout_admin(request):
+    """
+    Vue de déconnexion pour les administrateurs
+    
+    Cette vue déconnecte l'utilisateur admin et le redirige vers la page d'accueil
+    avec un message de confirmation.
+    
+    Args:
+        request: Objet HttpRequest de l'utilisateur
+        
+    Returns:
+        HttpResponse: Redirection vers la page d'accueil
+    """
+    logout(request)
+    messages.success(request, 'Vous avez été déconnecté avec succès.')
+    return redirect('drivers:index')
 
 @staff_member_required
 def dashboard_admin(request):
@@ -54,7 +72,7 @@ def dashboard_admin(request):
     ).aggregate(total=Sum('recette_realisee'))['total'] or 0
     
     # Pannes (utilisant le modèle Panne)
-    pannes_en_cours = Panne.objects.filter(statut='en_cours').count()
+    pannes_en_cours = Panne.objects.filter(statut__in=['signalee', 'en_cours']).count()
     pannes_critiques = Panne.objects.filter(severite='critique').count()
     
     
@@ -88,6 +106,9 @@ def dashboard_admin(request):
     # Demandes de modification en attente
     demandes_en_attente = DemandeModification.objects.filter(statut='en_attente').count()
     
+    # Pannes récentes pour affichage
+    pannes_recentes = Panne.objects.select_related('chauffeur').order_by('-date_creation')[:5]
+    
     context = {
         'total_chauffeurs': total_chauffeurs,
         'total_activites_aujourdhui': total_activites_aujourdhui,
@@ -100,6 +121,7 @@ def dashboard_admin(request):
         'pannes_critiques': pannes_critiques,
         'demandes_en_attente': demandes_en_attente,
         'activites_recentes': activites_recentes,
+        'pannes_recentes': pannes_recentes,
     }
     
     return render(request, 'admin_dashboard/dashboard.html', context)
@@ -477,7 +499,7 @@ def creer_calendrier_admin_mensuel(annee, mois, prises, remises):
                 }
                 
                 # Calcul du pourcentage de performance
-                if jour_data['objectif'] > 0 and jour_data['recette'] > 0:
+                if jour_data['objectif'] > 0:
                     jour_data['performance'] = int((jour_data['recette'] / jour_data['objectif']) * 100)
                 else:
                     jour_data['performance'] = 0
@@ -1021,6 +1043,17 @@ def traiter_demande_modification(request, demande_id):
                     
                     activite.save()
                     
+                    # Créer une panne si un problème mécanique est signalé dans les nouvelles données
+                    nouveau_probleme = nouvelles_donnees.get('probleme_mecanique', '')
+                    if nouveau_probleme and nouveau_probleme != 'Aucun':
+                        from activities.models import Panne
+                        Panne.objects.create(
+                            chauffeur=demande.chauffeur,
+                            description=nouveau_probleme,
+                            severite='moderee',  # Par défaut
+                            statut='signalee'  # Statut par défaut
+                        )
+                    
                     messages.success(request, f'Demande approuvée et modifications appliquées avec succès.')
                 except Exception as e:
                     messages.error(request, f'Erreur lors de l\'application des modifications: {str(e)}')
@@ -1051,6 +1084,117 @@ def traiter_demande_modification(request, demande_id):
     }
     
     return render(request, 'admin_dashboard/traiter_demande_modification.html', context)
+
+
+@staff_member_required
+def supprimer_activite(request, activite_id, type_activite):
+    """
+    Vue pour supprimer une activité spécifique (prise ou remise de clés)
+    """
+    try:
+        if type_activite == 'prise':
+            activite = get_object_or_404(PriseCles, id=activite_id)
+        else:
+            activite = get_object_or_404(RemiseCles, id=activite_id)
+        
+        chauffeur_nom = activite.chauffeur.nom_complet
+        activite.delete()
+        
+        messages.success(request, f'Activité de {chauffeur_nom} supprimée avec succès.')
+    except Exception as e:
+        messages.error(request, f'Erreur lors de la suppression: {str(e)}')
+    
+    return redirect('admin_dashboard:gestion_activites')
+
+
+@staff_member_required
+def supprimer_toutes_activites(request):
+    """
+    Vue pour supprimer toutes les activités (prises et remises de clés)
+    """
+    if request.method == 'POST':
+        try:
+            # Supprimer toutes les prises de clés
+            prises_count = PriseCles.objects.count()
+            PriseCles.objects.all().delete()
+            
+            # Supprimer toutes les remises de clés
+            remises_count = RemiseCles.objects.count()
+            RemiseCles.objects.all().delete()
+            
+            messages.success(request, f'Toutes les activités ont été supprimées ({prises_count} prises, {remises_count} remises).')
+        except Exception as e:
+            messages.error(request, f'Erreur lors de la suppression: {str(e)}')
+    
+    return redirect('admin_dashboard:gestion_activites')
+
+
+@staff_member_required
+def supprimer_demande_modification(request, demande_id):
+    """
+    Vue pour supprimer une demande de modification spécifique
+    """
+    try:
+        demande = get_object_or_404(DemandeModification, id=demande_id)
+        chauffeur_nom = demande.chauffeur.nom_complet
+        demande.delete()
+        
+        messages.success(request, f'Demande de modification de {chauffeur_nom} supprimée avec succès.')
+    except Exception as e:
+        messages.error(request, f'Erreur lors de la suppression: {str(e)}')
+    
+    return redirect('admin_dashboard:gestion_demandes_modification')
+
+
+@staff_member_required
+def reinitialiser_demandes_modification(request):
+    """
+    Vue pour réinitialiser toutes les demandes de modification
+    """
+    if request.method == 'POST':
+        try:
+            demandes_count = DemandeModification.objects.count()
+            DemandeModification.objects.all().delete()
+            
+            messages.success(request, f'Toutes les demandes de modification ont été supprimées ({demandes_count} demandes).')
+        except Exception as e:
+            messages.error(request, f'Erreur lors de la suppression: {str(e)}')
+    
+    return redirect('admin_dashboard:gestion_demandes_modification')
+
+
+@staff_member_required
+def supprimer_panne(request, panne_id):
+    """
+    Vue pour supprimer une panne spécifique
+    """
+    try:
+        panne = get_object_or_404(Panne, id=panne_id)
+        chauffeur_nom = panne.chauffeur.nom_complet
+        panne.delete()
+        
+        messages.success(request, f'Panne de {chauffeur_nom} supprimée avec succès.')
+    except Exception as e:
+        messages.error(request, f'Erreur lors de la suppression: {str(e)}')
+    
+    return redirect('admin_dashboard:dashboard_admin')
+
+
+@staff_member_required
+def supprimer_toutes_pannes(request):
+    """
+    Vue pour supprimer toutes les pannes
+    """
+    if request.method == 'POST':
+        try:
+            pannes_count = Panne.objects.count()
+            Panne.objects.all().delete()
+            
+            messages.success(request, f'Toutes les pannes ont été supprimées ({pannes_count} pannes).')
+        except Exception as e:
+            messages.error(request, f'Erreur lors de la suppression: {str(e)}')
+    
+    return redirect('admin_dashboard:dashboard_admin')
 
 
 @staff_member_required
