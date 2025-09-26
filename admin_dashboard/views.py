@@ -75,9 +75,6 @@ def dashboard_admin(request):
     activites_recentes.sort(key=lambda x: (x['date'], x['heure']), reverse=True)
     activites_recentes = activites_recentes[:10]
     
-    # Pannes récentes
-    pannes_recentes = Panne.objects.select_related('chauffeur').order_by('-date_creation')[:5]
-    
     # Demandes de modification en attente
     demandes_en_attente = DemandeModification.objects.filter(statut='en_attente').count()
     
@@ -93,7 +90,6 @@ def dashboard_admin(request):
         'pannes_critiques': pannes_critiques,
         'demandes_en_attente': demandes_en_attente,
         'activites_recentes': activites_recentes,
-        'pannes_recentes': pannes_recentes,
     }
     
     return render(request, 'admin_dashboard/dashboard.html', context)
@@ -167,6 +163,7 @@ def statistiques_recettes(request):
     nombre_chauffeurs_actifs = recettes_chauffeurs.count()
     moyenne_par_chauffeur = recette_totale / nombre_chauffeurs_actifs if nombre_chauffeurs_actifs > 0 else 0
     
+    
     context = {
         'periode': periode,
         'date_debut': date_debut,
@@ -183,6 +180,179 @@ def statistiques_recettes(request):
     }
     
     return render(request, 'admin_dashboard/statistiques_recettes.html', context)
+
+
+@staff_member_required
+def calendrier_activites(request):
+    """
+    Calendrier des activités pour l'administrateur
+    
+    Utilise la même logique que le calendrier chauffeur mais pour tous les chauffeurs.
+    """
+    from datetime import timedelta
+    import calendar
+    
+    # Paramètres de navigation
+    today = date.today()
+    annee = int(request.GET.get('annee', today.year))
+    mois = int(request.GET.get('mois', today.month))
+    chauffeur_id = request.GET.get('chauffeur')
+    
+    # Calculer les dates de début et fin du mois
+    mois_debut = date(annee, mois, 1)
+    if mois == 12:
+        mois_fin = date(annee + 1, 1, 1) - timedelta(days=1)
+    else:
+        mois_fin = date(annee, mois + 1, 1) - timedelta(days=1)
+    
+    # Récupération des chauffeurs pour le filtre
+    chauffeurs = Chauffeur.objects.all().order_by('nom', 'prenom')
+    
+    # Récupération des données du mois
+    prises_query = PriseCles.objects.filter(
+        date__gte=mois_debut,
+        date__lte=mois_fin
+    ).select_related('chauffeur').order_by('date')
+    
+    remises_query = RemiseCles.objects.filter(
+        date__gte=mois_debut,
+        date__lte=mois_fin
+    ).select_related('chauffeur').order_by('date')
+    
+    # Filtrage par chauffeur si spécifié
+    if chauffeur_id:
+        prises_query = prises_query.filter(chauffeur_id=chauffeur_id)
+        remises_query = remises_query.filter(chauffeur_id=chauffeur_id)
+    
+    prises_mois = list(prises_query)
+    remises_mois = list(remises_query)
+    
+    # Créer le calendrier du mois (même logique que chauffeur)
+    calendrier = creer_calendrier_admin_mensuel(annee, mois, prises_mois, remises_mois)
+    
+    # Calculer les statistiques du mois
+    total_mois = sum(remise.recette_realisee for remise in remises_mois)
+    jours_travailles = len(remises_mois)
+    moyenne_journaliere = total_mois / jours_travailles if jours_travailles > 0 else 0
+    
+    # Statistiques par mois de l'année
+    stats_par_mois = []
+    for m in range(1, 13):
+        mois_debut_m = date(annee, m, 1)
+        if m == 12:
+            mois_fin_m = date(annee + 1, 1, 1) - timedelta(days=1)
+        else:
+            mois_fin_m = date(annee, m + 1, 1) - timedelta(days=1)
+        
+        remises_m = RemiseCles.objects.filter(
+            date__gte=mois_debut_m, 
+            date__lte=mois_fin_m
+        )
+        if chauffeur_id:
+            remises_m = remises_m.filter(chauffeur_id=chauffeur_id)
+            
+        total_m = sum(remise.recette_realisee for remise in remises_m)
+        jours_m = remises_m.count()
+        
+        stats_par_mois.append({
+            'mois': m,
+            'nom_mois': ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 
+                         'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'][m-1],
+            'total': total_m,
+            'jours': jours_m,
+            'moyenne': total_m / jours_m if jours_m > 0 else 0,
+            'actif': jours_m > 0
+        })
+    
+    context = {
+        'annee': annee,
+        'mois': mois,
+        'mois_debut': mois_debut,
+        'mois_fin': mois_fin,
+        'calendrier': calendrier,
+        'prises_mois': prises_mois,
+        'remises_mois': remises_mois,
+        'total_mois': total_mois,
+        'jours_travailles': jours_travailles,
+        'moyenne_journaliere': moyenne_journaliere,
+        'stats_par_mois': stats_par_mois,
+        'chauffeurs': chauffeurs,
+        'chauffeur_selectionne': chauffeur_id,
+        'today': today,
+    }
+    
+    return render(request, 'admin_dashboard/calendrier_activites.html', context)
+
+
+def creer_calendrier_admin_mensuel(annee, mois, prises, remises):
+    """
+    Créer un calendrier mensuel avec les données d'activité pour l'admin
+    
+    Version adaptée de la fonction chauffeur pour gérer plusieurs chauffeurs.
+    """
+    import calendar
+    
+    # Création du calendrier du mois avec le module calendar
+    cal = calendar.monthcalendar(annee, mois)
+    
+    # Création de dictionnaires pour un accès rapide aux données
+    prises_dict = {}
+    remises_dict = {}
+    
+    # Grouper par date pour gérer plusieurs chauffeurs
+    for prise in prises:
+        if prise.date not in prises_dict:
+            prises_dict[prise.date] = []
+        prises_dict[prise.date].append(prise)
+    
+    for remise in remises:
+        if remise.date not in remises_dict:
+            remises_dict[remise.date] = []
+        remises_dict[remise.date].append(remise)
+    
+    # Construction de la structure de données pour le template
+    calendrier_semaines = []
+    
+    for semaine in cal:
+        semaine_data = []
+        for jour in semaine:
+            if jour == 0:  # Jour vide (hors du mois)
+                semaine_data.append(None)
+            else:
+                # Création de la date du jour
+                jour_date = date(annee, mois, jour)
+                
+                # Récupération des activités pour ce jour
+                prises_jour = prises_dict.get(jour_date, [])
+                remises_jour = remises_dict.get(jour_date, [])
+                
+                # Calcul des totaux pour ce jour
+                total_recette = sum(remise.recette_realisee for remise in remises_jour)
+                total_objectif = sum(prise.objectif_recette for prise in prises_jour)
+                
+                # Construction des données du jour
+                jour_data = {
+                    'jour': jour,
+                    'date': jour_date,
+                    'prises': prises_jour,
+                    'remises': remises_jour,
+                    'recette': total_recette,
+                    'objectif': total_objectif,
+                    'actif': len(prises_jour) > 0 or len(remises_jour) > 0,
+                    'complet': len(prises_jour) > 0 and len(remises_jour) > 0,
+                }
+                
+                # Calcul du pourcentage de performance
+                if jour_data['objectif'] > 0 and jour_data['recette'] > 0:
+                    jour_data['performance'] = int((jour_data['recette'] / jour_data['objectif']) * 100)
+                else:
+                    jour_data['performance'] = 0
+                
+                semaine_data.append(jour_data)
+        
+        calendrier_semaines.append(semaine_data)
+    
+    return calendrier_semaines
 
 
 @staff_member_required

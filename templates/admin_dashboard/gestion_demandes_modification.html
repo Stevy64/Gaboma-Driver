@@ -4,6 +4,9 @@
 {% block title %}Gestion des Demandes de Modification - Gaboma Drive{% endblock %}
 
 {% block content %}
+<!-- Token CSRF pour JavaScript -->
+{% csrf_token %}
+
 <div class="container-fluid">
     <!-- En-tête de la page -->
     <div class="row mb-4">
@@ -222,12 +225,12 @@
                                                 </a>
                                                 {% if demande.statut == 'en_attente' %}
                                                     <button type="button" class="btn btn-success btn-sm" 
-                                                            onclick="traiterDemande({{ demande.id }}, 'approuver')" 
+                                                            onclick="traiterDemandeRapide({{ demande.id }}, 'approuver')" 
                                                             title="Approuver rapidement">
                                                         <i class="fas fa-check me-1"></i>Approuver
                                                     </button>
                                                     <button type="button" class="btn btn-danger btn-sm" 
-                                                            onclick="traiterDemande({{ demande.id }}, 'rejeter')" 
+                                                            onclick="traiterDemandeRapide({{ demande.id }}, 'rejeter')" 
                                                             title="Rejeter rapidement">
                                                         <i class="fas fa-times me-1"></i>Rejeter
                                                     </button>
@@ -313,29 +316,24 @@
 </div>
 
 <script>
-function traiterDemande(demandeId, action) {
-    document.getElementById('demandeId').value = demandeId;
-    document.getElementById('actionDemande').value = action;
+function traiterDemandeRapide(demandeId, action) {
+    const actionText = action === 'approuver' ? 'approuver' : 'rejeter';
     
-    const modal = new bootstrap.Modal(document.getElementById('modalTraitement'));
-    modal.show();
-}
-
-function confirmerTraitement() {
-    const demandeId = document.getElementById('demandeId').value;
-    const action = document.getElementById('actionDemande').value;
-    const commentaire = document.getElementById('commentaire').value;
+    if (!confirm(`Êtes-vous sûr de vouloir ${actionText} cette demande de modification ?`)) {
+        return;
+    }
     
-    // Créer un formulaire dynamique pour soumettre la requête POST
+    // Créer un formulaire temporaire pour la soumission
     const form = document.createElement('form');
     form.method = 'POST';
     form.action = `/admin-dashboard/demandes-modification/${demandeId}/traiter/`;
     
     // Ajouter le token CSRF
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     const csrfInput = document.createElement('input');
     csrfInput.type = 'hidden';
     csrfInput.name = 'csrfmiddlewaretoken';
-    csrfInput.value = '{{ csrf_token }}';
+    csrfInput.value = csrfToken;
     form.appendChild(csrfInput);
     
     // Ajouter l'action
@@ -349,10 +347,10 @@ function confirmerTraitement() {
     const commentaireInput = document.createElement('input');
     commentaireInput.type = 'hidden';
     commentaireInput.name = 'commentaire';
-    commentaireInput.value = commentaire;
+    commentaireInput.value = `${actionText.charAt(0).toUpperCase() + actionText.slice(1)} rapidement`;
     form.appendChild(commentaireInput);
     
-    // Ajouter le formulaire au DOM et le soumettre
+    // Soumettre le formulaire
     document.body.appendChild(form);
     form.submit();
 }

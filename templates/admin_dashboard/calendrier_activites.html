@@ -1,0 +1,744 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Calendrier des Activités - Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .calendar-container {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    
+    .calendar-header {
+        background: linear-gradient(135deg, #1a365d, #2d5a87);
+        color: white;
+        padding: 20px;
+        text-align: center;
+    }
+    
+    .calendar-nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .calendar-nav a {
+        color: white;
+        text-decoration: none;
+        padding: 8px 16px;
+        border-radius: 5px;
+        background: rgba(255, 255, 255, 0.2);
+        transition: background 0.3s;
+    }
+    
+    .calendar-nav a:hover {
+        background: rgba(255, 255, 255, 0.3);
+        color: white;
+    }
+    
+    .calendar-title {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin: 0;
+    }
+    
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 1px;
+        background: #dee2e6;
+    }
+    
+    .calendar-day-header {
+        background: #f8f9fa;
+        padding: 10px;
+        text-align: center;
+        font-weight: bold;
+        color: #495057;
+        border-bottom: 2px solid #dee2e6;
+    }
+    
+    .calendar-day {
+        background: white;
+        min-height: 110px;
+        padding: 4px;
+        border: 1px solid #dee2e6;
+        border-radius: 12px;
+        position: relative;
+        transition: all 0.3s;
+        cursor: pointer;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    
+    .calendar-day:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .calendar-day.empty {
+        background: #f8f9fa;
+        color: #adb5bd;
+        cursor: default;
+        border-radius: 8px;
+    }
+    
+    .calendar-day.empty:hover {
+        transform: none;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    
+    .calendar-day.today {
+        border: 2px solid #2196f3;
+        box-shadow: 0 4px 8px rgba(33, 150, 243, 0.2);
+    }
+    
+    /* Couleurs de performance pour les cellules actives */
+    .calendar-day.actif.performance-excellent {
+        background: linear-gradient(135deg, #d4edda, #c3e6cb);
+        border: 1px solid #28a745;
+    }
+    
+    .calendar-day.actif.performance-bien {
+        background: linear-gradient(135deg, #d1ecf1, #bee5eb);
+        border: 1px solid #17a2b8;
+    }
+    
+    .calendar-day.actif.performance-moyen {
+        background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+        border: 1px solid #ffc107;
+    }
+    
+    .calendar-day.actif.performance-faible {
+        background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+        border: 1px solid #dc3545;
+    }
+    
+    .calendar-day.actif:not(.performance-excellent):not(.performance-bien):not(.performance-moyen):not(.performance-faible) {
+        background: linear-gradient(135deg, #e8f5e8, #d4edda);
+        border: 1px solid #28a745;
+    }
+    
+    .day-number {
+        font-weight: bold;
+        margin-bottom: 2px;
+        font-size: 0.8rem;
+        text-align: center;
+    }
+    
+    .day-content {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 2px;
+        min-height: 90px;
+    }
+    
+    .day-chauffeur {
+        font-size: 0.7rem;
+        color: #495057;
+        margin-bottom: 2px;
+        text-align: center;
+    }
+    
+    .chauffeur-name {
+        font-weight: 500;
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .day-revenue {
+        font-size: 0.75rem;
+        color: #28a745;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 2px;
+        background: rgba(40, 167, 69, 0.1);
+        padding: 2px 4px;
+        border-radius: 3px;
+    }
+    
+    .day-click-hint {
+        font-size: 0.5rem;
+        color: #6c757d;
+        text-align: center;
+        opacity: 0.6;
+        margin-top: auto;
+    }
+    
+    .day-stats {
+        font-size: 0.75rem;
+        color: #6c757d;
+        margin-bottom: 2px;
+    }
+    
+    .day-stats .badge {
+        font-size: 0.8rem;
+        font-weight: bold;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .day-stats .badge.bg-success {
+        background: linear-gradient(135deg, #28a745, #20c997) !important;
+        border: 2px solid #fff;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+    
+    .day-performance {
+        font-size: 0.7rem;
+        font-weight: bold;
+        padding: 2px 4px;
+        border-radius: 3px;
+        text-align: center;
+        margin-top: 2px;
+        margin-bottom: 2px;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .performance-excellent {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .performance-bien {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+    
+    .performance-moyen {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .performance-faible {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .stats-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .stat-card {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+    
+    .stat-card h6 {
+        margin: 0 0 8px 0;
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    
+    .stat-card .value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #495057;
+    }
+    
+    .filters {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+    
+    .print-button {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1000;
+    }
+    
+    /* Styles responsives pour mobile */
+    @media (max-width: 768px) {
+        .calendar-grid {
+            gap: 0.5px;
+        }
+        
+        .calendar-day {
+            min-height: 90px;
+            padding: 2px;
+            border-radius: 10px;
+        }
+        
+        .calendar-day.empty {
+            border-radius: 6px;
+        }
+        
+        .day-number {
+            font-size: 0.7rem;
+        }
+        
+        .day-chauffeur {
+            font-size: 0.6rem;
+        }
+        
+        .day-revenue {
+            font-size: 0.65rem;
+            padding: 1px 2px;
+        }
+        
+        .day-performance {
+            font-size: 0.6rem;
+            padding: 1px 2px;
+            margin-top: 1px;
+            margin-bottom: 1px;
+        }
+        
+        .day-click-hint {
+            font-size: 0.5rem;
+        }
+        
+        .calendar-day-header {
+            padding: 5px;
+            font-size: 0.8rem;
+        }
+        
+        .stats-cards {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        
+        .stat-card {
+            padding: 10px;
+        }
+        
+        .stat-card h6 {
+            font-size: 0.8rem;
+        }
+        
+        .stat-card .value {
+            font-size: 1rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .calendar-day {
+            min-height: 80px;
+            padding: 1px;
+            border-radius: 8px;
+        }
+        
+        .calendar-day.empty {
+            border-radius: 4px;
+        }
+        
+        .day-number {
+            font-size: 0.6rem;
+        }
+        
+        .day-chauffeur {
+            font-size: 0.55rem;
+        }
+        
+        .day-revenue {
+            font-size: 0.6rem;
+            padding: 1px;
+        }
+        
+        .day-performance {
+            font-size: 0.55rem;
+            padding: 1px;
+            margin-top: 1px;
+            margin-bottom: 1px;
+        }
+        
+        .calendar-day-header {
+            padding: 3px;
+            font-size: 0.7rem;
+        }
+        
+        .stats-cards {
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+        
+        .filters .row {
+            margin: 0;
+        }
+        
+        .filters .col-md-3,
+        .filters .col-md-2 {
+            margin-bottom: 10px;
+        }
+    }
+    
+    .legend {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-top: 20px;
+    }
+    
+    .legend-items {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 10px;
+    }
+    
+    .legend-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+    
+    .legend-color {
+        width: 20px;
+        height: 20px;
+        border-radius: 6px;
+        margin-right: 10px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    
+    .legend-color.performance-excellent {
+        background: linear-gradient(135deg, #d4edda, #c3e6cb);
+        border-color: #28a745;
+    }
+    
+    .legend-color.performance-bien {
+        background: linear-gradient(135deg, #d1ecf1, #bee5eb);
+        border-color: #17a2b8;
+    }
+    
+    .legend-color.performance-moyen {
+        background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+        border-color: #ffc107;
+    }
+    
+    .legend-color.performance-faible {
+        background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+        border-color: #dc3545;
+    }
+    
+    @media print {
+        .calendar-nav a,
+        .filters,
+        .print-button {
+            display: none !important;
+        }
+        
+        .calendar-container {
+            box-shadow: none;
+            border: 1px solid #000;
+        }
+        
+        .calendar-header {
+            background: #f8f9fa !important;
+            color: #000 !important;
+        }
+        
+        .calendar-day {
+            min-height: 100px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0 text-gray-800">
+                        <i class="bi bi-calendar3 me-2"></i>Calendrier des Activités
+                    </h1>
+                    <p class="text-muted mb-0">Vue d'ensemble des activités de tous les chauffeurs</p>
+                </div>
+                <div>
+                    <a href="{% url 'admin_dashboard:dashboard_admin' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Retour au Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtre actif -->
+    {% if chauffeur_selectionne %}
+        <div class="alert alert-info">
+            <i class="fas fa-filter me-2"></i>
+            <strong>Filtre actif :</strong> 
+            {% for chauffeur in chauffeurs %}
+                {% if chauffeur.id|stringformat:"s" == chauffeur_selectionne %}
+                    {{ chauffeur.nom_complet }}
+                {% endif %}
+            {% endfor %}
+            <a href="{% url 'admin_dashboard:calendrier_activites' %}?annee={{ annee }}&mois={{ mois }}" class="btn btn-sm btn-outline-secondary ms-2">
+                <i class="fas fa-times me-1"></i>Supprimer le filtre
+            </a>
+        </div>
+    {% endif %}
+
+    <!-- Statistiques du mois -->
+    <div class="stats-cards">
+        <div class="stat-card">
+            <h6>Total du Mois</h6>
+            <div class="value">{{ total_mois|floatformat:0 }} FCFA</div>
+        </div>
+        <div class="stat-card">
+            <h6>Jours Travaillés</h6>
+            <div class="value">{{ jours_travailles }}</div>
+        </div>
+        <div class="stat-card">
+            <h6>Moyenne Journalière</h6>
+            <div class="value">{{ moyenne_journaliere|floatformat:0 }} FCFA</div>
+        </div>
+        <div class="stat-card">
+            <h6>Prises de Clés</h6>
+            <div class="value">{{ prises_mois|length }}</div>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="filters">
+        <form method="GET" class="filter-form" id="calendar-filter-form" action="">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label for="chauffeur" class="form-label">Chauffeur</label>
+                    <select class="form-select" id="chauffeur" name="chauffeur">
+                        <option value="">Tous les chauffeurs</option>
+                        {% for chauffeur in chauffeurs %}
+                            <option value="{{ chauffeur.id }}" 
+                                    {% if chauffeur_selectionne == chauffeur.id|stringformat:"s" %}selected{% endif %}>
+                                {{ chauffeur.nom_complet }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="mois" class="form-label">Mois</label>
+                    <select class="form-select" id="mois" name="mois">
+                        <option value="1" {% if mois == 1 %}selected{% endif %}>Janvier</option>
+                        <option value="2" {% if mois == 2 %}selected{% endif %}>Février</option>
+                        <option value="3" {% if mois == 3 %}selected{% endif %}>Mars</option>
+                        <option value="4" {% if mois == 4 %}selected{% endif %}>Avril</option>
+                        <option value="5" {% if mois == 5 %}selected{% endif %}>Mai</option>
+                        <option value="6" {% if mois == 6 %}selected{% endif %}>Juin</option>
+                        <option value="7" {% if mois == 7 %}selected{% endif %}>Juillet</option>
+                        <option value="8" {% if mois == 8 %}selected{% endif %}>Août</option>
+                        <option value="9" {% if mois == 9 %}selected{% endif %}>Septembre</option>
+                        <option value="10" {% if mois == 10 %}selected{% endif %}>Octobre</option>
+                        <option value="11" {% if mois == 11 %}selected{% endif %}>Novembre</option>
+                        <option value="12" {% if mois == 12 %}selected{% endif %}>Décembre</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="annee" class="form-label">Année</label>
+                    <select class="form-select" id="annee" name="annee">
+                        <option value="2023" {% if annee == 2023 %}selected{% endif %}>2023</option>
+                        <option value="2024" {% if annee == 2024 %}selected{% endif %}>2024</option>
+                        <option value="2025" {% if annee == 2025 %}selected{% endif %}>2025</option>
+                        <option value="2026" {% if annee == 2026 %}selected{% endif %}>2026</option>
+                        <option value="2027" {% if annee == 2027 %}selected{% endif %}>2027</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-grid">
+                        <input type="submit" class="btn btn-primary" value="🔍 Filtrer" id="filter-submit-btn">
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Calendrier -->
+    <div class="calendar-container">
+        <div class="calendar-header">
+            <div class="calendar-nav">
+                {% if mois == 1 %}
+                    <a href="?annee={{ annee|add:"-1" }}&mois=12{% if chauffeur_selectionne %}&chauffeur={{ chauffeur_selectionne }}{% endif %}">
+                        <i class="fas fa-chevron-left me-1"></i>Mois Précédent
+                    </a>
+                {% else %}
+                    <a href="?annee={{ annee }}&mois={{ mois|add:"-1" }}{% if chauffeur_selectionne %}&chauffeur={{ chauffeur_selectionne }}{% endif %}">
+                        <i class="fas fa-chevron-left me-1"></i>Mois Précédent
+                    </a>
+                {% endif %}
+                
+                <h2 class="calendar-title">{{ mois|date:"F" }} {{ annee }}</h2>
+                
+                {% if mois == 12 %}
+                    <a href="?annee={{ annee|add:"1" }}&mois=1{% if chauffeur_selectionne %}&chauffeur={{ chauffeur_selectionne }}{% endif %}">
+                        Mois Suivant<i class="fas fa-chevron-right ms-1"></i>
+                    </a>
+                {% else %}
+                    <a href="?annee={{ annee }}&mois={{ mois|add:"1" }}{% if chauffeur_selectionne %}&chauffeur={{ chauffeur_selectionne }}{% endif %}">
+                        Mois Suivant<i class="fas fa-chevron-right ms-1"></i>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="calendar-grid">
+            <!-- En-têtes des jours -->
+            <div class="calendar-day-header">Lun</div>
+            <div class="calendar-day-header">Mar</div>
+            <div class="calendar-day-header">Mer</div>
+            <div class="calendar-day-header">Jeu</div>
+            <div class="calendar-day-header">Ven</div>
+            <div class="calendar-day-header">Sam</div>
+            <div class="calendar-day-header">Dim</div>
+            
+            <!-- Jours du calendrier -->
+            {% for semaine in calendrier %}
+                {% for jour_data in semaine %}
+                    {% if jour_data %}
+                        <div class="calendar-day {% if jour_data.date == today %}today{% endif %} {% if jour_data.actif %}actif{% endif %} {% if jour_data.complet %}complet{% endif %} {% if jour_data.performance >= 100 %}performance-excellent{% elif jour_data.performance >= 80 %}performance-bien{% elif jour_data.performance >= 60 %}performance-moyen{% elif jour_data.performance > 0 %}performance-faible{% endif %}">
+                            <div class="day-number">{{ jour_data.jour }}</div>
+                            
+                            {% if jour_data.actif %}
+                                <!-- Cellule cliquable pour voir les détails -->
+                                <div class="day-content" onclick="voirDetailsJour('{{ jour_data.date|date:"Y-m-d" }}')">
+                                    <!-- Chauffeur principal (le premier) -->
+                                    {% if jour_data.prises %}
+                                        <div class="day-chauffeur">
+                                            <i class="fas fa-user me-1"></i>
+                                            <span class="chauffeur-name">{{ jour_data.prises.0.chauffeur.nom_complet }}</span>
+                                        </div>
+                                    {% elif jour_data.remises %}
+                                        <div class="day-chauffeur">
+                                            <i class="fas fa-user me-1"></i>
+                                            <span class="chauffeur-name">{{ jour_data.remises.0.chauffeur.nom_complet }}</span>
+                                        </div>
+                                    {% endif %}
+                                    
+                                    <!-- Recette du jour -->
+                                    <div class="day-revenue">
+                                        <i class="fas fa-coins me-1"></i>
+                                        <strong>{{ jour_data.recette|floatformat:0 }} FCFA</strong>
+                                    </div>
+                                    
+                                    <!-- Performance -->
+                                    {% if jour_data.performance > 0 %}
+                                        <div class="day-performance 
+                                            {% if jour_data.performance >= 100 %}performance-excellent
+                                            {% elif jour_data.performance >= 80 %}performance-bien
+                                            {% elif jour_data.performance >= 60 %}performance-moyen
+                                            {% else %}performance-faible{% endif %}">
+                                            {{ jour_data.performance }}%
+                                        </div>
+                                    {% endif %}
+                                    
+                                    <!-- Indicateur de clic -->
+                                    <div class="day-click-hint">
+                                        <i class="fas fa-eye"></i>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <div class="calendar-day empty"></div>
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Légende -->
+    <div class="legend">
+        <h6>Légende des Couleurs de Performance :</h6>
+        <div class="legend-items">
+            <div class="legend-item">
+                <div class="legend-color performance-excellent"></div>
+                <span>Excellent (≥100%)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color performance-bien"></div>
+                <span>Bien (80-99%)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color performance-moyen"></div>
+                <span>Moyen (60-79%)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color performance-faible"></div>
+                <span>Faible (<60%)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #e3f2fd; border: 2px solid #2196f3; border-radius: 8px;"></div>
+                <span>Aujourd'hui</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bouton d'impression -->
+<button class="btn btn-primary print-button" onclick="window.print()">
+    <i class="fas fa-print me-1"></i>Imprimer
+</button>
+
+<script>
+// Script pour le formulaire de filtre
+console.log('🔍 Script de filtre chargé');
+
+// Test immédiat
+setTimeout(function() {
+    const form = document.getElementById('calendar-filter-form');
+    const btn = document.querySelector('#filter-submit-btn');
+    
+    if (form && btn) {
+        // Test de clic
+        btn.addEventListener('click', function() {
+            console.log('🎯 Bouton cliqué!');
+            
+            // Test de soumission
+            const formData = new FormData(form);
+            const params = new URLSearchParams(formData);
+            console.log('📊 Données:', params.toString());
+            
+            // Soumission manuelle si nécessaire
+            if (form.action === '') {
+                console.log('🚀 Soumission manuelle...');
+                window.location.href = '?' + params.toString();
+            }
+        });
+    }
+}, 1000);
+
+// Fonction pour voir les détails d'un jour
+function voirDetailsJour(date) {
+    console.log('📅 Voir détails pour:', date);
+    
+    // Construire l'URL vers la page de gestion des activités avec filtre par date
+    const url = '{% url "admin_dashboard:gestion_activites" %}?date_debut=' + date + '&date_fin=' + date;
+    
+    // Ouvrir dans un nouvel onglet
+    window.open(url, '_blank');
+}
+
+// Améliorer l'expérience tactile sur mobile
+document.addEventListener('DOMContentLoaded', function() {
+    const calendarDays = document.querySelectorAll('.calendar-day.actif');
+    
+    calendarDays.forEach(function(day) {
+        // Ajouter un effet de tap sur mobile
+        day.addEventListener('touchstart', function() {
+            this.style.transform = 'scale(0.95)';
+        });
+        
+        day.addEventListener('touchend', function() {
+            this.style.transform = 'scale(1)';
+        });
+    });
+});
+</script>
+{% endblock %}

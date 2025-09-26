@@ -217,18 +217,21 @@
                         
                         <div class="d-flex justify-content-between">
                             <div>
-                                <button type="submit" name="action" value="rejeter" class="btn btn-danger me-2"
-                                        onclick="return confirm('Êtes-vous sûr de vouloir rejeter cette demande ?')">
+                                <button type="button" class="btn btn-danger me-2"
+                                        onclick="soumettreAction('rejeter')">
                                     <i class="fas fa-times me-1"></i>Rejeter la Demande
                                 </button>
                             </div>
                             <div>
-                                <button type="submit" name="action" value="approuver" class="btn btn-success"
-                                        onclick="return confirm('Êtes-vous sûr de vouloir approuver cette demande ? Les modifications seront appliquées immédiatement.')">
+                                <button type="button" class="btn btn-success"
+                                        onclick="soumettreAction('approuver')">
                                     <i class="fas fa-check me-1"></i>Approuver la Demande
                                 </button>
                             </div>
                         </div>
+                        
+                        <!-- Champ caché pour l'action -->
+                        <input type="hidden" id="action_hidden" name="action" value="">
                     </form>
                 </div>
             </div>
@@ -254,4 +257,18 @@
     font-size: 14px;
 }
 </style>
+
+<script>
+function soumettreAction(action) {
+    const actionText = action === 'approuver' ? 'approuver' : 'rejeter';
+    const message = action === 'approuver' 
+        ? 'Êtes-vous sûr de vouloir approuver cette demande ? Les modifications seront appliquées immédiatement.'
+        : 'Êtes-vous sûr de vouloir rejeter cette demande ?';
+    
+    if (confirm(message)) {
+        document.getElementById('action_hidden').value = action;
+        document.querySelector('form').submit();
+    }
+}
+</script>
 {% endblock %}

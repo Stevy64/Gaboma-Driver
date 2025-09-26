@@ -243,22 +243,27 @@ def dashboard_chauffeur(request):
     nouvelle_activite_possible = not prise_aujourdhui and current_hour >= 3  # Nouvelle activité possible après 3h
     
     # =============================================================================
-    # RÉCUPÉRATION DES DONNÉES HISTORIQUES - 7 derniers jours
+    # RÉCUPÉRATION DES DONNÉES HISTORIQUES - Semaine courante
     # =============================================================================
     
-    # Calcul de la date de début de la semaine (7 jours en arrière)
-    week_start = today - timezone.timedelta(days=7)
+    # Calcul du début et fin de la semaine courante (lundi à dimanche)
+    # Trouver le lundi de la semaine courante
+    days_since_monday = today.weekday()  # 0 = lundi, 6 = dimanche
+    week_start = today - timezone.timedelta(days=days_since_monday)
+    week_end = week_start + timezone.timedelta(days=6)
     
-    # Récupération des prises de clés des 7 derniers jours
+    # Récupération des prises de clés de la semaine courante uniquement
     prises_recentes = PriseCles.objects.filter(
         chauffeur=chauffeur,
-        date__gte=week_start
+        date__gte=week_start,
+        date__lte=week_end
     ).order_by('-date')[:7]  # Limitation à 7 enregistrements
     
-    # Récupération des remises de clés des 7 derniers jours
+    # Récupération des remises de clés de la semaine courante uniquement
     remises_recentes = RemiseCles.objects.filter(
         chauffeur=chauffeur,
-        date__gte=week_start
+        date__gte=week_start,
+        date__lte=week_end
     ).order_by('-date')[:7]  # Limitation à 7 enregistrements
     
     # =============================================================================
@@ -300,10 +305,11 @@ def dashboard_chauffeur(request):
     # CALCUL DES STATISTIQUES DE LA SEMAINE
     # =============================================================================
     
-    # Récupération de toutes les remises de clés de la semaine
+    # Récupération de toutes les remises de clés de la semaine courante uniquement
     recettes_semaine = RemiseCles.objects.filter(
         chauffeur=chauffeur,
-        date__gte=week_start
+        date__gte=week_start,
+        date__lte=week_end
     ).order_by('-date')
     
     # Calcul du total des recettes de la semaine
@@ -414,7 +420,7 @@ def prendre_cles(request):
                     raise ValueError()
                 
                 # Création de l'enregistrement de prise de clés
-                PriseCles.objects.create(
+                prise_cles = PriseCles.objects.create(
                     chauffeur=chauffeur,
                     date=today,
                     heure_prise=timezone.now().time(),  # Heure actuelle
@@ -423,6 +429,17 @@ def prendre_cles(request):
                     probleme_mecanique=probleme_mecanique,
                     signature=signature
                 )
+                
+                # Création d'une panne si un problème mécanique est signalé
+                if probleme_mecanique and probleme_mecanique != 'Aucun':
+                    from activities.models import Panne
+                    Panne.objects.create(
+                        chauffeur=chauffeur,
+                        description=probleme_mecanique,
+                        date_signalement=today,
+                        severite='moyenne',  # Par défaut
+                        resolue=False
+                    )
                 
                 # Message de succès avec emoji pour la motivation
                 messages.success(request, '✅ La journée peut commencer, bonne route !')
@@ -509,6 +526,17 @@ def remettre_cles(request):
                     probleme_mecanique=probleme_mecanique,
                     signature=signature
                 )
+                
+                # Création d'une panne si un problème mécanique est signalé
+                if probleme_mecanique and probleme_mecanique != 'Aucun':
+                    from activities.models import Panne
+                    Panne.objects.create(
+                        chauffeur=chauffeur,
+                        description=probleme_mecanique,
+                        date_signalement=today,
+                        severite='moyenne',  # Par défaut
+                        resolue=False
+                    )
                 
                 # Calcul du message motivant basé sur la performance
                 # La méthode get_objectif_atteint() compare la recette avec l'objectif
@@ -1018,7 +1046,7 @@ def demander_modification(request):
                 'probleme_mecanique': activite.probleme_mecanique,
             }
             nouvelles_donnees = {
-                'recette_realisee': int(request.POST.get('nouveau_recette_realisee', 0)),
+                'recette_realisee': int(float(request.POST.get('nouveau_recette_realisee', 0))),
                 'plein_carburant': request.POST.get('nouveau_plein_carburant') == 'on',
                 'probleme_mecanique': request.POST.get('nouveau_probleme_mecanique', ''),
             }
