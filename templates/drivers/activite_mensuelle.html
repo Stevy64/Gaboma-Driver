@@ -67,8 +67,10 @@
         min-height: 120px;
         padding: 8px;
         border: 1px solid #dee2e6;
+        border-radius: 12px;
         position: relative;
         transition: all 0.3s;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
     
     .calendar-day:hover {
@@ -80,6 +82,7 @@
     .calendar-day.empty {
         background: #f8f9fa;
         color: #adb5bd;
+        border-radius: 8px;
     }
     
     .calendar-day.today {
@@ -145,6 +148,68 @@
     .performance-good { background: #ffc107; }
     .performance-poor { background: #dc3545; }
     .performance-none { background: #6c757d; }
+    
+    .day-revenue {
+        font-size: 0.7rem;
+        color: #28a745;
+        font-weight: bold;
+        background: rgba(40, 167, 69, 0.1);
+        padding: 2px 4px;
+        border-radius: 3px;
+        margin-top: 2px;
+        text-align: center;
+    }
+    
+    /* Styles pour l'appréciation de performance */
+    .performance-circle {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+        font-weight: bold;
+        font-size: 1.2rem;
+        color: white;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+    
+    .performance-circle.excellent {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+    }
+    
+    .performance-circle.good {
+        background: linear-gradient(135deg, #ffc107, #fd7e14);
+        box-shadow: 0 4px 8px rgba(255, 193, 7, 0.3);
+    }
+    
+    .performance-circle.poor {
+        background: linear-gradient(135deg, #dc3545, #e83e8c);
+        box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+    }
+    
+    /* Couleurs des cellules du calendrier basées sur la performance */
+    .calendar-day.performance-excellent {
+        background: linear-gradient(135deg, #d4edda, #c3e6cb);
+        border-left: 4px solid #28a745;
+    }
+    
+    .calendar-day.performance-good {
+        background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+        border-left: 4px solid #ffc107;
+    }
+    
+    .calendar-day.performance-poor {
+        background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+        border-left: 4px solid #dc3545;
+    }
+    
+    .calendar-day.performance-none {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-left: 4px solid #6c757d;
+    }
     
     .stats-card {
         background: white;
@@ -237,6 +302,142 @@
         color: #6c757d;
         margin-left: 10px;
     }
+    
+    /* Styles responsives pour petits écrans */
+    @media (max-width: 768px) {
+        .calendar-day {
+            min-height: 100px;
+            padding: 6px;
+            border-radius: 10px;
+        }
+        
+        .calendar-day.empty {
+            border-radius: 6px;
+        }
+        
+        .day-number {
+            font-size: 1rem;
+            margin-bottom: 3px;
+        }
+        
+        .day-activity {
+            font-size: 0.7rem;
+        }
+        
+        .activity-badge {
+            font-size: 0.6rem;
+            padding: 1px 4px;
+        }
+        
+        .performance-indicator {
+            width: 10px;
+            height: 10px;
+            top: 3px;
+            right: 3px;
+        }
+        
+        .day-revenue {
+            font-size: 0.65rem;
+            padding: 1px 3px;
+        }
+        
+        .calendar-day-header {
+            padding: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        
+        .stat-item {
+            padding: 12px;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .calendar-day {
+            min-height: 90px;
+            padding: 4px;
+            border-radius: 8px;
+        }
+        
+        .calendar-day.empty {
+            border-radius: 4px;
+        }
+        
+        .day-number {
+            font-size: 0.9rem;
+            margin-bottom: 2px;
+        }
+        
+        .day-activity {
+            font-size: 0.65rem;
+        }
+        
+        .activity-badge {
+            font-size: 0.55rem;
+            padding: 1px 3px;
+        }
+        
+        .performance-indicator {
+            width: 8px;
+            height: 8px;
+            top: 2px;
+            right: 2px;
+        }
+        
+        .day-revenue {
+            font-size: 0.6rem;
+            padding: 1px 2px;
+        }
+        
+        .calendar-day-header {
+            padding: 6px;
+            font-size: 0.8rem;
+        }
+        
+        .stats-grid {
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+        
+        .stat-item {
+            padding: 10px;
+        }
+        
+        .stat-value {
+            font-size: 1.3rem;
+        }
+        
+        .stat-label {
+            font-size: 0.75rem;
+        }
+        
+        .calendar-title {
+            font-size: 1.2rem;
+        }
+        
+        .calendar-nav a {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+        
+        .performance-circle {
+            width: 60px;
+            height: 60px;
+            font-size: 1rem;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -262,23 +463,100 @@
         </div>
     </div>
 
-    <!-- Statistiques du mois -->
-    <div class="stats-grid">
-        <div class="stat-item">
-            <div class="stat-value">{{ total_mois|floatformat:0 }}</div>
-            <div class="stat-label">Total Recettes (FCFA)</div>
+
+    <!-- Appréciation de la performance de la semaine -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="stats-card">
+                <h5><i class="bi bi-star-fill"></i> Appréciation de votre Performance</h5>
+                <div class="alert {% if performance_semaine >= 100 %}alert-success{% elif performance_semaine >= 80 %}alert-warning{% else %}alert-danger{% endif %}">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h6 class="mb-1">
+                                {% if performance_semaine >= 100 %}
+                                    <i class="bi bi-trophy-fill text-success"></i> Excellent Travail !
+                                {% elif performance_semaine >= 80 %}
+                                    <i class="bi bi-star-fill text-warning"></i> Bon Travail !
+                                {% else %}
+                                    <i class="bi bi-exclamation-triangle-fill text-danger"></i> Attention !
+                                {% endif %}
+                            </h6>
+                            <p class="mb-0">
+                                {% if performance_semaine >= 100 %}
+                                    Félicitations ! Vous avez dépassé vos objectifs cette semaine avec une performance de {{ performance_semaine|floatformat:1 }}%. Continuez ainsi !
+                                {% elif performance_semaine >= 80 %}
+                                    Vous êtes sur la bonne voie avec une performance de {{ performance_semaine|floatformat:1 }}%. Quelques efforts supplémentaires pour atteindre vos objectifs !
+                                {% else %}
+                                    Votre performance cette semaine est de {{ performance_semaine|floatformat:1 }}%. Il est temps de redoubler d'efforts pour améliorer vos résultats !
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div class="performance-circle {% if performance_semaine >= 100 %}excellent{% elif performance_semaine >= 80 %}good{% else %}poor{% endif %}">
+                                <span class="performance-value">{{ performance_semaine|floatformat:0 }}%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="stat-item">
-            <div class="stat-value">{{ jours_travailles }}</div>
-            <div class="stat-label">Jours Travaillés</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-value">{{ moyenne_journaliere|floatformat:0 }}</div>
-            <div class="stat-label">Moyenne Journalière (FCFA)</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-value">{{ total_annee|floatformat:0 }}</div>
-            <div class="stat-label">Total Année (FCFA)</div>
+    </div>
+
+    <!-- Recettes hebdomadaires et journalières -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="stats-card">
+                <h5><i class="bi bi-graph-up-arrow"></i> Vue Hebdomadaire et Journalière</h5>
+                <div class="row">
+                    <div class="col-md-4 col-sm-6 mb-3">
+                        <div class="card border-primary">
+                            <div class="card-body text-center">
+                                <h6 class="card-title text-primary">
+                                    <i class="bi bi-calendar-day"></i> Recette du Jour
+                                </h6>
+                                <h4 class="text-primary">{{ recette_jour|floatformat:0 }}</h4>
+                                <small class="text-muted">FCFA</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-sm-6 mb-3">
+                        <div class="card border-success">
+                            <div class="card-body text-center">
+                                <h6 class="card-title text-success">
+                                    <i class="bi bi-calendar-week"></i> Recette de la Semaine
+                                </h6>
+                                <h4 class="text-success">{{ recette_semaine|floatformat:0 }}</h4>
+                                <small class="text-muted">FCFA</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-sm-12 mb-3">
+                        <div class="card border-info">
+                            <div class="card-body text-center">
+                                <h6 class="card-title text-info">
+                                    <i class="bi bi-calendar-month"></i> Recette du Mois
+                                </h6>
+                                <h4 class="text-info">{{ total_mois|floatformat:0 }}</h4>
+                                <small class="text-muted">FCFA</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Informations sur la semaine en cours -->
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            <h6><i class="bi bi-info-circle"></i> Semaine en cours</h6>
+                            <p class="mb-0">
+                                <strong>Période :</strong> {{ semaine_debut|date:"d/m/Y" }} - {{ semaine_fin|date:"d/m/Y" }}<br>
+                                <strong>Jours travaillés cette semaine :</strong> {{ jours_travailles_semaine }}<br>
+                                <strong>Moyenne journalière cette semaine :</strong> {{ moyenne_semaine|floatformat:0 }} FCFA
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -310,7 +588,7 @@
             {% for semaine in calendrier %}
                 {% for jour in semaine %}
                     {% if jour %}
-                        <div class="calendar-day {% if jour.actif %}actif{% endif %} {% if jour.complet %}complet{% endif %} {% if jour.date == today %}today{% endif %}">
+                        <div class="calendar-day {% if jour.actif %}actif{% endif %} {% if jour.complet %}complet{% endif %} {% if jour.date == today %}today{% endif %} {% if jour.performance >= 100 %}performance-excellent{% elif jour.performance >= 80 %}performance-good{% elif jour.performance > 0 %}performance-poor{% else %}performance-none{% endif %}">
                             <div class="day-number">{{ jour.jour }}</div>
                             
                             <!-- Indicateur de performance -->
@@ -341,8 +619,8 @@
                                 {% endif %}
                                 
                                 {% if jour.recette > 0 %}
-                                    <div style="font-size: 0.7rem; color: #28a745; font-weight: bold;">
-                                        {{ jour.recette|floatformat:0 }} FCFA
+                                    <div class="day-revenue">
+                                        <i class="bi bi-cash-coin"></i> {{ jour.recette|floatformat:0 }} FCFA
                                     </div>
                                 {% endif %}
                                 
@@ -394,32 +672,47 @@
     <div class="row mt-4">
         <div class="col-12">
             <div class="stats-card">
-                <h5><i class="bi bi-info-circle"></i> Légende</h5>
+                <h5><i class="bi bi-info-circle"></i> Légende des Couleurs de Performance</h5>
                 <div class="row">
-                    <div class="col-md-3">
-                        <div class="d-flex align-items-center mb-2">
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="d-flex align-items-center">
                             <div class="performance-indicator performance-excellent me-2"></div>
-                            <span>Performance ≥ 100%</span>
+                            <div>
+                                <strong class="text-success">Excellent</strong><br>
+                                <small class="text-muted">Performance ≥ 100%</small>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <div class="d-flex align-items-center mb-2">
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="d-flex align-items-center">
                             <div class="performance-indicator performance-good me-2"></div>
-                            <span>Performance 90-99%</span>
+                            <div>
+                                <strong class="text-warning">Bon</strong><br>
+                                <small class="text-muted">Performance 80-99%</small>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <div class="d-flex align-items-center mb-2">
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="d-flex align-items-center">
                             <div class="performance-indicator performance-poor me-2"></div>
-                            <span>Performance < 90%</span>
+                            <div>
+                                <strong class="text-danger">À améliorer</strong><br>
+                                <small class="text-muted">Performance < 80%</small>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <div class="d-flex align-items-center mb-2">
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="d-flex align-items-center">
                             <div class="performance-indicator performance-none me-2"></div>
-                            <span>Aucune activité</span>
+                            <div>
+                                <strong class="text-muted">Aucune activité</strong><br>
+                                <small class="text-muted">Pas de données</small>
+                            </div>
                         </div>
                     </div>
+                </div>
+                <div class="alert alert-info mt-3">
+                    <i class="bi bi-lightbulb"></i> <strong>Astuce :</strong> Les cellules du calendrier sont colorées selon votre performance quotidienne pour vous aider à identifier vos meilleurs et moins bons jours.
                 </div>
             </div>
         </div>

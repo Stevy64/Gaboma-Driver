@@ -122,7 +122,7 @@
         <div class="card">
             <div class="card-header bg-primary text-white">
                 <h5 class="mb-0">
-                    <i class="fas fa-cogs me-2"></i> Gestion des Activités et Demandes
+                    <i class="bi bi-cogs me-2"></i> Gestion des Activités et Demandes
                 </h5>
             </div>
             <div class="card-body">
@@ -130,11 +130,11 @@
                     <div class="col-md-4">
                         <div class="card border-primary h-100">
                             <div class="card-body text-center">
-                                <i class="fas fa-tasks fa-3x text-primary mb-3"></i>
+                                <i class="bi bi-tasks fa-3x text-primary mb-3"></i>
                                 <h5 class="card-title">Gestion des Activités</h5>
                                 <p class="card-text">Consultez toutes les activités des chauffeurs avec filtres avancés.</p>
                                 <a href="{% url 'admin_dashboard:gestion_activites' %}" class="btn btn-primary">
-                                    <i class="fas fa-eye me-1"></i>Voir les Activités
+                                    <i class="bi bi-eye me-1"></i>Voir les Activités
                                 </a>
                             </div>
                         </div>
@@ -142,11 +142,11 @@
                     <div class="col-md-4">
                         <div class="card border-warning h-100">
                             <div class="card-body text-center">
-                                <i class="fas fa-edit fa-3x text-warning mb-3"></i>
+                                <i class="bi bi-edit fa-3x text-warning mb-3"></i>
                                 <h5 class="card-title">Demandes de Modification</h5>
                                 <p class="card-text">Approuvez ou rejetez les demandes de modification d'activité.</p>
                                 <a href="{% url 'admin_dashboard:gestion_demandes_modification' %}" class="btn btn-warning">
-                                    <i class="fas fa-list me-1"></i>Gérer les Demandes
+                                    <i class="bi bi-list me-1"></i>Gérer les Demandes
                                 </a>
                             </div>
                         </div>
@@ -154,11 +154,11 @@
                     <div class="col-md-4">
                         <div class="card border-info h-100">
                             <div class="card-body text-center">
-                                <i class="fas fa-chart-line fa-3x text-info mb-3"></i>
+                                <i class="bi bi-chart-line fa-3x text-info mb-3"></i>
                                 <h5 class="card-title">Statistiques Avancées</h5>
                                 <p class="card-text">Analysez les performances et les tendances des chauffeurs.</p>
                                 <a href="{% url 'admin_dashboard:statistiques_recettes' %}" class="btn btn-info">
-                                    <i class="fas fa-chart-bar me-1"></i>Voir les Stats
+                                    <i class="bi bi-chart-bar me-1"></i>Voir les Stats
                                 </a>
                             </div>
                         </div>
@@ -208,7 +208,7 @@
                                         {% endif %}
                                     </td>
                                     <td class="fw-bold">
-                                        <i class="fas fa-clock me-1"></i>{{ activite.date_heure|date:"H:i" }}
+                                        <i class="bi bi-clock me-1"></i>{{ activite.date_heure|date:"H:i" }}
                                     </td>
                                 </tr>
                                 {% endfor %}

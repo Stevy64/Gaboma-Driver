@@ -13,6 +13,371 @@
    ============================================================================= */
 
 /* =============================================================================
+   NAVIGATION ADMIN MODERNE
+   ============================================================================= */
+
+/* Navbar admin avec thème sombre */
+.modern-navbar.admin-navbar {
+    background: rgba(26, 54, 93, 1) !important; /* Dark blue pour admin - opaque par défaut */
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Effet de scroll pour l'admin - Transparence uniquement au scroll */
+.modern-navbar.admin-navbar.scrolled {
+    background: rgba(26, 54, 93, 0.85) !important; /* Dark blue transparent au scroll */
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* Menu mobile admin en grille - UNIQUEMENT pour les petits écrans */
+@media (max-width: 991.98px) {
+    .modern-navbar.admin-navbar .navbar-collapse {
+        background: rgba(26, 54, 93, 0.95);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 12px;
+        margin-top: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    /* Grille admin pour les éléments de navigation - Toujours 2 colonnes avec distribution équitable */
+    .modern-navbar.admin-navbar .navbar-nav {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.75rem;
+        margin: 0 auto;
+        padding: 0;
+        width: 100%;
+        max-width: 400px; /* Limiter la largeur pour une meilleure symétrie */
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .modern-navbar.admin-navbar .nav-item {
+        margin: 0;
+        animation: none;
+        opacity: 1;
+        transform: none;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .modern-navbar.admin-navbar .nav-link {
+        margin: 0;
+        padding: 1rem 0.75rem !important;
+        border-radius: 12px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 80px;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.9) !important;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    .modern-navbar.admin-navbar .nav-link i {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+        margin-right: 0;
+        color: rgba(255, 255, 255, 0.9);
+    }
+    
+    .modern-navbar.admin-navbar .nav-link:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        border-color: rgba(255, 255, 255, 0.3);
+        color: white !important;
+    }
+    
+    .modern-navbar.admin-navbar .nav-link:hover i {
+        color: white;
+    }
+    
+    /* Styles uniformes pour tous les liens dans la grille mobile admin */
+    .modern-navbar.admin-navbar .nav-link.dropdown-toggle {
+        margin: 0;
+        padding: 1rem 0.75rem !important;
+        border-radius: 12px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 80px;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.9) !important;
+        width: 100%;
+        box-sizing: border-box;
+        position: relative;
+    }
+    
+    /* Masquer la flèche dropdown par défaut dans la grille mobile admin */
+    .modern-navbar.admin-navbar .nav-link.dropdown-toggle::after {
+        display: none !important;
+    }
+    
+    /* Icônes uniformes pour les éléments dropdown admin */
+    .modern-navbar.admin-navbar .nav-link.dropdown-toggle i {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+        margin-right: 0;
+        color: rgba(255, 255, 255, 0.9);
+    }
+    
+    /* Effet de survol uniforme pour dropdown admin */
+    .modern-navbar.admin-navbar .nav-link.dropdown-toggle:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        border-color: rgba(255, 255, 255, 0.3);
+        color: white !important;
+    }
+    
+    .modern-navbar.admin-navbar .nav-link.dropdown-toggle:hover i {
+        color: white;
+    }
+    
+    /* Menu dropdown adapté pour mobile admin */
+    .modern-navbar.admin-navbar .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(26, 54, 93, 0.95);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        min-width: 150px;
+        z-index: 1000;
+        margin-top: 0.5rem;
+    }
+    
+    .modern-navbar.admin-navbar .dropdown-item {
+        color: rgba(255, 255, 255, 0.9) !important;
+        padding: 0.75rem 1rem;
+        border-radius: 4px;
+        margin: 0.25rem;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+    }
+    
+    .modern-navbar.admin-navbar .dropdown-item:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white !important;
+    }
+    
+    .modern-navbar.admin-navbar .dropdown-item i {
+        margin-right: 0.5rem;
+        font-size: 1rem;
+    }
+}
+
+/* Styles pour les GRANDS ÉCRANS ADMIN - Ancien affichage horizontal */
+@media (min-width: 992px) {
+    .modern-navbar.admin-navbar .navbar-nav {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: auto !important;
+        max-width: none !important;
+        gap: 0 !important;
+    }
+    
+    .modern-navbar.admin-navbar .nav-item {
+        margin: 0 !important;
+        width: auto !important;
+        display: block !important;
+        justify-content: unset !important;
+        align-items: unset !important;
+    }
+    
+    .modern-navbar.admin-navbar .nav-link,
+    .modern-navbar.admin-navbar .nav-link.dropdown-toggle {
+        margin: 0 !important;
+        padding: 0.5rem 1rem !important;
+        border-radius: 6px !important;
+        text-align: left !important;
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        min-height: auto !important;
+        background: transparent !important;
+        border: none !important;
+        width: auto !important;
+        box-sizing: border-box !important;
+        position: relative !important;
+        color: rgba(255, 255, 255, 0.9) !important;
+    }
+    
+    /* Restaurer la flèche dropdown sur les grands écrans admin */
+    .modern-navbar.admin-navbar .nav-link.dropdown-toggle::after {
+        display: inline-block !important;
+        margin-left: 0.255em;
+        vertical-align: 0.255em;
+        content: "";
+        border-top: 0.3em solid;
+        border-right: 0.3em solid transparent;
+        border-bottom: 0;
+        border-left: 0.3em solid transparent;
+    }
+    
+    .modern-navbar.admin-navbar .nav-link i,
+    .modern-navbar.admin-navbar .nav-link.dropdown-toggle i {
+        font-size: 1rem !important;
+        margin-bottom: 0 !important;
+        margin-right: 0.5rem !important;
+        color: rgba(255, 255, 255, 0.9) !important;
+    }
+    
+    .modern-navbar.admin-navbar .nav-link:hover,
+    .modern-navbar.admin-navbar .nav-link.dropdown-toggle:hover {
+        background: rgba(255, 255, 255, 0.1) !important;
+        transform: none !important;
+        box-shadow: none !important;
+        border-color: transparent !important;
+        color: white !important;
+    }
+    
+    .modern-navbar.admin-navbar .nav-link:hover i,
+    .modern-navbar.admin-navbar .nav-link.dropdown-toggle:hover i {
+        color: white !important;
+    }
+    
+    /* Menu dropdown pour grands écrans admin */
+    .modern-navbar.admin-navbar .dropdown-menu {
+        position: absolute !important;
+        top: 100% !important;
+        left: 0 !important;
+        transform: none !important;
+        background: rgba(26, 54, 93, 0.95) !important;
+        backdrop-filter: blur(15px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 8px !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+        min-width: 200px !important;
+        z-index: 1000 !important;
+        margin-top: 0.25rem !important;
+    }
+    
+    .modern-navbar.admin-navbar .dropdown-item {
+        color: rgba(255, 255, 255, 0.9) !important;
+        padding: 0.5rem 1rem !important;
+        border-radius: 4px !important;
+        margin: 0.125rem !important;
+        transition: all 0.3s ease !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+    
+    .modern-navbar.admin-navbar .dropdown-item:hover {
+        background: rgba(255, 255, 255, 0.2) !important;
+        color: white !important;
+    }
+    
+    .modern-navbar.admin-navbar .dropdown-item i {
+        margin-right: 0.5rem !important;
+        font-size: 0.875rem !important;
+    }
+    
+    /* Gestion des nombres impairs d'éléments pour la symétrie admin */
+    .modern-navbar.admin-navbar .navbar-nav:has(.nav-item:nth-child(odd):last-child) {
+        grid-template-columns: 1fr 1fr !important;
+    }
+    
+    .modern-navbar.admin-navbar .navbar-nav:has(.nav-item:nth-child(odd):last-child) .nav-item:last-child {
+        grid-column: 1 / -1; /* Prendre toute la largeur pour le dernier élément impair */
+        justify-self: center;
+        max-width: 200px; /* Limiter la largeur pour éviter qu'il soit trop large */
+    }
+    
+    /* Responsive pour très petits écrans admin - Garder 2 colonnes */
+    @media (max-width: 480px) {
+        .modern-navbar.admin-navbar .navbar-nav {
+            grid-template-columns: repeat(2, 1fr) !important; /* Toujours 2 colonnes */
+            gap: 0.5rem;
+            max-width: 350px; /* Réduire la largeur max sur mobile */
+        }
+        
+        .modern-navbar.admin-navbar .nav-link,
+        .modern-navbar.admin-navbar .nav-link.dropdown-toggle {
+            min-height: 70px;
+            padding: 0.75rem 0.5rem !important;
+        }
+        
+        .modern-navbar.admin-navbar .nav-link i,
+        .modern-navbar.admin-navbar .nav-link.dropdown-toggle i {
+            font-size: 1.25rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .modern-navbar.admin-navbar .nav-link span {
+            font-size: 0.8rem;
+        }
+        
+        /* Ajustement pour les éléments impairs sur mobile admin */
+        .modern-navbar.admin-navbar .navbar-nav:has(.nav-item:nth-child(odd):last-child) .nav-item:last-child {
+            max-width: 150px;
+        }
+        
+        /* Ajustement des dropdowns sur mobile admin */
+        .modern-navbar.admin-navbar .dropdown-menu {
+            min-width: 120px;
+            font-size: 0.9rem;
+        }
+        
+        .modern-navbar.admin-navbar .dropdown-item {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.85rem;
+        }
+    }
+    
+    /* Pour les écrans très étroits admin - Forcer 2 colonnes */
+    @media (max-width: 360px) {
+        .modern-navbar.admin-navbar .navbar-nav {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 0.4rem;
+        }
+        
+        .modern-navbar.admin-navbar .nav-link,
+        .modern-navbar.admin-navbar .nav-link.dropdown-toggle {
+            min-height: 65px;
+            padding: 0.6rem 0.4rem !important;
+        }
+        
+        .modern-navbar.admin-navbar .nav-link i,
+        .modern-navbar.admin-navbar .nav-link.dropdown-toggle i {
+            font-size: 1.1rem;
+            margin-bottom: 0.2rem;
+        }
+        
+        .modern-navbar.admin-navbar .nav-link span {
+            font-size: 0.75rem;
+        }
+    }
+}
+
+/* =============================================================================
    BARRE DE NAVIGATION ADMIN - Dark Blue
    ============================================================================= */
 
@@ -28,15 +393,25 @@
 .navbar-nav .nav-link {
     color: #e2e8f0 !important;
     font-weight: 500;
+}
+
+/* S'assurer que les icônes sont visibles dans la navigation admin */
+.navbar-nav .nav-link .bi {
+    color: #e2e8f0 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    margin-right: 0.5rem;
+    font-size: 1rem;
+}
+
+/* Effet hover sur les liens de navigation */
+.navbar-nav .nav-link:hover {
+    color: #ffffff !important;
+    background-color: rgba(74, 144, 226, 0.2);
     transition: all 0.3s ease;
     border-radius: 6px;
     margin: 0 2px;
     padding: 8px 12px !important;
-}
-
-.navbar-nav .nav-link:hover {
-    color: #ffffff !important;
-    background-color: rgba(255, 255, 255, 0.1);
     transform: translateY(-1px);
 }
 

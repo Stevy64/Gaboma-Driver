@@ -8,6 +8,8 @@
  * pour l'interface utilisateur de l'application de suivi d'activité de taxi.
  * 
  * Fonctionnalités principales :
+ * - Navigation moderne avec effet de scroll
+ * - Menu hamburger animé
  * - Gestion des alertes persistantes avec animation
  * - Validation des formulaires en temps réel
  * - Formatage automatique des données (téléphone, montants)
@@ -18,6 +20,107 @@
  * Compatibilité : ES5+ (pour support navigateurs anciens)
  * Dépendances : Bootstrap 5, jQuery (optionnel)
  */
+
+// =============================================================================
+// NAVIGATION MODERNE - Effet de scroll et animations
+// =============================================================================
+
+/**
+ * Initialise la navigation moderne avec effet de scroll
+ * 
+ * Cette fonction ajoute un effet de transparence et de flou à la navbar
+ * quand l'utilisateur fait défiler la page, créant un effet moderne et élégant.
+ */
+function initModernNavigation() {
+    const navbar = document.querySelector('.modern-navbar');
+    if (!navbar) return;
+    
+    // Fonction pour gérer l'effet de scroll
+    function handleScroll() {
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        
+        if (scrollTop > 50) {
+            navbar.classList.add('scrolled');
+        } else {
+            navbar.classList.remove('scrolled');
+        }
+    }
+    
+    // Écouter l'événement de scroll
+    window.addEventListener('scroll', handleScroll);
+    
+    // Initialiser l'état au chargement
+    handleScroll();
+}
+
+/**
+ * Initialise les animations du menu hamburger
+ * 
+ * Cette fonction gère les animations fluides du menu hamburger
+ * pour une expérience utilisateur moderne et intuitive.
+ */
+function initHamburgerAnimations() {
+    const toggler = document.querySelector('.modern-toggler');
+    if (!toggler) return;
+    
+    // Animation au clic
+    toggler.addEventListener('click', function() {
+        const isExpanded = this.getAttribute('aria-expanded') === 'true';
+        
+        // Animation des barres du hamburger
+        const spans = this.querySelectorAll('.hamburger span');
+        spans.forEach((span, index) => {
+            span.style.transitionDelay = `${index * 0.1}s`;
+        });
+        
+        // Effet de vibration légère
+        this.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+            this.style.transform = 'scale(1)';
+        }, 150);
+    });
+    
+    // Animation au survol
+    toggler.addEventListener('mouseenter', function() {
+        this.style.transform = 'scale(1.05)';
+    });
+    
+    toggler.addEventListener('mouseleave', function() {
+        if (this.getAttribute('aria-expanded') !== 'true') {
+            this.style.transform = 'scale(1)';
+        }
+    });
+}
+
+/**
+ * Initialise les animations des liens de navigation
+ * 
+ * Cette fonction ajoute des effets visuels aux liens de navigation
+ * pour une expérience utilisateur plus engageante.
+ */
+function initNavigationAnimations() {
+    const navLinks = document.querySelectorAll('.modern-navbar .nav-link');
+    
+    navLinks.forEach(link => {
+        // Effet de survol avec délai
+        link.addEventListener('mouseenter', function() {
+            this.style.transitionDelay = '0s';
+        });
+        
+        link.addEventListener('mouseleave', function() {
+            this.style.transitionDelay = '0.1s';
+        });
+        
+        // Effet de clic
+        link.addEventListener('click', function() {
+            // Animation de clic
+            this.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                this.style.transform = '';
+            }, 150);
+        });
+    });
+}
 
 // =============================================================================
 // GESTION DES ALERTES PERSISTANTES - Système d'alertes avec auto-dismiss
@@ -433,4 +536,56 @@ function showAlert(type, message) {
     if (container) {
         container.insertAdjacentHTML('afterbegin', alertHtml);
     }
+}
+
+// =============================================================================
+// INITIALISATION PRINCIPALE - Démarrage de toutes les fonctionnalités
+// =============================================================================
+
+/**
+ * Initialise toutes les fonctionnalités JavaScript de l'application
+ * 
+ * Cette fonction est appelée au chargement de la page et démarre
+ * toutes les fonctionnalités JavaScript nécessaires.
+ */
+function initializeApp() {
+    // Initialisation de la navigation moderne
+    initModernNavigation();
+    initHamburgerAnimations();
+    initNavigationAnimations();
+    
+    // Initialisation des alertes persistantes
+    initPersistentAlerts();
+    
+    // Initialisation des composants Bootstrap
+    initBootstrapComponents();
+    
+    // Initialisation des formulaires
+    initFormValidation();
+    initAutoFormatting();
+    
+    // Initialisation de l'horloge
+    initRealTimeClock();
+    
+    // Initialisation de l'auto-save
+    initAutoSave();
+    
+    console.log('🚗 Gaboma Drive - Application initialisée avec succès');
+}
+
+// =============================================================================
+// DÉMARRAGE AUTOMATIQUE - Lancement au chargement de la page
+// =============================================================================
+
+// Attendre que le DOM soit complètement chargé
+document.addEventListener('DOMContentLoaded', function() {
+    // Délai pour s'assurer que tous les styles sont chargés
+    setTimeout(initializeApp, 100);
+});
+
+// Initialisation immédiate si le DOM est déjà chargé
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeApp);
+} else {
+    initializeApp();
 }

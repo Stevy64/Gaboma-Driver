@@ -20,20 +20,25 @@
     
     {% block extra_css %}{% endblock %}
 </head>
-<body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+<body class="body-with-fixed-nav">
+    <!-- Navigation Fixe et Stylée -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top modern-navbar{% if user.is_staff and '/admin-dashboard/' in request.path %} admin-navbar{% endif %}">
         <div class="container">
-            <a class="navbar-brand" href="{% url 'drivers:index' %}">
+            <a class="navbar-brand modern-brand" href="{% url 'drivers:index' %}">
                 <i class="bi bi-taxi-front"></i> Gaboma Drive
             </a>
             
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
+            <!-- Menu Toggle Moderne -->
+            <button class="navbar-toggler modern-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <div class="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
             </button>
             
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
+                <ul class="navbar-nav">
                     {% if user.is_authenticated %}
                         {% if user.is_staff %}
                             <!-- Menu Admin -->
@@ -64,45 +69,71 @@
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="{% url 'admin_dashboard:gestion_activites' %}">
-                                    <i class="fas fa-tasks"></i> Activités
+                                    <i class="bi bi-list-task"></i> Activités
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="{% url 'admin_dashboard:gestion_demandes_modification' %}">
-                                    <i class="fas fa-edit"></i> Demandes
+                                    <i class="bi bi-clipboard-check"></i> Demandes
                                 </a>
+                            </li>
+                            <!-- Profil Admin -->
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-person-circle"></i> Profil
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="{% url 'admin:logout' %}">
+                                        <i class="bi bi-box-arrow-right"></i> Déconnexion
+                                    </a></li>
+                                </ul>
                             </li>
                         {% else %}
                             <!-- Menu Chauffeur -->
                             <li class="nav-item">
                                 <a class="nav-link" href="{% url 'drivers:dashboard_chauffeur' %}">
-                                    <i class="bi bi-speedometer2"></i> Mon Dashboard
+                                    <i class="bi bi-speedometer2"></i> Dashboard
                                 </a>
                             </li>
-                        {% endif %}
-                    {% endif %}
-                </ul>
-                
-                <ul class="navbar-nav">
-                    {% if user.is_authenticated %}
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="bi bi-person-circle"></i> {{ user.get_full_name|default:user.username }}
-                            </a>
-                            <ul class="dropdown-menu">
-                                {% if not user.is_staff %}
-                                    <!-- Menu spécifique aux chauffeurs -->
-                                    <li><a class="dropdown-item" href="{% url 'drivers:nouvelle_activite' %}">
-                                        <i class="bi bi-plus-circle"></i> Nouvelle Activité
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'drivers:nouvelle_activite' %}">
+                                    <i class="bi bi-plus-circle"></i> Nouvelle Activité
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'drivers:activite_mensuelle' %}">
+                                    <i class="bi bi-calendar3"></i> Activité Mensuelle
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'drivers:demander_modification' %}">
+                                    <i class="bi bi-pencil-square"></i> Demande Modification
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'drivers:mes_demandes' %}">
+                                    <i class="bi bi-list-check"></i> Mes Demandes
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'drivers:mon_compte' %}">
+                                    <i class="bi bi-person-gear"></i> Mon Compte
+                                </a>
+                            </li>
+                            <!-- Profil Chauffeur -->
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-person-circle"></i> Profil
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="{% url 'admin:logout' %}">
+                                        <i class="bi bi-box-arrow-right"></i> Déconnexion
                                     </a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                {% endif %}
-                                <li><a class="dropdown-item" href="{% url 'admin:logout' %}">
-                                    <i class="bi bi-box-arrow-right"></i> Déconnexion
-                                </a></li>
-                            </ul>
-                        </li>
+                                </ul>
+                            </li>
+                        {% endif %}
                     {% else %}
+                        <!-- Menu Non Connecté -->
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'drivers:login_chauffeur' %}">
                                 <i class="bi bi-person"></i> Connexion Chauffeur

@@ -11,13 +11,13 @@
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h1 class="h3 mb-0 text-gray-800">
-                        <i class="fas fa-edit me-2"></i>Traiter la Demande de Modification
+                        <i class="bi bi-edit me-2"></i>Traiter la Demande de Modification
                     </h1>
                     <p class="text-muted mb-0">Examinez et traitez la demande de modification d'activité</p>
                 </div>
                 <div>
                     <a href="{% url 'admin_dashboard:gestion_demandes_modification' %}" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left me-1"></i>Retour aux Demandes
+                        <i class="bi bi-arrow-left me-1"></i>Retour aux Demandes
                     </a>
                 </div>
             </div>
@@ -30,7 +30,7 @@
             <div class="card shadow mb-4">
                 <div class="card-header bg-primary text-white">
                     <h5 class="card-title mb-0">
-                        <i class="fas fa-info-circle me-2"></i>Informations de la Demande
+                        <i class="bi bi-info-circle me-2"></i>Informations de la Demande
                     </h5>
                 </div>
                 <div class="card-body">
@@ -54,11 +54,11 @@
                         <div class="col-sm-8">
                             {% if demande.type_activite == 'prise' %}
                                 <span class="badge bg-info">
-                                    <i class="fas fa-key me-1"></i>Prise de clés
+                                    <i class="bi bi-key me-1"></i>Prise de clés
                                 </span>
                             {% else %}
                                 <span class="badge bg-success">
-                                    <i class="fas fa-hand-holding me-1"></i>Remise de clés
+                                    <i class="bi bi-hand-holding me-1"></i>Remise de clés
                                 </span>
                             {% endif %}
                         </div>
@@ -74,15 +74,15 @@
                         <div class="col-sm-8">
                             {% if demande.statut == 'en_attente' %}
                                 <span class="badge bg-warning">
-                                    <i class="fas fa-clock me-1"></i>En attente
+                                    <i class="bi bi-clock me-1"></i>En attente
                                 </span>
                             {% elif demande.statut == 'approuvee' %}
                                 <span class="badge bg-success">
-                                    <i class="fas fa-check me-1"></i>Approuvée
+                                    <i class="bi bi-check me-1"></i>Approuvée
                                 </span>
                             {% else %}
                                 <span class="badge bg-danger">
-                                    <i class="fas fa-times me-1"></i>Rejetée
+                                    <i class="bi bi-times me-1"></i>Rejetée
                                 </span>
                             {% endif %}
                         </div>
@@ -125,7 +125,7 @@
             <div class="card shadow mb-4">
                 <div class="card-header bg-info text-white">
                     <h5 class="card-title mb-0">
-                        <i class="fas fa-exchange-alt me-2"></i>Comparaison des Données
+                        <i class="bi bi-exchange-alt me-2"></i>Comparaison des Données
                     </h5>
                 </div>
                 <div class="card-body">
@@ -186,7 +186,7 @@
                         </div>
                     {% else %}
                         <div class="alert alert-warning">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <i class="bi bi-exclamation-triangle me-2"></i>
                             L'activité concernée n'a pas été trouvée. Il est possible qu'elle ait été supprimée.
                         </div>
                     {% endif %}
@@ -202,7 +202,7 @@
             <div class="card shadow">
                 <div class="card-header bg-warning text-dark">
                     <h5 class="card-title mb-0">
-                        <i class="fas fa-cogs me-2"></i>Actions de Traitement
+                        <i class="bi bi-cogs me-2"></i>Actions de Traitement
                     </h5>
                 </div>
                 <div class="card-body">
@@ -219,13 +219,13 @@
                             <div>
                                 <button type="button" class="btn btn-danger me-2"
                                         onclick="soumettreAction('rejeter')">
-                                    <i class="fas fa-times me-1"></i>Rejeter la Demande
+                                    <i class="bi bi-times me-1"></i>Rejeter la Demande
                                 </button>
                             </div>
                             <div>
                                 <button type="button" class="btn btn-success"
                                         onclick="soumettreAction('approuver')">
-                                    <i class="fas fa-check me-1"></i>Approuver la Demande
+                                    <i class="bi bi-check me-1"></i>Approuver la Demande
                                 </button>
                             </div>
                         </div>
@@ -241,7 +241,7 @@
     <div class="row">
         <div class="col-12">
             <div class="alert alert-info">
-                <i class="fas fa-info-circle me-2"></i>
+                <i class="bi bi-info-circle me-2"></i>
                 Cette demande a déjà été traitée le {{ demande.date_traitement|date:"d/m/Y à H:i" }} 
                 par {{ demande.admin_traite.get_full_name|default:demande.admin_traite.username }}.
             </div>

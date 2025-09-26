@@ -4,9 +4,19 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Sum, Count, Avg, Q
 from django.utils import timezone
+from django.http import HttpResponse
 from datetime import datetime, date, timedelta
 from drivers.models import Chauffeur
 from activities.models import Activite, Recette, Panne, PriseCles, RemiseCles, DemandeModification
+
+# Import conditionnel d'openpyxl pour éviter les erreurs si le module n'est pas installé
+try:
+    import openpyxl
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.utils import get_column_letter
+    OPENPYXL_AVAILABLE = True
+except ImportError:
+    OPENPYXL_AVAILABLE = False
 
 
 @staff_member_required
@@ -110,22 +120,27 @@ def liste_chauffeurs(request):
 @staff_member_required
 def statistiques_recettes(request):
     """
-    Statistiques des recettes avec filtres par période
+    Statistiques des recettes avec filtres par période et chauffeur
     
     Affiche les recettes en FCFA pour différentes périodes :
     - Par chauffeur avec nombre de jours travaillés
     - Par jour avec évolution temporelle
     - Totaux par période (jour, semaine, mois, année)
+    - Graphiques et disques statistiques enrichis
     """
-    # Filtres de période
+    # Filtres de période et chauffeur
     periode = request.GET.get('periode', 'mois')
+    chauffeur_id = request.GET.get('chauffeur', '')
     
+    # Définition des périodes
     if periode == 'jour':
         date_debut = date.today()
         date_fin = date.today()
     elif periode == 'semaine':
-        date_debut = date.today() - timedelta(days=7)
-        date_fin = date.today()
+        # Semaine courante (lundi à dimanche)
+        today = date.today()
+        date_debut = today - timedelta(days=today.weekday())
+        date_fin = date_debut + timedelta(days=6)
     elif periode == 'mois':
         date_debut = date.today().replace(day=1)
         date_fin = date.today()
@@ -136,36 +151,148 @@ def statistiques_recettes(request):
         date_debut = date.today().replace(day=1)
         date_fin = date.today()
     
+    # Filtre par chauffeur si spécifié
+    chauffeur_filter = {}
+    if chauffeur_id:
+        try:
+            chauffeur = Chauffeur.objects.get(id=chauffeur_id)
+            chauffeur_filter = {'chauffeur': chauffeur}
+        except Chauffeur.DoesNotExist:
+            chauffeur = None
+    else:
+        chauffeur = None
+    
     # Recettes par chauffeur (utilisant les nouveaux modèles)
     recettes_chauffeurs = Chauffeur.objects.filter(
         remisecles__date__gte=date_debut,
         remisecles__date__lte=date_fin
     ).annotate(
         total_recettes=Sum('remisecles__recette_realisee'),
-        nb_jours=Count('remisecles', distinct=True)
+        nb_jours=Count('remisecles', distinct=True),
+        moyenne_journaliere=Avg('remisecles__recette_realisee')
     ).filter(total_recettes__gt=0).order_by('-total_recettes')
     
     # Recettes par jour (utilisant les nouveaux modèles)
     recettes_par_jour = RemiseCles.objects.filter(
         date__gte=date_debut,
-        date__lte=date_fin
+        date__lte=date_fin,
+        **chauffeur_filter
     ).values('date').annotate(
-        total=Sum('recette_realisee')
+        total=Sum('recette_realisee'),
+        nb_chauffeurs=Count('chauffeur', distinct=True)
     ).order_by('date')
     
     # Calcul des totaux
     recette_totale = RemiseCles.objects.filter(
         date__gte=date_debut,
-        date__lte=date_fin
+        date__lte=date_fin,
+        **chauffeur_filter
     ).aggregate(Sum('recette_realisee'))['recette_realisee__sum'] or 0
     
     # Statistiques supplémentaires
     nombre_chauffeurs_actifs = recettes_chauffeurs.count()
     moyenne_par_chauffeur = recette_totale / nombre_chauffeurs_actifs if nombre_chauffeurs_actifs > 0 else 0
     
+    # Données pour les graphiques
+    # 1. Données pour le graphique en barres (recettes par jour)
+    chart_data_daily = []
+    for recette_jour in recettes_par_jour:
+        chart_data_daily.append({
+            'date': recette_jour['date'].strftime('%d/%m'),
+            'recette': float(recette_jour['total']),
+            'nb_chauffeurs': recette_jour['nb_chauffeurs']
+        })
+    
+    # 2. Données pour le graphique en secteurs (répartition par chauffeur)
+    chart_data_chauffeurs = []
+    for chauffeur_data in recettes_chauffeurs:
+        chart_data_chauffeurs.append({
+            'nom': chauffeur_data.nom_complet,
+            'recette': float(chauffeur_data.total_recettes),
+            'nb_jours': chauffeur_data.nb_jours,
+            'moyenne': float(chauffeur_data.moyenne_journaliere or 0)
+        })
+    
+    # 3. Statistiques pour les disques de performance
+    # Calcul de la performance moyenne
+    performances_chauffeurs = []
+    for chauffeur_data in recettes_chauffeurs:
+        # Récupérer les objectifs pour ce chauffeur sur la période
+        objectifs_chauffeur = PriseCles.objects.filter(
+            chauffeur=chauffeur_data,
+            date__gte=date_debut,
+            date__lte=date_fin
+        ).aggregate(Sum('objectif_recette'))['objectif_recette__sum'] or 0
+        
+        performance = (chauffeur_data.total_recettes / objectifs_chauffeur * 100) if objectifs_chauffeur > 0 else 0
+        performances_chauffeurs.append({
+            'chauffeur': chauffeur_data.nom_complet,
+            'performance': performance,
+            'recette': chauffeur_data.total_recettes,
+            'objectif': objectifs_chauffeur
+        })
+    
+    # Performance moyenne globale
+    performance_moyenne = sum(p['performance'] for p in performances_chauffeurs) / len(performances_chauffeurs) if performances_chauffeurs else 0
+    
+    # 4. Données pour l'évolution temporelle (si période > jour)
+    evolution_data = []
+    if periode in ['semaine', 'mois', 'annee']:
+        # Calculer les totaux par sous-période
+        if periode == 'semaine':
+            # Par jour de la semaine
+            for i in range(7):
+                jour_date = date_debut + timedelta(days=i)
+                if jour_date <= date_fin:
+                    recette_jour = RemiseCles.objects.filter(
+                        date=jour_date,
+                        **chauffeur_filter
+                    ).aggregate(Sum('recette_realisee'))['recette_realisee__sum'] or 0
+                    evolution_data.append({
+                        'periode': jour_date.strftime('%A'),
+                        'recette': float(recette_jour)
+                    })
+        elif periode == 'mois':
+            # Par semaine du mois
+            semaine_actuelle = 1
+            recette_semaine = 0
+            for recette_jour in recettes_par_jour:
+                semaine_jour = recette_jour['date'].isocalendar()[1]
+                if semaine_jour != semaine_actuelle:
+                    evolution_data.append({
+                        'periode': f'Semaine {semaine_actuelle}',
+                        'recette': float(recette_semaine)
+                    })
+                    semaine_actuelle = semaine_jour
+                    recette_semaine = recette_jour['total']
+                else:
+                    recette_semaine += recette_jour['total']
+            # Ajouter la dernière semaine
+            if recette_semaine > 0:
+                evolution_data.append({
+                    'periode': f'Semaine {semaine_actuelle}',
+                    'recette': float(recette_semaine)
+                })
+        elif periode == 'annee':
+            # Par mois de l'année
+            for mois in range(1, 13):
+                recette_mois = RemiseCles.objects.filter(
+                    date__year=date.today().year,
+                    date__month=mois,
+                    **chauffeur_filter
+                ).aggregate(Sum('recette_realisee'))['recette_realisee__sum'] or 0
+                evolution_data.append({
+                    'periode': f'{mois:02d}',
+                    'recette': float(recette_mois)
+                })
+    
+    # Liste de tous les chauffeurs pour le filtre
+    tous_chauffeurs = Chauffeur.objects.all().order_by('nom', 'prenom')
     
     context = {
         'periode': periode,
+        'chauffeur_selectionne': chauffeur,
+        'chauffeur_id': chauffeur_id,
         'date_debut': date_debut,
         'date_fin': date_fin,
         'recettes_chauffeurs': recettes_chauffeurs,
@@ -177,6 +304,13 @@ def statistiques_recettes(request):
         'recette_semaine': recette_totale if periode == 'semaine' else 0,
         'recette_mois': recette_totale if periode == 'mois' else 0,
         'recette_annee': recette_totale if periode == 'annee' else 0,
+        # Données pour les graphiques
+        'chart_data_daily': chart_data_daily,
+        'chart_data_chauffeurs': chart_data_chauffeurs,
+        'performances_chauffeurs': performances_chauffeurs,
+        'performance_moyenne': performance_moyenne,
+        'evolution_data': evolution_data,
+        'tous_chauffeurs': tous_chauffeurs,
     }
     
     return render(request, 'admin_dashboard/statistiques_recettes.html', context)
@@ -503,12 +637,12 @@ def gestion_activites(request):
         prises = prises.none()  # Afficher seulement les remises
     
     # Pagination pour les prises
-    prises_paginator = Paginator(prises, 10)  # 10 éléments par page
+    prises_paginator = Paginator(prises, 15)  # 15 éléments par page
     prises_page = request.GET.get('prises_page')
     prises_obj = prises_paginator.get_page(prises_page)
     
     # Pagination pour les remises
-    remises_paginator = Paginator(remises, 10)  # 10 éléments par page
+    remises_paginator = Paginator(remises, 15)  # 15 éléments par page
     remises_page = request.GET.get('remises_page')
     remises_obj = remises_paginator.get_page(remises_page)
     
@@ -560,12 +694,12 @@ def activites_chauffeur(request, chauffeur_id):
     remises = RemiseCles.objects.filter(chauffeur=chauffeur).order_by('-date', '-heure_remise')
     
     # Pagination pour les prises
-    prises_paginator = Paginator(prises, 10)
+    prises_paginator = Paginator(prises, 15)
     prises_page = request.GET.get('prises_page')
     prises_obj = prises_paginator.get_page(prises_page)
     
     # Pagination pour les remises
-    remises_paginator = Paginator(remises, 10)
+    remises_paginator = Paginator(remises, 15)
     remises_page = request.GET.get('remises_page')
     remises_obj = remises_paginator.get_page(remises_page)
     
@@ -917,3 +1051,175 @@ def traiter_demande_modification(request, demande_id):
     }
     
     return render(request, 'admin_dashboard/traiter_demande_modification.html', context)
+
+
+@staff_member_required
+def exporter_excel(request):
+    """
+    Export des données de recettes et performances en fichier Excel
+    
+    Génère un fichier Excel contenant toutes les données selon les filtres :
+    - Période : jour, semaine, mois, année
+    - Chauffeur : spécifique ou tous
+    """
+    # Vérifier si openpyxl est disponible
+    if not OPENPYXL_AVAILABLE:
+        messages.error(request, "Le module openpyxl n'est pas installé. Veuillez installer openpyxl pour utiliser cette fonctionnalité.")
+        return redirect('admin_dashboard:statistiques_recettes')
+    
+    try:
+        # Récupération des paramètres de filtre
+        periode = request.GET.get('periode', 'mois')
+        chauffeur_id = request.GET.get('chauffeur')
+        
+        # Calcul des dates selon la période
+        aujourd_hui = timezone.now().date()
+        
+        if periode == 'jour':
+            date_debut = aujourd_hui
+            date_fin = aujourd_hui
+        elif periode == 'semaine':
+            # Lundi de cette semaine
+            date_debut = aujourd_hui - timedelta(days=aujourd_hui.weekday())
+            date_fin = date_debut + timedelta(days=6)
+        elif periode == 'mois':
+            date_debut = aujourd_hui.replace(day=1)
+            if aujourd_hui.month == 12:
+                date_fin = aujourd_hui.replace(year=aujourd_hui.year + 1, month=1, day=1) - timedelta(days=1)
+            else:
+                date_fin = aujourd_hui.replace(month=aujourd_hui.month + 1, day=1) - timedelta(days=1)
+        else:  # annee
+            date_debut = aujourd_hui.replace(month=1, day=1)
+            date_fin = aujourd_hui.replace(month=12, day=31)
+        
+        # Filtrage des données
+        chauffeur_filter = Q()
+        if chauffeur_id:
+            chauffeur_filter = Q(chauffeur_id=chauffeur_id)
+        
+        # Récupération des données
+        prises = PriseCles.objects.filter(
+            chauffeur_filter,
+            date__range=[date_debut, date_fin]
+        ).order_by('date', 'chauffeur__nom')
+        
+        remises = RemiseCles.objects.filter(
+            chauffeur_filter,
+            date__range=[date_debut, date_fin]
+        ).order_by('date', 'chauffeur__nom')
+        
+        # Création du fichier Excel
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        # Titre limité à 31 caractères pour Excel
+        ws.title = f"Recettes_{periode}_{date_debut.strftime('%m%d')}"
+        
+        # Styles
+        header_font = Font(bold=True, color="FFFFFF")
+        header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+        border = Border(
+            left=Side(style='thin'),
+            right=Side(style='thin'),
+            top=Side(style='thin'),
+            bottom=Side(style='thin')
+        )
+        
+        # En-têtes
+        headers = [
+            'Date', 'Chauffeur', 'Heure Début', 'Heure Fin', 
+            'Objectif (FCFA)', 'Recette Réalisée (FCFA)', 'Performance (%)',
+            'Carburant Plein', 'Problème Mécanique (Début)', 'Problème Mécanique (Fin)'
+        ]
+        
+        for col, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col, value=header)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = Alignment(horizontal='center')
+            cell.border = border
+        
+        # Données
+        row = 2
+        for prise in prises:
+            # Trouver la remise correspondante
+            remise = remises.filter(
+                chauffeur=prise.chauffeur,
+                date=prise.date
+            ).first()
+            
+            # Calcul de la performance
+            performance = 0
+            if prise.objectif_recette and prise.objectif_recette > 0:
+                recette_reelle = remise.recette_realisee if remise else 0
+                performance = (recette_reelle / prise.objectif_recette) * 100
+            
+            # Données de la ligne
+            data = [
+                prise.date.strftime('%d/%m/%Y'),
+                prise.chauffeur.nom_complet,
+                prise.heure_prise.strftime('%H:%M') if prise.heure_prise else '',
+                remise.heure_remise.strftime('%H:%M') if remise and remise.heure_remise else '',
+                prise.objectif_recette or 0,
+                remise.recette_realisee if remise else 0,
+                round(performance, 1),
+                'Oui' if prise.plein_carburant else 'Non',
+                prise.probleme_mecanique or 'Aucun',
+                remise.probleme_mecanique if remise else ''
+            ]
+            
+            # Écriture des données
+            for col, value in enumerate(data, 1):
+                cell = ws.cell(row=row, column=col, value=value)
+                cell.border = border
+                if col in [5, 6]:  # Colonnes monétaires
+                    cell.number_format = '#,##0'
+                elif col == 7:  # Performance
+                    cell.number_format = '0.0'
+            
+            row += 1
+        
+        # Résumé
+        ws.cell(row=row + 1, column=1, value="RÉSUMÉ").font = Font(bold=True)
+        ws.cell(row=row + 2, column=1, value="Période:").font = Font(bold=True)
+        ws.cell(row=row + 2, column=2, value=f"{date_debut.strftime('%d/%m/%Y')} - {date_fin.strftime('%d/%m/%Y')}")
+        
+        ws.cell(row=row + 3, column=1, value="Total Recettes:").font = Font(bold=True)
+        total_recettes = sum(remise.recette_realisee for remise in remises if remise.recette_realisee)
+        ws.cell(row=row + 3, column=2, value=total_recettes).number_format = '#,##0'
+        
+        ws.cell(row=row + 4, column=1, value="Total Objectifs:").font = Font(bold=True)
+        total_objectifs = sum(prise.objectif_recette for prise in prises if prise.objectif_recette)
+        ws.cell(row=row + 4, column=2, value=total_objectifs).number_format = '#,##0'
+        
+        ws.cell(row=row + 5, column=1, value="Performance Moyenne:").font = Font(bold=True)
+        performance_moyenne = (total_recettes / total_objectifs * 100) if total_objectifs > 0 else 0
+        ws.cell(row=row + 5, column=2, value=round(performance_moyenne, 1)).number_format = '0.0'
+        
+        # Ajustement des colonnes
+        for col in range(1, len(headers) + 1):
+            column_letter = get_column_letter(col)
+            ws.column_dimensions[column_letter].width = 15
+        
+        # Nom du fichier
+        chauffeur_nom = ""
+        if chauffeur_id:
+            try:
+                chauffeur = Chauffeur.objects.get(id=chauffeur_id)
+                chauffeur_nom = f"_{chauffeur.nom}_{chauffeur.prenom}"
+            except Chauffeur.DoesNotExist:
+                pass
+        
+        filename = f"recettes_{periode}{chauffeur_nom}_{date_debut.strftime('%Y%m%d')}_{date_fin.strftime('%Y%m%d')}.xlsx"
+        
+        # Réponse HTTP
+        response = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        
+        wb.save(response)
+        return response
+        
+    except Exception as e:
+        messages.error(request, f"Erreur lors de la génération du fichier Excel : {str(e)}")
+        return redirect('admin_dashboard:statistiques_recettes')

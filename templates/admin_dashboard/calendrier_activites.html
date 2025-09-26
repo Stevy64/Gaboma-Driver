@@ -464,7 +464,7 @@
                 </div>
                 <div>
                     <a href="{% url 'admin_dashboard:dashboard_admin' %}" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left me-1"></i>Retour au Dashboard
+                        <i class="bi bi-arrow-left me-1"></i>Retour au Dashboard
                     </a>
                 </div>
             </div>
@@ -474,7 +474,7 @@
     <!-- Filtre actif -->
     {% if chauffeur_selectionne %}
         <div class="alert alert-info">
-            <i class="fas fa-filter me-2"></i>
+            <i class="bi bi-filter me-2"></i>
             <strong>Filtre actif :</strong> 
             {% for chauffeur in chauffeurs %}
                 {% if chauffeur.id|stringformat:"s" == chauffeur_selectionne %}
@@ -482,7 +482,7 @@
                 {% endif %}
             {% endfor %}
             <a href="{% url 'admin_dashboard:calendrier_activites' %}?annee={{ annee }}&mois={{ mois }}" class="btn btn-sm btn-outline-secondary ms-2">
-                <i class="fas fa-times me-1"></i>Supprimer le filtre
+                <i class="bi bi-times me-1"></i>Supprimer le filtre
             </a>
         </div>
     {% endif %}
@@ -566,11 +566,11 @@
             <div class="calendar-nav">
                 {% if mois == 1 %}
                     <a href="?annee={{ annee|add:"-1" }}&mois=12{% if chauffeur_selectionne %}&chauffeur={{ chauffeur_selectionne }}{% endif %}">
-                        <i class="fas fa-chevron-left me-1"></i>Mois Précédent
+                        <i class="bi bi-chevron-left me-1"></i>Mois Précédent
                     </a>
                 {% else %}
                     <a href="?annee={{ annee }}&mois={{ mois|add:"-1" }}{% if chauffeur_selectionne %}&chauffeur={{ chauffeur_selectionne }}{% endif %}">
-                        <i class="fas fa-chevron-left me-1"></i>Mois Précédent
+                        <i class="bi bi-chevron-left me-1"></i>Mois Précédent
                     </a>
                 {% endif %}
                 
@@ -578,11 +578,11 @@
                 
                 {% if mois == 12 %}
                     <a href="?annee={{ annee|add:"1" }}&mois=1{% if chauffeur_selectionne %}&chauffeur={{ chauffeur_selectionne }}{% endif %}">
-                        Mois Suivant<i class="fas fa-chevron-right ms-1"></i>
+                        Mois Suivant<i class="bi bi-chevron-right ms-1"></i>
                     </a>
                 {% else %}
                     <a href="?annee={{ annee }}&mois={{ mois|add:"1" }}{% if chauffeur_selectionne %}&chauffeur={{ chauffeur_selectionne }}{% endif %}">
-                        Mois Suivant<i class="fas fa-chevron-right ms-1"></i>
+                        Mois Suivant<i class="bi bi-chevron-right ms-1"></i>
                     </a>
                 {% endif %}
             </div>
@@ -611,19 +611,19 @@
                                     <!-- Chauffeur principal (le premier) -->
                                     {% if jour_data.prises %}
                                         <div class="day-chauffeur">
-                                            <i class="fas fa-user me-1"></i>
+                                            <i class="bi bi-user me-1"></i>
                                             <span class="chauffeur-name">{{ jour_data.prises.0.chauffeur.nom_complet }}</span>
                                         </div>
                                     {% elif jour_data.remises %}
                                         <div class="day-chauffeur">
-                                            <i class="fas fa-user me-1"></i>
+                                            <i class="bi bi-user me-1"></i>
                                             <span class="chauffeur-name">{{ jour_data.remises.0.chauffeur.nom_complet }}</span>
                                         </div>
                                     {% endif %}
                                     
                                     <!-- Recette du jour -->
                                     <div class="day-revenue">
-                                        <i class="fas fa-coins me-1"></i>
+                                        <i class="bi-cash-coin me-1"></i>
                                         <strong>{{ jour_data.recette|floatformat:0 }} FCFA</strong>
                                     </div>
                                     
@@ -640,7 +640,7 @@
                                     
                                     <!-- Indicateur de clic -->
                                     <div class="day-click-hint">
-                                        <i class="fas fa-eye"></i>
+                                        <i class="bi bi-eye"></i>
                                     </div>
                                 </div>
                             {% endif %}
@@ -683,7 +683,7 @@
 
 <!-- Bouton d'impression -->
 <button class="btn btn-primary print-button" onclick="window.print()">
-    <i class="fas fa-print me-1"></i>Imprimer
+    <i class="bi bi-print me-1"></i>Imprimer
 </button>
 
 <script>

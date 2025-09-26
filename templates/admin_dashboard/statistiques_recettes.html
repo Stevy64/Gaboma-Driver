@@ -3,67 +3,83 @@
 
 {% block title %}Statistiques des Recettes - Admin{% endblock %}
 
+{% block extra_css %}
+<style>
+    .stat-card {
+        transition: transform 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .card {
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: box-shadow 0.3s ease;
+    }
+    
+    .card:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+    
+    .card-header {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-bottom: 1px solid #e9ecef;
+        border-radius: 10px 10px 0 0 !important;
+    }
+    
+    /* Responsive pour mobile */
+    @media (max-width: 768px) {
+        .card-header h5 {
+            font-size: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="bi bi-graph-up"></i> Statistiques des Recettes
-                </h5>
+
+<!-- Statistiques principales -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card bg-primary text-white">
+            <div class="card-body text-center">
+                <i class="bi bi-calendar-day fs-1 mb-2"></i>
+                <h6>Recette {{ periode|title }}</h6>
+                <h3>{{ recette_totale|floatformat:0 }} FCFA</h3>
+                <small>{{ date_debut|date:"d/m/Y" }} - {{ date_fin|date:"d/m/Y" }}</small>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-3">
-                        <div class="card bg-primary text-white">
-                            <div class="card-body">
-                                <h6>Recette du jour</h6>
-                                <h3>{{ recette_jour|default:"0" }} FCFA</h3>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card bg-success text-white">
-                            <div class="card-body">
-                                <h6>Recette de la semaine</h6>
-                                <h3>{{ recette_semaine|default:"0" }} FCFA</h3>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card bg-info text-white">
-                            <div class="card-body">
-                                <h6>Recette du mois</h6>
-                                <h3>{{ recette_mois|default:"0" }} FCFA</h3>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card bg-warning text-white">
-                            <div class="card-body">
-                                <h6>Recette de l'année</h6>
-                                <h3>{{ recette_annee|default:"0" }} FCFA</h3>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="mt-4">
-                    <h6>Filtres</h6>
-                    <form method="get" class="row g-3">
-                        <div class="col-md-3">
-                            <select name="periode" class="form-select">
-                                <option value="jour">Aujourd'hui</option>
-                                <option value="semaine">Cette semaine</option>
-                                <option value="mois">Ce mois</option>
-                                <option value="annee">Cette année</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <input type="submit" class="btn btn-primary" value="Filtrer">
-                        </div>
-                    </form>
-                </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card bg-success text-white">
+            <div class="card-body text-center">
+                <i class="bi bi-people fs-1 mb-2"></i>
+                <h6>Chauffeurs Actifs</h6>
+                <h3>{{ nombre_chauffeurs_actifs }}</h3>
+                <small>{{ moyenne_par_chauffeur|floatformat:0 }} FCFA/chauffeur</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card bg-info text-white">
+            <div class="card-body text-center">
+                <i class="bi bi-graph-up fs-1 mb-2"></i>
+                <h6>Performance Moyenne</h6>
+                <h3>{{ performance_moyenne|floatformat:1 }}%</h3>
+                <small>Objectifs atteints</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card bg-warning text-white">
+            <div class="card-body text-center">
+                <i class="bi bi-calendar3 fs-1 mb-2"></i>
+                <h6>Période</h6>
+                <h3>{{ periode|title }}</h3>
+                <small>{{ recettes_par_jour|length }} jour{{ recettes_par_jour|length|pluralize }}</small>
             </div>
         </div>
     </div>
@@ -87,4 +103,180 @@
         </div>
     </div>
 </div>
+
+<!-- Filtres de Statistiques -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-funnel"></i> Filtres de Statistiques
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-3" id="filter-form">
+                    <div class="col-md-4">
+                        <label class="form-label">Période</label>
+                        <select name="periode" class="form-select" id="periode-select">
+                            <option value="jour" {% if periode == 'jour' %}selected{% endif %}>Aujourd'hui</option>
+                            <option value="semaine" {% if periode == 'semaine' %}selected{% endif %}>Cette semaine</option>
+                            <option value="mois" {% if periode == 'mois' %}selected{% endif %}>Ce mois</option>
+                            <option value="annee" {% if periode == 'annee' %}selected{% endif %}>Cette année</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Chauffeur</label>
+                        <select name="chauffeur" class="form-select" id="chauffeur-select">
+                            <option value="">Tous les chauffeurs</option>
+                            {% for chauffeur in tous_chauffeurs %}
+                                <option value="{{ chauffeur.id }}" {% if chauffeur.id|stringformat:"s" == chauffeur_id %}selected{% endif %}>
+                                    {{ chauffeur.nom_complet }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <input type="submit" value="🔍 Filtrer" class="btn btn-primary" id="filter-submit-btn">
+                    </div>
+                </form>
+                
+                {% if chauffeur_selectionne %}
+                <div class="mt-3">
+                    <div class="alert alert-info">
+                        <i class="bi bi-person-check me-1"></i>
+                        <strong>Filtre actif :</strong> {{ chauffeur_selectionne.nom_complet }}
+                        <a href="?periode={{ periode }}" class="btn btn-sm btn-outline-secondary ms-2">
+                            <i class="bi bi-x"></i> Supprimer le filtre
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Excel des Données -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-file-earmark-excel"></i> Export des Données Excel
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-4">
+                    Téléchargez un fichier Excel contenant toutes les données de recettes et performances selon les filtres sélectionnés.
+                </p>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card border-success">
+                            <div class="card-body text-center">
+                                <i class="bi bi-file-earmark-excel text-success" style="font-size: 3rem;"></i>
+                                <h5 class="card-title mt-3">Export Complet</h5>
+                                <p class="card-text">Toutes les données selon les filtres actuels</p>
+                                <a href="{% url 'admin_dashboard:exporter_excel' %}?periode={{ periode }}{% if chauffeur_id %}&chauffeur={{ chauffeur_id }}{% endif %}" 
+                                   class="btn btn-success">
+                                    <i class="bi bi-download me-1"></i>Télécharger Excel
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card border-info">
+                            <div class="card-body text-center">
+                                <i class="bi bi-calendar3 text-info" style="font-size: 3rem;"></i>
+                                <h5 class="card-title mt-3">Période Sélectionnée</h5>
+                                <p class="card-text">
+                                    {% if periode == 'jour' %}
+                                        Données d'aujourd'hui
+                                    {% elif periode == 'semaine' %}
+                                        Données de cette semaine
+                                    {% elif periode == 'mois' %}
+                                        Données de ce mois
+                                    {% elif periode == 'annee' %}
+                                        Données de cette année
+                                    {% endif %}
+                                </p>
+                                <span class="badge bg-info fs-6">
+                                    {% if chauffeur_selectionne %}
+                                        {{ chauffeur_selectionne.nom_complet }}
+                                    {% else %}
+                                        Tous les chauffeurs
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <h6 class="mb-3">Contenu du fichier Excel :</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li><i class="bi bi-check-circle text-success me-2"></i>Données des chauffeurs</li>
+                                <li><i class="bi bi-check-circle text-success me-2"></i>Recettes par jour</li>
+                                <li><i class="bi bi-check-circle text-success me-2"></i>Objectifs vs Réalisé</li>
+                                <li><i class="bi bi-check-circle text-success me-2"></i>Performances (%)</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li><i class="bi bi-check-circle text-success me-2"></i>Heures de travail</li>
+                                <li><i class="bi bi-check-circle text-success me-2"></i>État du carburant</li>
+                                <li><i class="bi bi-check-circle text-success me-2"></i>Problèmes mécaniques</li>
+                                <li><i class="bi bi-check-circle text-success me-2"></i>Totaux et moyennes</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Corriger le bouton "Filtrer" avec une approche simple et robuste
+    const filterForm = document.getElementById('filter-form');
+    const filterButton = document.getElementById('filter-submit-btn');
+    
+    if (filterForm && filterButton) {
+        // Gérer la soumission du formulaire
+        filterForm.addEventListener('submit', function(e) {
+            // Ne pas empêcher la soumission normale
+            filterButton.disabled = true;
+            filterButton.value = '⏳ Filtrage...';
+            
+            // Réactiver le bouton après 2 secondes
+            setTimeout(function() {
+                filterButton.disabled = false;
+                filterButton.value = '🔍 Filtrer';
+            }, 2000);
+        });
+        
+        // Auto-submit sur changement de sélection (optionnel)
+        const periodeSelect = document.getElementById('periode-select');
+        const chauffeurSelect = document.getElementById('chauffeur-select');
+        
+        if (periodeSelect) {
+            periodeSelect.addEventListener('change', function() {
+                filterForm.submit();
+            });
+        }
+        
+        if (chauffeurSelect) {
+            chauffeurSelect.addEventListener('change', function() {
+                filterForm.submit();
+            });
+        }
+    }
+});
+</script>
 {% endblock %}

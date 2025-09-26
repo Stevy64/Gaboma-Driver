@@ -297,7 +297,7 @@ def dashboard_chauffeur(request):
     
     # Pagination des activités récentes
     from django.core.paginator import Paginator
-    paginator = Paginator(activites_recentes, 10)  # 10 activités par page
+    paginator = Paginator(activites_recentes, 15)  # 15 activités par page
     page_number = request.GET.get('page')
     activites_page = paginator.get_page(page_number)
     
@@ -849,6 +849,42 @@ def activite_mensuelle(request):
     total_annee = sum(remise.recette_realisee for remise in remises_annee)
     mois_travailles = remises_annee.values('date__month').distinct().count()
     
+    # Calculer les recettes du jour, de la semaine en cours et du mois
+    # Recette du jour (aujourd'hui)
+    recette_jour = 0
+    remise_aujourdhui = RemiseCles.objects.filter(
+        chauffeur=chauffeur,
+        date=today
+    ).first()
+    if remise_aujourdhui:
+        recette_jour = remise_aujourdhui.recette_realisee
+    
+    # Calculer la semaine en cours (lundi à dimanche)
+    # Trouver le lundi de la semaine en cours
+    jours_semaine = today.weekday()  # 0 = lundi, 6 = dimanche
+    lundi_semaine = today - timedelta(days=jours_semaine)
+    dimanche_semaine = lundi_semaine + timedelta(days=6)
+    
+    # Recette de la semaine en cours
+    remises_semaine = RemiseCles.objects.filter(
+        chauffeur=chauffeur,
+        date__gte=lundi_semaine,
+        date__lte=dimanche_semaine
+    )
+    recette_semaine = sum(remise.recette_realisee for remise in remises_semaine)
+    jours_travailles_semaine = remises_semaine.count()
+    moyenne_semaine = recette_semaine / jours_travailles_semaine if jours_travailles_semaine > 0 else 0
+    
+    # Calculer la performance de la semaine
+    # Récupérer les objectifs de la semaine
+    prises_semaine = PriseCles.objects.filter(
+        chauffeur=chauffeur,
+        date__gte=lundi_semaine,
+        date__lte=dimanche_semaine
+    )
+    objectif_semaine = sum(prise.objectif_recette for prise in prises_semaine)
+    performance_semaine = (recette_semaine / objectif_semaine * 100) if objectif_semaine > 0 else 0
+    
     # Statistiques par mois de l'année
     stats_par_mois = []
     for m in range(1, 13):
@@ -889,6 +925,15 @@ def activite_mensuelle(request):
         'stats_par_mois': stats_par_mois,
         'mois_nom': ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
                      'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'][mois-1],
+        # Nouvelles variables pour les recettes hebdomadaires et journalières
+        'recette_jour': recette_jour,
+        'recette_semaine': recette_semaine,
+        'jours_travailles_semaine': jours_travailles_semaine,
+        'moyenne_semaine': moyenne_semaine,
+        'performance_semaine': performance_semaine,
+        'semaine_debut': lundi_semaine,
+        'semaine_fin': dimanche_semaine,
+        'today': today,
     }
     
     return render(request, 'drivers/activite_mensuelle.html', context)

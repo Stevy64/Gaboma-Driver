@@ -11,7 +11,7 @@
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h1 class="h3 mb-0 text-gray-800">
-                        <i class="fas fa-user me-2"></i>Activités de {{ chauffeur.nom_complet }}
+                        <i class="bi bi-user me-2"></i>Activités de {{ chauffeur.nom_complet }}
                     </h1>
                     <p class="text-muted mb-0">Détail des activités et performances du chauffeur</p>
                 </div>
@@ -19,29 +19,29 @@
                     <!-- Boutons d'export PDF -->
                     <div class="dropdown">
                         <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-file-pdf me-1"></i>Exporter PDF
+                            <i class="bi bi-file-pdf me-1"></i>Exporter PDF
                         </button>
                         <ul class="dropdown-menu">
                             <li>
                                 <a class="dropdown-item" href="{% url 'admin_dashboard:exporter_activite_chauffeur_pdf' chauffeur.id %}" target="_blank">
-                                    <i class="fas fa-download me-2"></i>Télécharger PDF
+                                    <i class="bi bi-download me-2"></i>Télécharger PDF
                                 </a>
                             </li>
                             <li>
                                 <a class="dropdown-item" href="#" onclick="partagerPDF('email')">
-                                    <i class="fas fa-envelope me-2"></i>Partager par Email
+                                    <i class="bi bi-envelope me-2"></i>Partager par Email
                                 </a>
                             </li>
                             <li>
                                 <a class="dropdown-item" href="#" onclick="partagerPDF('whatsapp')">
-                                    <i class="fab fa-whatsapp me-2"></i>Partager sur WhatsApp
+                                    <i class="bi bi-whatsapp me-2"></i>Partager sur WhatsApp
                                 </a>
                             </li>
                         </ul>
                     </div>
                     
                     <a href="{% url 'admin_dashboard:gestion_activites' %}" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left me-1"></i>Retour aux Activités
+                        <i class="bi bi-arrow-left me-1"></i>Retour aux Activités
                     </a>
                 </div>
             </div>
@@ -62,10 +62,10 @@
                         <div class="col-md-6">
                             <h4 class="mb-1">{{ chauffeur.nom_complet }}</h4>
                             <p class="text-muted mb-1">
-                                <i class="fas fa-phone me-1"></i>{{ chauffeur.telephone }}
+                                <i class="bi bi-phone me-1"></i>{{ chauffeur.telephone }}
                             </p>
                             <p class="text-muted mb-0">
-                                <i class="fas fa-envelope me-1"></i>{{ chauffeur.email }}
+                                <i class="bi bi-envelope me-1"></i>{{ chauffeur.email }}
                             </p>
                         </div>
                         <div class="col-md-4 text-end">
@@ -103,7 +103,7 @@
                             <div class="h5 mb-0 font-weight-bold text-gray-800">{{ recettes_totales|floatformat:0 }} FCFA</div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-money-bill-wave fa-2x text-gray-300"></i>
+                            <i class="bi bi-money-bill-wave fa-2x text-gray-300"></i>
                         </div>
                     </div>
                 </div>
@@ -120,7 +120,7 @@
                             <div class="h5 mb-0 font-weight-bold text-gray-800">{{ objectifs_totaux|floatformat:0 }} FCFA</div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-target fa-2x text-gray-300"></i>
+                            <i class="bi bi-target fa-2x text-gray-300"></i>
                         </div>
                     </div>
                 </div>
@@ -137,7 +137,7 @@
                             <div class="h5 mb-0 font-weight-bold text-gray-800">{{ performance_moyenne|floatformat:1 }}%</div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                            <i class="bi bi-chart-line fa-2x text-gray-300"></i>
                         </div>
                     </div>
                 </div>
@@ -154,7 +154,7 @@
                             <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_remises }}</div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                            <i class="bi bi-calendar fa-2x text-gray-300"></i>
                         </div>
                     </div>
                 </div>
@@ -168,7 +168,7 @@
             <div class="card shadow">
                 <div class="card-header bg-white">
                     <h5 class="card-title mb-0">
-                        <i class="fas fa-chart-bar me-2"></i>Performances par Jour
+                        <i class="bi bi-chart-bar me-2"></i>Performances par Jour
                     </h5>
                 </div>
                 <div class="card-body">
@@ -205,19 +205,19 @@
                                         <td>
                                             {% if perf.statut == 'success' %}
                                                 <span class="badge bg-success">
-                                                    <i class="fas fa-check me-1"></i>Objectif atteint
+                                                    <i class="bi bi-check me-1"></i>Objectif atteint
                                                 </span>
                                             {% elif perf.statut == 'warning' %}
                                                 <span class="badge bg-warning">
-                                                    <i class="fas fa-exclamation-triangle me-1"></i>Proche de l'objectif
+                                                    <i class="bi bi-exclamation-triangle me-1"></i>Proche de l'objectif
                                                 </span>
                                             {% elif perf.statut == 'danger' %}
                                                 <span class="badge bg-danger">
-                                                    <i class="fas fa-times me-1"></i>Objectif non atteint
+                                                    <i class="bi bi-times me-1"></i>Objectif non atteint
                                                 </span>
                                             {% else %}
                                                 <span class="badge bg-info">
-                                                    <i class="fas fa-info me-1"></i>Sans objectif
+                                                    <i class="bi bi-info me-1"></i>Sans objectif
                                                 </span>
                                             {% endif %}
                                         </td>
@@ -228,7 +228,7 @@
                         </div>
                     {% else %}
                         <div class="text-center py-4">
-                            <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                            <i class="bi bi-chart-bar fa-3x text-muted mb-3"></i>
                             <p class="text-muted">Aucune performance enregistrée pour ce chauffeur.</p>
                         </div>
                     {% endif %}
@@ -244,7 +244,7 @@
             <div class="card shadow">
                 <div class="card-header bg-info text-white">
                     <h5 class="card-title mb-0">
-                        <i class="fas fa-key me-2"></i>Prises de Clés ({{ total_prises }})
+                        <i class="bi bi-key me-2"></i>Prises de Clés ({{ total_prises }})
                     </h5>
                 </div>
                 <div class="card-body">
@@ -279,7 +279,7 @@
                         </div>
                     {% else %}
                         <div class="text-center py-3">
-                            <i class="fas fa-key fa-2x text-muted mb-2"></i>
+                            <i class="bi bi-key fa-2x text-muted mb-2"></i>
                             <p class="text-muted mb-0">Aucune prise de clés enregistrée</p>
                         </div>
                     {% endif %}
@@ -323,7 +323,7 @@
             <div class="card shadow">
                 <div class="card-header bg-success text-white">
                     <h5 class="card-title mb-0">
-                        <i class="fas fa-hand-holding me-2"></i>Remises de Clés ({{ total_remises }})
+                        <i class="bi bi-hand-holding me-2"></i>Remises de Clés ({{ total_remises }})
                     </h5>
                 </div>
                 <div class="card-body">
@@ -358,7 +358,7 @@
                         </div>
                     {% else %}
                         <div class="text-center py-3">
-                            <i class="fas fa-hand-holding fa-2x text-muted mb-2"></i>
+                            <i class="bi bi-hand-holding fa-2x text-muted mb-2"></i>
                             <p class="text-muted mb-0">Aucune remise de clés enregistrée</p>
                         </div>
                     {% endif %}

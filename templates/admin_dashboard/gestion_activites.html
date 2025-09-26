@@ -11,13 +11,13 @@
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h1 class="h3 mb-0 text-gray-800">
-                        <i class="fas fa-tasks me-2"></i>Gestion des Activités
+                        <i class="bi bi-tasks me-2"></i>Gestion des Activités
                     </h1>
                     <p class="text-muted mb-0">Consultez et gérez toutes les activités des chauffeurs</p>
                 </div>
                 <div>
                     <a href="{% url 'admin_dashboard:dashboard_admin' %}" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left me-1"></i>Retour au Dashboard
+                        <i class="bi bi-arrow-left me-1"></i>Retour au Dashboard
                     </a>
                 </div>
             </div>
@@ -30,7 +30,7 @@
             <div class="card shadow">
                 <div class="card-header bg-primary text-white">
                     <h5 class="card-title mb-0">
-                        <i class="fas fa-filter me-2"></i>Filtres de Recherche
+                        <i class="bi bi-filter me-2"></i>Filtres de Recherche
                     </h5>
                 </div>
                 <div class="card-body">
@@ -67,10 +67,10 @@
                         </div>
                         <div class="col-12">
                             <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-search me-1"></i>Filtrer
+                                <i class="bi bi-search me-1"></i>Filtrer
                             </button>
                             <a href="{% url 'admin_dashboard:gestion_activites' %}" class="btn btn-outline-secondary">
-                                <i class="fas fa-times me-1"></i>Effacer les filtres
+                                <i class="bi bi-times me-1"></i>Effacer les filtres
                             </a>
                         </div>
                     </form>
@@ -92,7 +92,7 @@
                             <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_prises }}</div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-key fa-2x text-gray-300"></i>
+                            <i class="bi bi-key fa-2x text-gray-300"></i>
                         </div>
                     </div>
                 </div>
@@ -109,7 +109,7 @@
                             <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_remises }}</div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-hand-holding fa-2x text-gray-300"></i>
+                            <i class="bi bi-hand-holding fa-2x text-gray-300"></i>
                         </div>
                     </div>
                 </div>
@@ -126,7 +126,7 @@
                             <div class="h5 mb-0 font-weight-bold text-gray-800">{{ recettes_totales|floatformat:0 }} FCFA</div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-money-bill-wave fa-2x text-gray-300"></i>
+                            <i class="bi bi-money-bill-wave fa-2x text-gray-300"></i>
                         </div>
                     </div>
                 </div>
@@ -141,17 +141,17 @@
                 <div class="card-header bg-white">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="card-title mb-0">
-                            <i class="fas fa-list me-2"></i>Liste des Activités
+                            <i class="bi bi-list me-2"></i>Liste des Activités
                         </h5>
                         <div class="btn-group" role="group">
                             <button type="button" class="btn btn-outline-primary btn-sm" onclick="showPrises()">
-                                <i class="fas fa-key me-1"></i>Prises
+                                <i class="bi bi-key me-1"></i>Prises
                             </button>
                             <button type="button" class="btn btn-outline-success btn-sm" onclick="showRemises()">
-                                <i class="fas fa-hand-holding me-1"></i>Remises
+                                <i class="bi bi-hand-holding me-1"></i>Remises
                             </button>
                             <button type="button" class="btn btn-primary btn-sm" onclick="showAll()">
-                                <i class="fas fa-list me-1"></i>Toutes
+                                <i class="bi bi-list me-1"></i>Toutes
                             </button>
                         </div>
                     </div>
@@ -160,7 +160,7 @@
                     <!-- Prises de clés -->
                     <div id="prises-section">
                         <h6 class="text-primary mb-3">
-                            <i class="fas fa-key me-2"></i>Prises de Clés ({{ total_prises }})
+                            <i class="bi bi-key me-2"></i>Prises de Clés ({{ total_prises }})
                         </h6>
                         {% if prises %}
                             <div class="table-responsive">
@@ -213,11 +213,11 @@
                                                 <div class="d-flex gap-1">
                                                     <a href="{% url 'admin_dashboard:activites_chauffeur' prise.chauffeur.id %}" 
                                                        class="btn btn-primary btn-sm" title="Voir détails">
-                                                        <i class="fas fa-eye me-1"></i>Voir
+                                                        <i class="bi bi-eye me-1"></i>Voir
                                                     </a>
                                                     <a href="{% url 'admin_dashboard:exporter_activite_chauffeur_pdf' prise.chauffeur.id %}" 
                                                        class="btn btn-success btn-sm" title="Exporter PDF" target="_blank">
-                                                        <i class="fas fa-file-pdf me-1"></i>PDF
+                                                        <i class="bi bi-file-pdf me-1"></i>PDF
                                                     </a>
                                                 </div>
                                             </td>
@@ -228,7 +228,7 @@
                             </div>
                         {% else %}
                             <div class="text-center py-4">
-                                <i class="fas fa-key fa-3x text-muted mb-3"></i>
+                                <i class="bi bi-key fa-3x text-muted mb-3"></i>
                                 <p class="text-muted">Aucune prise de clés trouvée pour les critères sélectionnés.</p>
                             </div>
                         {% endif %}
@@ -268,7 +268,7 @@
                     <!-- Remises de clés -->
                     <div id="remises-section" style="display: none;">
                         <h6 class="text-success mb-3">
-                            <i class="fas fa-hand-holding me-2"></i>Remises de Clés ({{ total_remises }})
+                            <i class="bi bi-hand-holding me-2"></i>Remises de Clés ({{ total_remises }})
                         </h6>
                         {% if remises %}
                             <div class="table-responsive">
@@ -321,11 +321,11 @@
                                                 <div class="d-flex gap-1">
                                                     <a href="{% url 'admin_dashboard:activites_chauffeur' remise.chauffeur.id %}" 
                                                        class="btn btn-primary btn-sm" title="Voir détails">
-                                                        <i class="fas fa-eye me-1"></i>Voir
+                                                        <i class="bi bi-eye me-1"></i>Voir
                                                     </a>
                                                     <a href="{% url 'admin_dashboard:exporter_activite_chauffeur_pdf' remise.chauffeur.id %}" 
                                                        class="btn btn-success btn-sm" title="Exporter PDF" target="_blank">
-                                                        <i class="fas fa-file-pdf me-1"></i>PDF
+                                                        <i class="bi bi-file-pdf me-1"></i>PDF
                                                     </a>
                                                 </div>
                                             </td>
@@ -336,7 +336,7 @@
                             </div>
                         {% else %}
                             <div class="text-center py-4">
-                                <i class="fas fa-hand-holding fa-3x text-muted mb-3"></i>
+                                <i class="bi bi-hand-holding fa-3x text-muted mb-3"></i>
                                 <p class="text-muted">Aucune remise de clés trouvée pour les critères sélectionnés.</p>
                             </div>
                         {% endif %}

@@ -14,13 +14,13 @@
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h1 class="h3 mb-0 text-gray-800">
-                        <i class="fas fa-edit me-2"></i>Gestion des Demandes de Modification
+                        <i class="bi bi-edit me-2"></i>Gestion des Demandes de Modification
                     </h1>
                     <p class="text-muted mb-0">Approuvez ou rejetez les demandes de modification d'activité</p>
                 </div>
                 <div>
                     <a href="{% url 'admin_dashboard:dashboard_admin' %}" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left me-1"></i>Retour au Dashboard
+                        <i class="bi bi-arrow-left me-1"></i>Retour au Dashboard
                     </a>
                 </div>
             </div>
@@ -40,7 +40,7 @@
                             <div class="h5 mb-0 font-weight-bold text-gray-800">{{ demandes_en_attente }}</div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                            <i class="bi bi-clock fa-2x text-gray-300"></i>
                         </div>
                     </div>
                 </div>
@@ -57,7 +57,7 @@
                             <div class="h5 mb-0 font-weight-bold text-gray-800">{{ demandes_approuvees }}</div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-check fa-2x text-gray-300"></i>
+                            <i class="bi bi-check fa-2x text-gray-300"></i>
                         </div>
                     </div>
                 </div>
@@ -74,7 +74,7 @@
                             <div class="h5 mb-0 font-weight-bold text-gray-800">{{ demandes_rejetees }}</div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-times fa-2x text-gray-300"></i>
+                            <i class="bi bi-times fa-2x text-gray-300"></i>
                         </div>
                     </div>
                 </div>
@@ -91,7 +91,7 @@
                             <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_demandes }}</div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-list fa-2x text-gray-300"></i>
+                            <i class="bi bi-list fa-2x text-gray-300"></i>
                         </div>
                     </div>
                 </div>
@@ -105,7 +105,7 @@
             <div class="card shadow">
                 <div class="card-header bg-primary text-white">
                     <h5 class="card-title mb-0">
-                        <i class="fas fa-filter me-2"></i>Filtres
+                        <i class="bi bi-filter me-2"></i>Filtres
                     </h5>
                 </div>
                 <div class="card-body">
@@ -135,7 +135,7 @@
                             <label class="form-label">&nbsp;</label>
                             <div class="d-grid">
                                 <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-search me-1"></i>Filtrer
+                                    <i class="bi bi-search me-1"></i>Filtrer
                                 </button>
                             </div>
                         </div>
@@ -151,7 +151,7 @@
             <div class="card shadow">
                 <div class="card-header bg-white">
                     <h5 class="card-title mb-0">
-                        <i class="fas fa-list me-2"></i>Liste des Demandes
+                        <i class="bi bi-list me-2"></i>Liste des Demandes
                     </h5>
                 </div>
                 <div class="card-body">
@@ -186,11 +186,11 @@
                                         <td>
                                             {% if demande.type_activite == 'prise' %}
                                                 <span class="badge bg-info">
-                                                    <i class="fas fa-key me-1"></i>Prise de clés
+                                                    <i class="bi bi-key me-1"></i>Prise de clés
                                                 </span>
                                             {% else %}
                                                 <span class="badge bg-success">
-                                                    <i class="fas fa-hand-holding me-1"></i>Remise de clés
+                                                    <i class="bi bi-hand-holding me-1"></i>Remise de clés
                                                 </span>
                                             {% endif %}
                                         </td>
@@ -198,15 +198,15 @@
                                         <td>
                                             {% if demande.statut == 'en_attente' %}
                                                 <span class="badge bg-warning">
-                                                    <i class="fas fa-clock me-1"></i>En attente
+                                                    <i class="bi bi-clock me-1"></i>En attente
                                                 </span>
                                             {% elif demande.statut == 'approuvee' %}
                                                 <span class="badge bg-success">
-                                                    <i class="fas fa-check me-1"></i>Approuvée
+                                                    <i class="bi bi-check me-1"></i>Approuvée
                                                 </span>
                                             {% else %}
                                                 <span class="badge bg-danger">
-                                                    <i class="fas fa-times me-1"></i>Rejetée
+                                                    <i class="bi bi-times me-1"></i>Rejetée
                                                 </span>
                                             {% endif %}
                                         </td>
@@ -221,18 +221,18 @@
                                             <div class="d-flex gap-2">
                                                 <a href="{% url 'admin_dashboard:traiter_demande_modification' demande.id %}" 
                                                    class="btn btn-primary btn-sm" title="Traiter la demande">
-                                                    <i class="fas fa-edit me-1"></i>Traiter
+                                                    <i class="bi bi-edit me-1"></i>Traiter
                                                 </a>
                                                 {% if demande.statut == 'en_attente' %}
                                                     <button type="button" class="btn btn-success btn-sm" 
                                                             onclick="traiterDemandeRapide({{ demande.id }}, 'approuver')" 
                                                             title="Approuver rapidement">
-                                                        <i class="fas fa-check me-1"></i>Approuver
+                                                        <i class="bi bi-check me-1"></i>Approuver
                                                     </button>
                                                     <button type="button" class="btn btn-danger btn-sm" 
                                                             onclick="traiterDemandeRapide({{ demande.id }}, 'rejeter')" 
                                                             title="Rejeter rapidement">
-                                                        <i class="fas fa-times me-1"></i>Rejeter
+                                                        <i class="bi bi-times me-1"></i>Rejeter
                                                     </button>
                                                 {% endif %}
                                             </div>
@@ -244,7 +244,7 @@
                         </div>
                     {% else %}
                         <div class="text-center py-5">
-                            <i class="fas fa-edit fa-3x text-muted mb-3"></i>
+                            <i class="bi bi-edit fa-3x text-muted mb-3"></i>
                             <h5 class="text-muted">Aucune demande trouvée</h5>
                             <p class="text-muted">Il n'y a actuellement aucune demande de modification pour les critères sélectionnés.</p>
                         </div>
