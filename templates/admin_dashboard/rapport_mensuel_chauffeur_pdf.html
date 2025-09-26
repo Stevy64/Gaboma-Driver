@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rapport Mensuel d'Activité - {{ chauffeur.nom_complet }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1.5cm;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            font-size: 11px;
+            line-height: 1.3;
+            color: #333;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 3px solid #0d6efd;
+            padding-bottom: 15px;
+        }
+        
+        .header h1 {
+            color: #0d6efd;
+            font-size: 22px;
+            margin: 0;
+            font-weight: bold;
+        }
+        
+        .header h2 {
+            color: #666;
+            font-size: 16px;
+            margin: 8px 0;
+        }
+        
+        .header .periode {
+            color: #0d6efd;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .info-section {
+            margin-bottom: 20px;
+        }
+        
+        .info-section h3 {
+            color: #0d6efd;
+            font-size: 14px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 3px;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .info-item {
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 4px;
+            border-left: 3px solid #0d6efd;
+        }
+        
+        .info-item strong {
+            color: #0d6efd;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: #f8f9fa;
+            padding: 12px;
+            text-align: center;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .stat-card h4 {
+            margin: 0 0 5px 0;
+            color: #0d6efd;
+            font-size: 11px;
+        }
+        
+        .stat-card .value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #28a745;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+            font-size: 9px;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 6px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #0d6efd;
+            color: white;
+            font-weight: bold;
+            font-size: 10px;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        .performance-excellent {
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .performance-good {
+            color: #ffc107;
+            font-weight: bold;
+        }
+        
+        .performance-poor {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        
+        .performance-none {
+            color: #6c757d;
+            font-weight: bold;
+        }
+        
+        .footer {
+            margin-top: 25px;
+            text-align: center;
+            font-size: 9px;
+            color: #666;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+        }
+        
+        .page-break {
+            page-break-before: always;
+        }
+        
+        .badge {
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 8px;
+            font-weight: bold;
+        }
+        
+        .badge-success {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .badge-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        
+        .badge-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .badge-info {
+            background-color: #17a2b8;
+            color: white;
+        }
+        
+        .semaine-header {
+            background-color: #e9ecef;
+            font-weight: bold;
+            color: #0d6efd;
+        }
+        
+        .total-mois {
+            background-color: #d4edda;
+            font-weight: bold;
+            color: #155724;
+        }
+    </style>
+</head>
+<body>
+    <!-- En-tête du rapport -->
+    <div class="header">
+        <h1>📊 RAPPORT MENSUEL D'ACTIVITÉ</h1>
+        <h2>{{ chauffeur.nom_complet }}</h2>
+        <div class="periode">{{ mois_nom }}</div>
+        <p>Généré le {{ date_generation|date:"d/m/Y à H:i" }}</p>
+    </div>
+
+    <!-- Informations du chauffeur -->
+    <div class="info-section">
+        <h3>👤 Informations du Chauffeur</h3>
+        <div class="info-grid">
+            <div class="info-item">
+                <strong>Nom complet:</strong> {{ chauffeur.nom_complet }}
+            </div>
+            <div class="info-item">
+                <strong>Téléphone:</strong> {{ chauffeur.telephone }}
+            </div>
+            <div class="info-item">
+                <strong>Email:</strong> {{ chauffeur.email }}
+            </div>
+            <div class="info-item">
+                <strong>Statut:</strong> 
+                {% if chauffeur.actif %}
+                    <span class="badge badge-success">Actif</span>
+                {% else %}
+                    <span class="badge badge-danger">Inactif</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques du mois -->
+    <div class="info-section">
+        <h3>📈 Statistiques du Mois</h3>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h4>Jours Travaillés</h4>
+                <div class="value">{{ jours_travailles }}</div>
+            </div>
+            <div class="stat-card">
+                <h4>Recettes Totales</h4>
+                <div class="value">{{ recettes_totales|floatformat:0 }} FCFA</div>
+            </div>
+            <div class="stat-card">
+                <h4>Objectifs Totaux</h4>
+                <div class="value">{{ objectifs_totaux|floatformat:0 }} FCFA</div>
+            </div>
+            <div class="stat-card">
+                <h4>Performance Moyenne</h4>
+                <div class="value">{{ performance_moyenne|floatformat:1 }}%</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Détail des performances journalières -->
+    {% if performances_journalieres %}
+    <div class="info-section">
+        <h3>📅 Détail des Performances Journalières</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Jour</th>
+                    <th>Heure Début</th>
+                    <th>Heure Fin</th>
+                    <th>Objectif (FCFA)</th>
+                    <th>Réalisé (FCFA)</th>
+                    <th>Performance</th>
+                    <th>Carburant</th>
+                    <th>Problème</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for perf in performances_journalieres %}
+                <tr>
+                    <td>{{ perf.date|date:"d/m/Y" }}</td>
+                    <td>{{ perf.jour_semaine }}</td>
+                    <td>
+                        {% if perf.heure_prise %}
+                            {{ perf.heure_prise|time:"H:i" }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>{{ perf.heure_remise|time:"H:i" }}</td>
+                    <td>{{ perf.objectif|floatformat:0 }}</td>
+                    <td>{{ perf.realise|floatformat:0 }}</td>
+                    <td class="performance-{% if perf.statut == 'success' %}excellent{% elif perf.statut == 'warning' %}good{% elif perf.statut == 'danger' %}poor{% else %}none{% endif %}">
+                        {{ perf.pourcentage|floatformat:1 }}%
+                    </td>
+                    <td>
+                        {% if perf.plein_carburant %}
+                            <span class="badge badge-success">Plein</span>
+                        {% else %}
+                            <span class="badge badge-warning">Partiel</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if perf.probleme_mecanique != 'Aucun' %}
+                            <span class="badge badge-danger">{{ perf.probleme_mecanique }}</span>
+                        {% else %}
+                            <span class="badge badge-success">Aucun</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <!-- Totaux par semaine -->
+    {% if totaux_semaines %}
+    <div class="info-section page-break">
+        <h3>📊 Totaux par Semaine</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Semaine</th>
+                    <th>Jours Travaillés</th>
+                    <th>Objectif Total (FCFA)</th>
+                    <th>Recette Total (FCFA)</th>
+                    <th>Performance</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for semaine in totaux_semaines %}
+                <tr>
+                    <td class="semaine-header">Semaine {{ semaine.semaine }}</td>
+                    <td>{{ semaine.jours }}</td>
+                    <td>{{ semaine.objectif|floatformat:0 }}</td>
+                    <td>{{ semaine.recette|floatformat:0 }}</td>
+                    <td class="performance-{% if semaine.performance >= 100 %}excellent{% elif semaine.performance >= 90 %}good{% else %}poor{% endif %}">
+                        {{ semaine.performance|floatformat:1 }}%
+                    </td>
+                </tr>
+                {% endfor %}
+                <!-- Total du mois -->
+                <tr class="total-mois">
+                    <td><strong>TOTAL MOIS</strong></td>
+                    <td><strong>{{ jours_travailles }}</strong></td>
+                    <td><strong>{{ objectifs_totaux|floatformat:0 }} FCFA</strong></td>
+                    <td><strong>{{ recettes_totales|floatformat:0 }} FCFA</strong></td>
+                    <td><strong>{{ performance_moyenne|floatformat:1 }}%</strong></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <!-- Analyse des performances -->
+    <div class="info-section">
+        <h3>📊 Analyse des Performances</h3>
+        <div class="info-grid">
+            <div class="info-item">
+                <strong>Meilleure journée:</strong><br>
+                {% for perf in performances_journalieres %}
+                    {% if forloop.first %}
+                        {{ perf.date|date:"d/m/Y" }} - {{ perf.realise|floatformat:0 }} FCFA ({{ perf.pourcentage|floatformat:1 }}%)
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <div class="info-item">
+                <strong>Recette moyenne/jour:</strong><br>
+                {% if jours_travailles > 0 %}
+                    {{ recettes_totales|div:jours_travailles|floatformat:0 }} FCFA
+                {% else %}
+                    0 FCFA
+                {% endif %}
+            </div>
+            <div class="info-item">
+                <strong>Objectif moyen/jour:</strong><br>
+                {% if jours_travailles > 0 %}
+                    {{ objectifs_totaux|div:jours_travailles|floatformat:0 }} FCFA
+                {% else %}
+                    0 FCFA
+                {% endif %}
+            </div>
+            <div class="info-item">
+                <strong>Évaluation globale:</strong><br>
+                {% if performance_moyenne >= 100 %}
+                    <span class="badge badge-success">Excellent</span>
+                {% elif performance_moyenne >= 90 %}
+                    <span class="badge badge-warning">Bon</span>
+                {% else %}
+                    <span class="badge badge-danger">À améliorer</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Pied de page -->
+    <div class="footer">
+        <p><strong>Gaboma Drive</strong> - Système de Gestion des Activités de Taxi</p>
+        <p>Rapport mensuel généré automatiquement le {{ date_generation|date:"d/m/Y à H:i" }}</p>
+        <p>Période: {{ date_debut|date:"d/m/Y" }} au {{ date_fin|date:"d/m/Y" }}</p>
+        <p>Pour toute question, contactez l'administration</p>
+    </div>
+</body>
+</html>

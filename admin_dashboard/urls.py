@@ -18,6 +18,7 @@ urlpatterns = [
     # =============================================================================
     path('activites/', views.gestion_activites, name='gestion_activites'),
     path('activites/chauffeur/<int:chauffeur_id>/', views.activites_chauffeur, name='activites_chauffeur'),
+    path('activites/chauffeur/<int:chauffeur_id>/pdf/', views.exporter_activite_chauffeur_pdf, name='exporter_activite_chauffeur_pdf'),
     
     # =============================================================================
     # GESTION DES DEMANDES DE MODIFICATION - Workflow d'approbation

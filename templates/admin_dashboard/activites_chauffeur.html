@@ -15,7 +15,31 @@
                     </h1>
                     <p class="text-muted mb-0">Détail des activités et performances du chauffeur</p>
                 </div>
-                <div>
+                <div class="d-flex gap-2">
+                    <!-- Boutons d'export PDF -->
+                    <div class="dropdown">
+                        <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-file-pdf me-1"></i>Exporter PDF
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'admin_dashboard:exporter_activite_chauffeur_pdf' chauffeur.id %}" target="_blank">
+                                    <i class="fas fa-download me-2"></i>Télécharger PDF
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="#" onclick="partagerPDF('email')">
+                                    <i class="fas fa-envelope me-2"></i>Partager par Email
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="#" onclick="partagerPDF('whatsapp')">
+                                    <i class="fab fa-whatsapp me-2"></i>Partager sur WhatsApp
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    
                     <a href="{% url 'admin_dashboard:gestion_activites' %}" class="btn btn-outline-secondary">
                         <i class="fas fa-arrow-left me-1"></i>Retour aux Activités
                     </a>
@@ -397,4 +421,38 @@
     border-left: 0.25rem solid #f6c23e !important;
 }
 </style>
+
+<script>
+function partagerPDF(type) {
+    const pdfUrl = "{% url 'admin_dashboard:exporter_activite_chauffeur_pdf' chauffeur.id %}";
+    const chauffeurNom = "{{ chauffeur.nom_complet }}";
+    const dateAujourdhui = new Date().toLocaleDateString('fr-FR');
+    
+    if (type === 'download') {
+        // Téléchargement direct
+        window.open(pdfUrl, '_blank');
+    } else if (type === 'whatsapp') {
+        // Partage sur WhatsApp
+        const message = `📊 Rapport d'activité de ${chauffeurNom}\n\nVoici le rapport d'activité généré le ${dateAujourdhui}.\n\nPour télécharger le PDF complet, cliquez sur le lien ci-dessous :\n${window.location.origin}${pdfUrl}`;
+        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank');
+    } else if (type === 'email') {
+        // Partage par email
+        const subject = `Rapport d'activité - ${chauffeurNom}`;
+        const body = `Bonjour,\n\nVeuillez trouver ci-joint le rapport d'activité de ${chauffeurNom} généré le ${dateAujourdhui}.\n\nPour télécharger le PDF complet, cliquez sur le lien ci-dessous :\n${window.location.origin}${pdfUrl}\n\nCordialement,\nL'équipe Gaboma Drive`;
+        const emailUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        window.location.href = emailUrl;
+    }
+}
+
+// Fonction pour afficher un modal de confirmation avant le partage
+function confirmerPartage(type) {
+    const chauffeurNom = "{{ chauffeur.nom_complet }}";
+    const message = `Êtes-vous sûr de vouloir partager le rapport d'activité de ${chauffeurNom} ?`;
+    
+    if (confirm(message)) {
+        partagerPDF(type);
+    }
+}
+</script>
 {% endblock %}

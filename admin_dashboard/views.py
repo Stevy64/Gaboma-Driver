@@ -47,12 +47,6 @@ def dashboard_admin(request):
     pannes_en_cours = Panne.objects.filter(statut='en_cours').count()
     pannes_critiques = Panne.objects.filter(severite='critique').count()
     
-    # Top chauffeurs du mois (basé sur les remises de clés)
-    top_chauffeurs_mois = Chauffeur.objects.filter(
-        remisecles__date__gte=date.today().replace(day=1)
-    ).annotate(
-        total_recettes=Sum('remisecles__recette_realisee')
-    ).filter(total_recettes__gt=0).order_by('-total_recettes')[:3]
     
     # Activités récentes (prises et remises)
     prises_recentes = PriseCles.objects.select_related('chauffeur').order_by('-date', '-heure_prise')[:5]
@@ -98,7 +92,6 @@ def dashboard_admin(request):
         'pannes_en_cours': pannes_en_cours,
         'pannes_critiques': pannes_critiques,
         'demandes_en_attente': demandes_en_attente,
-        'top_chauffeurs_mois': top_chauffeurs_mois,
         'activites_recentes': activites_recentes,
         'pannes_recentes': pannes_recentes,
     }
@@ -333,6 +326,12 @@ def gestion_activites(request):
     prises = prises.order_by('-date', '-heure_prise')
     remises = remises.order_by('-date', '-heure_remise')
     
+    # Filtrage par type d'activité (pour l'affichage)
+    if type_activite == 'prise':
+        remises = remises.none()  # Afficher seulement les prises
+    elif type_activite == 'remise':
+        prises = prises.none()  # Afficher seulement les remises
+    
     # Pagination pour les prises
     prises_paginator = Paginator(prises, 10)  # 10 éléments par page
     prises_page = request.GET.get('prises_page')
@@ -361,6 +360,12 @@ def gestion_activites(request):
         'recettes_totales': recettes_totales,
         'filtres': {
             'chauffeur_id': chauffeur_id,
+            'date_debut': date_debut,
+            'date_fin': date_fin,
+            'type_activite': type_activite,
+        },
+        'filtres_applied': {
+            'chauffeur': chauffeur_id,
             'date_debut': date_debut,
             'date_fin': date_fin,
             'type_activite': type_activite,
@@ -440,6 +445,177 @@ def activites_chauffeur(request, chauffeur_id):
     }
     
     return render(request, 'admin_dashboard/activites_chauffeur.html', context)
+
+
+@staff_member_required
+def exporter_activite_chauffeur_pdf(request, chauffeur_id):
+    """
+    Vue pour exporter les activités d'un chauffeur en PDF
+    
+    Génère un rapport PDF mensuel complet des activités d'un chauffeur avec
+    les jours travaillés, recettes réalisées, performances et totaux par semaine.
+    """
+    chauffeur = get_object_or_404(Chauffeur, id=chauffeur_id)
+    
+    # Récupération des paramètres de filtrage (par défaut: mois en cours)
+    date_debut = request.GET.get('date_debut')
+    date_fin = request.GET.get('date_fin')
+    
+    # Si aucune date n'est spécifiée, utiliser le mois en cours
+    if not date_debut or not date_fin:
+        today = timezone.now().date()
+        # Premier jour du mois
+        date_debut = today.replace(day=1)
+        # Dernier jour du mois
+        if today.month == 12:
+            date_fin = today.replace(year=today.year + 1, month=1, day=1) - timedelta(days=1)
+        else:
+            date_fin = today.replace(month=today.month + 1, day=1) - timedelta(days=1)
+    
+    # Conversion des dates
+    if isinstance(date_debut, str):
+        date_debut = datetime.strptime(date_debut, '%Y-%m-%d').date()
+    if isinstance(date_fin, str):
+        date_fin = datetime.strptime(date_fin, '%Y-%m-%d').date()
+    
+    # Récupération des activités du chauffeur pour le mois
+    prises = PriseCles.objects.filter(
+        chauffeur=chauffeur,
+        date__gte=date_debut,
+        date__lte=date_fin
+    ).order_by('date', 'heure_prise')
+    
+    remises = RemiseCles.objects.filter(
+        chauffeur=chauffeur,
+        date__gte=date_debut,
+        date__lte=date_fin
+    ).order_by('date', 'heure_remise')
+    
+    # Calcul des statistiques générales
+    total_prises = prises.count()
+    total_remises = remises.count()
+    recettes_totales = remises.aggregate(total=Sum('recette_realisee'))['total'] or 0
+    objectifs_totaux = prises.aggregate(total=Sum('objectif_recette'))['total'] or 0
+    performance_moyenne = (recettes_totales / objectifs_totaux * 100) if objectifs_totaux > 0 else 0
+    
+    # Calcul des performances par jour avec détails
+    performances_journalieres = []
+    jours_travailles = set()
+    
+    for remise in remises:
+        jours_travailles.add(remise.date)
+        try:
+            prise = PriseCles.objects.get(chauffeur=chauffeur, date=remise.date)
+            pourcentage = (remise.recette_realisee / prise.objectif_recette) * 100
+            performances_journalieres.append({
+                'date': remise.date,
+                'jour_semaine': remise.date.strftime('%A'),
+                'objectif': prise.objectif_recette,
+                'realise': remise.recette_realisee,
+                'pourcentage': pourcentage,
+                'statut': 'success' if pourcentage >= 100 else 'warning' if pourcentage >= 90 else 'danger',
+                'heure_prise': prise.heure_prise,
+                'heure_remise': remise.heure_remise,
+                'plein_carburant': remise.plein_carburant,
+                'probleme_mecanique': remise.probleme_mecanique
+            })
+        except PriseCles.DoesNotExist:
+            performances_journalieres.append({
+                'date': remise.date,
+                'jour_semaine': remise.date.strftime('%A'),
+                'objectif': 0,
+                'realise': remise.recette_realisee,
+                'pourcentage': 0,
+                'statut': 'info',
+                'heure_prise': None,
+                'heure_remise': remise.heure_remise,
+                'plein_carburant': remise.plein_carburant,
+                'probleme_mecanique': remise.probleme_mecanique
+            })
+    
+    # Calcul des totaux par semaine
+    totaux_semaines = []
+    semaine_courante = None
+    recette_semaine = 0
+    objectif_semaine = 0
+    jours_semaine = 0
+    
+    for perf in performances_journalieres:
+        # Calcul du numéro de semaine
+        semaine_num = perf['date'].isocalendar()[1]
+        
+        if semaine_courante is None:
+            semaine_courante = semaine_num
+        
+        if semaine_num != semaine_courante:
+            # Finaliser la semaine précédente
+            totaux_semaines.append({
+                'semaine': semaine_courante,
+                'recette': recette_semaine,
+                'objectif': objectif_semaine,
+                'jours': jours_semaine,
+                'performance': (recette_semaine / objectif_semaine * 100) if objectif_semaine > 0 else 0
+            })
+            # Commencer une nouvelle semaine
+            semaine_courante = semaine_num
+            recette_semaine = perf['realise']
+            objectif_semaine = perf['objectif']
+            jours_semaine = 1
+        else:
+            recette_semaine += perf['realise']
+            objectif_semaine += perf['objectif']
+            jours_semaine += 1
+    
+    # Ajouter la dernière semaine
+    if semaine_courante is not None:
+        totaux_semaines.append({
+            'semaine': semaine_courante,
+            'recette': recette_semaine,
+            'objectif': objectif_semaine,
+            'jours': jours_semaine,
+            'performance': (recette_semaine / objectif_semaine * 100) if objectif_semaine > 0 else 0
+        })
+    
+    # Préparation du contexte pour le PDF
+    context = {
+        'chauffeur': chauffeur,
+        'prises': prises,
+        'remises': remises,
+        'performances_journalieres': performances_journalieres,
+        'totaux_semaines': totaux_semaines,
+        'total_prises': total_prises,
+        'total_remises': total_remises,
+        'recettes_totales': recettes_totales,
+        'objectifs_totaux': objectifs_totaux,
+        'performance_moyenne': performance_moyenne,
+        'jours_travailles': len(jours_travailles),
+        'date_debut': date_debut,
+        'date_fin': date_fin,
+        'date_generation': timezone.now(),
+        'mois_nom': date_debut.strftime('%B %Y'),
+    }
+    
+    # Génération du PDF
+    try:
+        from django.template.loader import render_to_string
+        from django.http import HttpResponse
+        import weasyprint
+        
+        html_string = render_to_string('admin_dashboard/rapport_mensuel_chauffeur_pdf.html', context)
+        html = weasyprint.HTML(string=html_string, base_url=request.build_absolute_uri())
+        pdf = html.write_pdf()
+        
+        response = HttpResponse(pdf, content_type='application/pdf')
+        mois_str = date_debut.strftime('%Y-%m')
+        response['Content-Disposition'] = f'attachment; filename="rapport_mensuel_{chauffeur.nom}_{chauffeur.prenom}_{mois_str}.pdf"'
+        return response
+        
+    except ImportError:
+        messages.error(request, 'Le module weasyprint n\'est pas installé. Impossible de générer le PDF.')
+        return redirect('admin_dashboard:activites_chauffeur', chauffeur_id=chauffeur_id)
+    except Exception as e:
+        messages.error(request, f'Erreur lors de la génération du PDF: {str(e)}')
+        return redirect('admin_dashboard:activites_chauffeur', chauffeur_id=chauffeur_id)
 
 
 @staff_member_required

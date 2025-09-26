@@ -35,7 +35,7 @@
     <div class="col-6 col-md-3">
         <div class="card text-center h-100">
             <div class="card-body p-3">
-                <i class="fas fa-coins text-success" style="font-size: 1.5rem;"></i>
+                <i class="bi bi-cash-coin text-success" style="font-size: 1.5rem;"></i>
                 <h5 class="mt-2 mb-1">{{ recettes_aujourdhui|floatformat:0 }} FCFA</h5>
                 <p class="text-muted mb-0 small">Recettes aujourd'hui</p>
             </div>
@@ -117,39 +117,8 @@
 </div>
 
 <div class="row g-3">
-    <!-- Top chauffeurs du mois -->
-    <div class="col-12 col-lg-6">
-        <div class="card h-100">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="bi bi-trophy"></i> Top chauffeurs du mois
-                </h5>
-            </div>
-            <div class="card-body">
-                {% if top_chauffeurs_mois %}
-                    <div class="list-group list-group-flush">
-                        {% for chauffeur in top_chauffeurs_mois %}
-                        <div class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>{{ chauffeur.nom_complet }}</strong>
-                                <br>
-                                <small class="text-muted d-none d-sm-block">{{ chauffeur.telephone }}</small>
-                            </div>
-                            <span class="badge bg-success rounded-pill">
-                                {{ chauffeur.total_recettes|floatformat:0 }} FCFA
-                            </span>
-                        </div>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <p class="text-muted text-center">Aucune donnée ce mois</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-
     <!-- Activités récentes -->
-    <div class="col-12 col-lg-6">
+    <div class="col-12">
         <div class="card h-100">
             <div class="card-header">
                 <h5 class="mb-0">
