@@ -13,9 +13,10 @@
             <p class="lead">Application de suivi d'activité dans le domaine du transport au Gabon</p>
         </div>
 
-        <!-- Connexion Chauffeur -->
+        <!-- Connexions -->
         <div class="row justify-content-center">
-            <div class="col-md-6">
+            <!-- Connexion Chauffeur -->
+            <div class="col-md-6 mb-4">
                 <div class="card h-100 shadow-sm">
                     <div class="card-body text-center p-5">
                         <div class="mb-4">
@@ -33,6 +34,30 @@
                             <a href="{% url 'drivers:creer_compte' %}" class="btn btn-outline-primary">
                                 <i class="bi bi-person-plus"></i> Créer un compte
                             </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Connexion Superviseur -->
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center p-5">
+                        <div class="mb-4">
+                            <i class="bi bi-person-badge text-success" style="font-size: 4rem;"></i>
+                        </div>
+                        <h3 class="card-title">Superviseur</h3>
+                        <p class="card-text text-muted">
+                            Accédez à votre espace de supervision pour gérer les chauffeurs, 
+                            traiter les demandes et suivre les performances.
+                        </p>
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'drivers:login_superviseur' %}" class="btn btn-success btn-lg">
+                                <i class="bi bi-box-arrow-in-right"></i> Connexion Superviseur
+                            </a>
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle"></i> Privilège octroyé par l'administrateur
+                            </small>
                         </div>
                     </div>
                 </div>
@@ -103,9 +128,14 @@
                 </small>
             </div>
             <div class="col-md-4 text-md-end">
-                <small class="text-muted">
-                    Développé avec <i class="bi bi-heart-fill text-danger"></i> pour le Gabon
-                </small>
+                <div class="d-flex justify-content-md-end align-items-center gap-3">
+                    <small class="text-muted">
+                        Développé avec <i class="bi bi-heart-fill text-danger"></i> pour le Gabon
+                    </small>
+                    <a href="/admin/" class="btn btn-outline-secondary btn-sm" title="Accès administrateur">
+                        <i class="bi bi-gear"></i> Admin
+                    </a>
+                </div>
             </div>
         </div>
     </div>

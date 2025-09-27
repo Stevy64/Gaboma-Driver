@@ -1,14 +1,55 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import logout
+from django.contrib.auth.models import User, Group
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Sum, Count, Avg, Q
 from django.utils import timezone
 from django.http import HttpResponse
 from datetime import datetime, date, timedelta
-from drivers.models import Chauffeur
+from drivers.models import Chauffeur, AssignationSuperviseur
 from activities.models import Activite, Recette, Panne, PriseCles, RemiseCles, DemandeModification
+
+
+def get_chauffeurs_for_user(user):
+    """
+    Récupère les chauffeurs accessibles selon le type d'utilisateur
+    
+    Args:
+        user: Utilisateur connecté
+        
+    Returns:
+        QuerySet: Chauffeurs accessibles
+    """
+    if user.is_superuser:
+        # Super admin : accès à tous les chauffeurs
+        return Chauffeur.objects.all()
+    elif user.groups.filter(name='Superviseurs').exists():
+        # Superviseur : seulement ses chauffeurs assignés
+        return AssignationSuperviseur.get_chauffeurs_assignes(user)
+    else:
+        # Autres utilisateurs : aucun chauffeur
+        return Chauffeur.objects.none()
+
+
+def get_activites_for_user(user, model_class, **filters):
+    """
+    Récupère les activités accessibles selon le type d'utilisateur
+    
+    Args:
+        user: Utilisateur connecté
+        model_class: Classe du modèle d'activité
+        **filters: Filtres additionnels
+        
+    Returns:
+        QuerySet: Activités accessibles
+    """
+    chauffeurs = get_chauffeurs_for_user(user)
+    if chauffeurs.exists():
+        return model_class.objects.filter(chauffeur__in=chauffeurs, **filters)
+    else:
+        return model_class.objects.none()
 
 # Import conditionnel d'openpyxl pour éviter les erreurs si le module n'est pas installé
 try:
@@ -39,6 +80,8 @@ def logout_admin(request):
 
 @staff_member_required
 def dashboard_admin(request):
+    # Vérifier si l'utilisateur est un superviseur (pas super admin)
+    is_supervisor = request.user.groups.filter(name='Superviseurs').exists() and not request.user.is_superuser
     """
     Tableau de bord administrateur avec statistiques en temps réel
     
@@ -50,35 +93,32 @@ def dashboard_admin(request):
     - Top chauffeurs du mois
     - Activités et pannes récentes
     """
-    # Statistiques générales
-    total_chauffeurs = Chauffeur.objects.filter(actif=True).count()
+    # Récupérer les chauffeurs accessibles selon le type d'utilisateur
+    chauffeurs_accessibles = get_chauffeurs_for_user(request.user)
     
-    # Activités du jour (prises et remises)
-    prises_aujourdhui = PriseCles.objects.filter(date=date.today()).count()
-    remises_aujourdhui = RemiseCles.objects.filter(date=date.today()).count()
+    # Statistiques générales
+    total_chauffeurs = chauffeurs_accessibles.filter(actif=True).count()
+    
+    # Activités du jour (filtrées par chauffeurs accessibles)
+    prises_aujourdhui = get_activites_for_user(request.user, PriseCles, date=date.today()).count()
+    remises_aujourdhui = get_activites_for_user(request.user, RemiseCles, date=date.today()).count()
     total_activites_aujourdhui = prises_aujourdhui + remises_aujourdhui
     
-    # Recettes en FCFA (utilisant les nouveaux modèles)
-    recettes_aujourdhui = RemiseCles.objects.filter(
-        date=date.today()
-    ).aggregate(total=Sum('recette_realisee'))['total'] or 0
+    # Recettes en FCFA (filtrées par chauffeurs accessibles)
+    recettes_aujourdhui = get_activites_for_user(request.user, RemiseCles, date=date.today()).aggregate(total=Sum('recette_realisee'))['total'] or 0
     
-    recettes_semaine = RemiseCles.objects.filter(
-        date__gte=date.today() - timedelta(days=7)
-    ).aggregate(total=Sum('recette_realisee'))['total'] or 0
+    recettes_semaine = get_activites_for_user(request.user, RemiseCles, date__gte=date.today() - timedelta(days=7)).aggregate(total=Sum('recette_realisee'))['total'] or 0
     
-    recettes_mois = RemiseCles.objects.filter(
-        date__gte=date.today().replace(day=1)
-    ).aggregate(total=Sum('recette_realisee'))['total'] or 0
+    recettes_mois = get_activites_for_user(request.user, RemiseCles, date__gte=date.today().replace(day=1)).aggregate(total=Sum('recette_realisee'))['total'] or 0
     
-    # Pannes (utilisant le modèle Panne)
-    pannes_en_cours = Panne.objects.filter(statut__in=['signalee', 'en_cours']).count()
-    pannes_critiques = Panne.objects.filter(severite='critique').count()
+    # Pannes (filtrées par chauffeurs accessibles)
+    pannes_en_cours = get_activites_for_user(request.user, Panne, statut__in=['signalee', 'en_cours']).count()
+    pannes_critiques = get_activites_for_user(request.user, Panne, severite='critique').count()
     
     
-    # Activités récentes (prises et remises)
-    prises_recentes = PriseCles.objects.select_related('chauffeur').order_by('-date', '-heure_prise')[:5]
-    remises_recentes = RemiseCles.objects.select_related('chauffeur').order_by('-date', '-heure_remise')[:5]
+    # Activités récentes (prises et remises) - filtrées par chauffeurs accessibles
+    prises_recentes = get_activites_for_user(request.user, PriseCles).select_related('chauffeur').order_by('-date', '-heure_prise')
+    remises_recentes = get_activites_for_user(request.user, RemiseCles).select_related('chauffeur').order_by('-date', '-heure_remise')
     
     # Combiner les activités récentes pour l'affichage
     activites_recentes = []
@@ -101,13 +141,21 @@ def dashboard_admin(request):
     
     # Trier par date décroissante
     activites_recentes.sort(key=lambda x: (x['date'], x['heure']), reverse=True)
-    activites_recentes = activites_recentes[:10]
+    
+    # Pagination des activités récentes
+    from django.core.paginator import Paginator
+    activites_paginator = Paginator(activites_recentes, 10)  # 10 activités par page
+    activites_page = request.GET.get('activites_page')
+    activites_obj = activites_paginator.get_page(activites_page)
     
     # Demandes de modification en attente
     demandes_en_attente = DemandeModification.objects.filter(statut='en_attente').count()
     
-    # Pannes récentes pour affichage
-    pannes_recentes = Panne.objects.select_related('chauffeur').order_by('-date_creation')[:5]
+    # Pannes récentes pour affichage avec pagination
+    pannes_recentes = Panne.objects.select_related('chauffeur').order_by('-date_creation')
+    pannes_paginator = Paginator(pannes_recentes, 10)  # 10 pannes par page
+    pannes_page = request.GET.get('pannes_page')
+    pannes_obj = pannes_paginator.get_page(pannes_page)
     
     context = {
         'total_chauffeurs': total_chauffeurs,
@@ -120,8 +168,10 @@ def dashboard_admin(request):
         'pannes_en_cours': pannes_en_cours,
         'pannes_critiques': pannes_critiques,
         'demandes_en_attente': demandes_en_attente,
-        'activites_recentes': activites_recentes,
-        'pannes_recentes': pannes_recentes,
+        'activites_recentes': activites_obj,
+        'activites_page_obj': activites_obj,
+        'pannes_recentes': pannes_obj,
+        'pannes_page_obj': pannes_obj,
     }
     
     return render(request, 'admin_dashboard/dashboard.html', context)
@@ -129,11 +179,20 @@ def dashboard_admin(request):
 
 @staff_member_required
 def liste_chauffeurs(request):
-    """Liste des chauffeurs"""
-    chauffeurs = Chauffeur.objects.all().order_by('nom', 'prenom')
+    """Liste des chauffeurs avec pagination"""
+    from django.core.paginator import Paginator
+    
+    # Filtrer les chauffeurs selon le type d'utilisateur
+    chauffeurs = get_chauffeurs_for_user(request.user).order_by('nom', 'prenom')
+    
+    # Pagination
+    paginator = Paginator(chauffeurs, 10)  # 10 chauffeurs par page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
     
     context = {
-        'chauffeurs': chauffeurs,
+        'chauffeurs': page_obj,
+        'page_obj': page_obj,
     }
     
     return render(request, 'admin_dashboard/liste_chauffeurs.html', context)
@@ -211,9 +270,17 @@ def statistiques_recettes(request):
         **chauffeur_filter
     ).aggregate(Sum('recette_realisee'))['recette_realisee__sum'] or 0
     
-    # Statistiques supplémentaires
-    nombre_chauffeurs_actifs = recettes_chauffeurs.count()
-    moyenne_par_chauffeur = recette_totale / nombre_chauffeurs_actifs if nombre_chauffeurs_actifs > 0 else 0
+    # Statistiques supplémentaires adaptées aux filtres
+    if chauffeur:
+        # Si un chauffeur spécifique est sélectionné
+        nombre_chauffeurs_actifs = 1
+        moyenne_par_chauffeur = recette_totale
+        nom_chauffeur = chauffeur.nom_complet
+    else:
+        # Si tous les chauffeurs sont sélectionnés
+        nombre_chauffeurs_actifs = recettes_chauffeurs.count()
+        moyenne_par_chauffeur = recette_totale / nombre_chauffeurs_actifs if nombre_chauffeurs_actifs > 0 else 0
+        nom_chauffeur = "Chauffeurs Actifs"
     
     # Données pour les graphiques
     # 1. Données pour le graphique en barres (recettes par jour)
@@ -322,6 +389,7 @@ def statistiques_recettes(request):
         'recette_totale': recette_totale,
         'nombre_chauffeurs_actifs': nombre_chauffeurs_actifs,
         'moyenne_par_chauffeur': moyenne_par_chauffeur,
+        'nom_chauffeur': nom_chauffeur,
         'recette_jour': recette_totale if periode == 'jour' else 0,
         'recette_semaine': recette_totale if periode == 'semaine' else 0,
         'recette_mois': recette_totale if periode == 'mois' else 0,
@@ -659,12 +727,12 @@ def gestion_activites(request):
         prises = prises.none()  # Afficher seulement les remises
     
     # Pagination pour les prises
-    prises_paginator = Paginator(prises, 15)  # 15 éléments par page
+    prises_paginator = Paginator(prises, 10)  # 10 éléments par page
     prises_page = request.GET.get('prises_page')
     prises_obj = prises_paginator.get_page(prises_page)
     
     # Pagination pour les remises
-    remises_paginator = Paginator(remises, 15)  # 15 éléments par page
+    remises_paginator = Paginator(remises, 10)  # 10 éléments par page
     remises_page = request.GET.get('remises_page')
     remises_obj = remises_paginator.get_page(remises_page)
     
@@ -1367,3 +1435,314 @@ def exporter_excel(request):
     except Exception as e:
         messages.error(request, f"Erreur lors de la génération du fichier Excel : {str(e)}")
         return redirect('admin_dashboard:statistiques_recettes')
+
+
+# =============================================================================
+# GESTION DES SUPERVISEURS - Privilèges et permissions
+# =============================================================================
+
+@staff_member_required
+def gestion_superviseurs(request):
+    # Vérifier que l'utilisateur est super admin
+    if not request.user.is_superuser:
+        messages.error(request, 'Accès refusé. Seuls les super administrateurs peuvent gérer les superviseurs.')
+        return redirect('admin_dashboard:dashboard_admin')
+    """
+    Vue de gestion des superviseurs
+    
+    Permet à l'administrateur de :
+    - Voir la liste des superviseurs
+    - Ajouter/retirer des privilèges superviseur
+    - Créer de nouveaux comptes superviseur
+    
+    Args:
+        request: Objet HttpRequest de l'utilisateur
+        
+    Returns:
+        HttpResponse: Template de gestion des superviseurs
+    """
+    from django.core.paginator import Paginator
+    
+    # Récupération du groupe Superviseurs
+    try:
+        superviseurs_group = Group.objects.get(name='Superviseurs')
+        superviseurs = User.objects.filter(groups=superviseurs_group).order_by('username')
+    except Group.DoesNotExist:
+        superviseurs = User.objects.none()
+        messages.warning(request, 'Le groupe "Superviseurs" n\'existe pas. Veuillez l\'initialiser.')
+    
+    # Pagination des superviseurs
+    paginator = Paginator(superviseurs, 10)  # 10 superviseurs par page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Récupération de tous les utilisateurs non-superviseurs avec pagination
+    non_superviseurs = User.objects.exclude(groups=superviseurs_group).order_by('username')
+    non_superviseurs_paginator = Paginator(non_superviseurs, 10)  # 10 utilisateurs par page
+    non_superviseurs_page = request.GET.get('non_superviseurs_page')
+    non_superviseurs_obj = non_superviseurs_paginator.get_page(non_superviseurs_page)
+    
+    context = {
+        'superviseurs': page_obj,
+        'page_obj': page_obj,
+        'non_superviseurs': non_superviseurs_obj,
+        'non_superviseurs_page_obj': non_superviseurs_obj,
+        'superviseurs_count': superviseurs.count(),
+    }
+    
+    return render(request, 'admin_dashboard/gestion_superviseurs.html', context)
+
+
+@staff_member_required
+def ajouter_superviseur(request, user_id):
+    # Vérifier que l'utilisateur est super admin
+    if not request.user.is_superuser:
+        messages.error(request, 'Accès refusé. Seuls les super administrateurs peuvent gérer les superviseurs.')
+        return redirect('admin_dashboard:dashboard_admin')
+    """
+    Vue pour ajouter un utilisateur au groupe Superviseurs
+    
+    Args:
+        request: Objet HttpRequest de l'utilisateur
+        user_id: ID de l'utilisateur à promouvoir
+        
+    Returns:
+        HttpResponse: Redirection vers la gestion des superviseurs
+    """
+    try:
+        user = User.objects.get(id=user_id)
+        superviseurs_group = Group.objects.get(name='Superviseurs')
+        
+        if not user.groups.filter(name='Superviseurs').exists():
+            user.groups.add(superviseurs_group)
+            messages.success(request, f'{user.username} a été ajouté aux superviseurs.')
+        else:
+            messages.warning(request, f'{user.username} est déjà superviseur.')
+            
+    except User.DoesNotExist:
+        messages.error(request, 'Utilisateur non trouvé.')
+    except Group.DoesNotExist:
+        messages.error(request, 'Groupe "Superviseurs" non trouvé.')
+    
+    return redirect('admin_dashboard:gestion_superviseurs')
+
+
+@staff_member_required
+def retirer_superviseur(request, user_id):
+    # Vérifier que l'utilisateur est super admin
+    if not request.user.is_superuser:
+        messages.error(request, 'Accès refusé. Seuls les super administrateurs peuvent gérer les superviseurs.')
+        return redirect('admin_dashboard:dashboard_admin')
+    """
+    Vue pour retirer un utilisateur du groupe Superviseurs
+    
+    Args:
+        request: Objet HttpRequest de l'utilisateur
+        user_id: ID de l'utilisateur à rétrograder
+        
+    Returns:
+        HttpResponse: Redirection vers la gestion des superviseurs
+    """
+    try:
+        user = User.objects.get(id=user_id)
+        superviseurs_group = Group.objects.get(name='Superviseurs')
+        
+        if user.groups.filter(name='Superviseurs').exists():
+            user.groups.remove(superviseurs_group)
+            messages.success(request, f'{user.username} n\'est plus superviseur.')
+        else:
+            messages.warning(request, f'{user.username} n\'était pas superviseur.')
+            
+    except User.DoesNotExist:
+        messages.error(request, 'Utilisateur non trouvé.')
+    except Group.DoesNotExist:
+        messages.error(request, 'Groupe "Superviseurs" non trouvé.')
+    
+    return redirect('admin_dashboard:gestion_superviseurs')
+
+
+@staff_member_required
+def creer_superviseur(request):
+    # Vérifier que l'utilisateur est super admin
+    if not request.user.is_superuser:
+        messages.error(request, 'Accès refusé. Seuls les super administrateurs peuvent gérer les superviseurs.')
+        return redirect('admin_dashboard:dashboard_admin')
+    """
+    Vue pour créer un nouveau compte superviseur
+    
+    Args:
+        request: Objet HttpRequest de l'utilisateur
+        
+    Returns:
+        HttpResponse: Template de création ou redirection
+    """
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        first_name = request.POST.get('first_name', '')
+        last_name = request.POST.get('last_name', '')
+        
+        # Validation des champs obligatoires
+        if not username or not password:
+            messages.error(request, 'Nom d\'utilisateur et mot de passe sont obligatoires.')
+            return render(request, 'admin_dashboard/creer_superviseur.html')
+        
+        # Vérification de l'unicité du nom d'utilisateur
+        if User.objects.filter(username=username).exists():
+            messages.error(request, 'Ce nom d\'utilisateur existe déjà.')
+            return render(request, 'admin_dashboard/creer_superviseur.html')
+        
+        try:
+            # Création de l'utilisateur
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password,
+                first_name=first_name,
+                last_name=last_name
+            )
+            
+            # Ajout au groupe Superviseurs
+            superviseurs_group = Group.objects.get(name='Superviseurs')
+            user.groups.add(superviseurs_group)
+            
+            messages.success(request, f'Superviseur {username} créé avec succès.')
+            return redirect('admin_dashboard:gestion_superviseurs')
+            
+        except Group.DoesNotExist:
+            messages.error(request, 'Groupe "Superviseurs" non trouvé.')
+        except Exception as e:
+            messages.error(request, f'Erreur lors de la création : {str(e)}')
+    
+    return render(request, 'admin_dashboard/creer_superviseur.html')
+
+
+@staff_member_required
+def assigner_chauffeurs(request, superviseur_id):
+    """
+    Vue pour assigner des chauffeurs à un superviseur
+    
+    Args:
+        request: Objet HttpRequest de l'utilisateur
+        superviseur_id: ID du superviseur
+        
+    Returns:
+        HttpResponse: Template d'assignation ou redirection
+    """
+    # Vérifier que l'utilisateur est super admin
+    if not request.user.is_superuser:
+        messages.error(request, 'Accès refusé. Seuls les super administrateurs peuvent gérer les assignations.')
+        return redirect('admin_dashboard:dashboard_admin')
+    
+    try:
+        superviseur = User.objects.get(id=superviseur_id, groups__name='Superviseurs')
+    except User.DoesNotExist:
+        messages.error(request, 'Superviseur non trouvé.')
+        return redirect('admin_dashboard:gestion_superviseurs')
+    
+    if request.method == 'POST':
+        chauffeur_ids = request.POST.getlist('chauffeurs')
+        
+        # Supprimer complètement les assignations existantes
+        AssignationSuperviseur.objects.filter(superviseur=superviseur).delete()
+        
+        # Créer les nouvelles assignations
+        for chauffeur_id in chauffeur_ids:
+            try:
+                chauffeur = Chauffeur.objects.get(id=chauffeur_id)
+                AssignationSuperviseur.objects.create(
+                    chauffeur=chauffeur,
+                    superviseur=superviseur,
+                    assigne_par=request.user
+                )
+            except Chauffeur.DoesNotExist:
+                continue
+        
+        messages.success(request, f'Assignations mises à jour pour {superviseur.get_full_name() or superviseur.username}.')
+        return redirect('admin_dashboard:gestion_superviseurs')
+    
+    # Récupérer tous les chauffeurs
+    chauffeurs = Chauffeur.objects.filter(actif=True).order_by('nom', 'prenom')
+    
+    # Récupérer les chauffeurs déjà assignés
+    chauffeurs_assignes = AssignationSuperviseur.get_chauffeurs_assignes(superviseur)
+    
+    context = {
+        'superviseur': superviseur,
+        'chauffeurs': chauffeurs,
+        'chauffeurs_assignes': chauffeurs_assignes,
+    }
+    
+    return render(request, 'admin_dashboard/assigner_chauffeurs.html', context)
+
+
+@staff_member_required
+def detail_superviseur(request, superviseur_id):
+    """
+    Vue pour afficher les détails d'un superviseur et ses chauffeurs assignés
+    
+    Args:
+        request: Objet HttpRequest de l'utilisateur
+        superviseur_id: ID du superviseur
+        
+    Returns:
+        HttpResponse: Template de détail du superviseur
+    """
+    # Vérifier que l'utilisateur est super admin
+    if not request.user.is_superuser:
+        messages.error(request, 'Accès refusé. Seuls les super administrateurs peuvent voir les détails des superviseurs.')
+        return redirect('admin_dashboard:dashboard_admin')
+    
+    try:
+        superviseur = User.objects.get(id=superviseur_id, groups__name='Superviseurs')
+    except User.DoesNotExist:
+        messages.error(request, 'Superviseur non trouvé.')
+        return redirect('admin_dashboard:gestion_superviseurs')
+    
+    # Récupérer les chauffeurs assignés
+    chauffeurs_assignes = AssignationSuperviseur.get_chauffeurs_assignes(superviseur)
+    
+    # Statistiques du superviseur
+    stats = {
+        'total_chauffeurs': chauffeurs_assignes.count(),
+        'chauffeurs_actifs': chauffeurs_assignes.filter(actif=True).count(),
+        'total_prises_mois': get_activites_for_user(superviseur, PriseCles, date__gte=date.today().replace(day=1)).count(),
+        'total_remises_mois': get_activites_for_user(superviseur, RemiseCles, date__gte=date.today().replace(day=1)).count(),
+        'recettes_mois': get_activites_for_user(superviseur, RemiseCles, date__gte=date.today().replace(day=1)).aggregate(total=Sum('recette_realisee'))['total'] or 0,
+    }
+    
+    # Activités récentes des chauffeurs assignés
+    activites_recentes = []
+    prises_recentes = get_activites_for_user(superviseur, PriseCles).select_related('chauffeur').order_by('-date', '-heure_prise')[:10]
+    remises_recentes = get_activites_for_user(superviseur, RemiseCles).select_related('chauffeur').order_by('-date', '-heure_remise')[:10]
+    
+    for prise in prises_recentes:
+        activites_recentes.append({
+            'type': 'Prise de clés',
+            'chauffeur': prise.chauffeur.nom_complet,
+            'date_heure': datetime.combine(prise.date, prise.heure_prise),
+            'details': f"Objectif: {prise.objectif_recette} FCFA",
+            'icon': 'bi-key text-primary'
+        })
+    
+    for remise in remises_recentes:
+        activites_recentes.append({
+            'type': 'Remise de clés',
+            'chauffeur': remise.chauffeur.nom_complet,
+            'date_heure': datetime.combine(remise.date, remise.heure_remise),
+            'details': f"Recette: {remise.recette_realisee} FCFA",
+            'icon': 'bi-box-arrow-in-right text-success'
+        })
+    
+    # Trier les activités récentes par date et heure
+    activites_recentes.sort(key=lambda x: x['date_heure'], reverse=True)
+    
+    context = {
+        'superviseur': superviseur,
+        'chauffeurs_assignes': chauffeurs_assignes,
+        'stats': stats,
+        'activites_recentes': activites_recentes[:10],
+    }
+    
+    return render(request, 'admin_dashboard/detail_superviseur.html', context)

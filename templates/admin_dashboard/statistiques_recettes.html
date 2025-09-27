@@ -57,9 +57,14 @@
         <div class="card stat-card bg-success text-white">
             <div class="card-body text-center">
                 <i class="bi bi-people fs-1 mb-2"></i>
-                <h6>Chauffeurs Actifs</h6>
-                <h3>{{ nombre_chauffeurs_actifs }}</h3>
-                <small>{{ moyenne_par_chauffeur|floatformat:0 }} FCFA/chauffeur</small>
+                <h6>{{ nom_chauffeur }}</h6>
+                {% if chauffeur_selectionne %}
+                    <h3>{{ recette_totale|floatformat:0 }} FCFA</h3>
+                    <small>Recette {{ periode|title }}</small>
+                {% else %}
+                    <h3>{{ nombre_chauffeurs_actifs }}</h3>
+                    <small>{{ moyenne_par_chauffeur|floatformat:0 }} FCFA/chauffeur</small>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -67,9 +72,15 @@
         <div class="card stat-card bg-info text-white">
             <div class="card-body text-center">
                 <i class="bi bi-graph-up fs-1 mb-2"></i>
-                <h6>Performance Moyenne</h6>
-                <h3>{{ performance_moyenne|floatformat:1 }}%</h3>
-                <small>Objectifs atteints</small>
+                {% if chauffeur_selectionne %}
+                    <h6>Performance</h6>
+                    <h3>{{ performance_moyenne|floatformat:1 }}%</h3>
+                    <small>Objectifs atteints</small>
+                {% else %}
+                    <h6>Performance Moyenne</h6>
+                    <h3>{{ performance_moyenne|floatformat:1 }}%</h3>
+                    <small>Objectifs atteints</small>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -79,7 +90,11 @@
                 <i class="bi bi-calendar3 fs-1 mb-2"></i>
                 <h6>Période</h6>
                 <h3>{{ periode|title }}</h3>
-                <small>{{ recettes_par_jour|length }} jour{{ recettes_par_jour|length|pluralize }}</small>
+                {% if chauffeur_selectionne %}
+                    <small>{{ recettes_par_jour|length }} jour{{ recettes_par_jour|length|pluralize }} travaillé{{ recettes_par_jour|length|pluralize }}</small>
+                {% else %}
+                    <small>{{ recettes_par_jour|length }} jour{{ recettes_par_jour|length|pluralize }}</small>
+                {% endif %}
             </div>
         </div>
     </div>

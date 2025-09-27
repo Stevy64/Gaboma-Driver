@@ -37,5 +37,16 @@ urlpatterns = [
     path('reinitialiser-demandes-modification/', views.reinitialiser_demandes_modification, name='reinitialiser_demandes_modification'),
     path('supprimer-panne/<int:panne_id>/', views.supprimer_panne, name='supprimer_panne'),
     path('supprimer-toutes-pannes/', views.supprimer_toutes_pannes, name='supprimer_toutes_pannes'),
+    
+    # =============================================================================
+    # GESTION DES SUPERVISEURS - Privilèges et permissions
+    # =============================================================================
+    path('superviseurs/', views.gestion_superviseurs, name='gestion_superviseurs'),
+    path('superviseurs/ajouter/<int:user_id>/', views.ajouter_superviseur, name='ajouter_superviseur'),
+    path('superviseurs/retirer/<int:user_id>/', views.retirer_superviseur, name='retirer_superviseur'),
+    path('superviseurs/creer/', views.creer_superviseur, name='creer_superviseur'),
+    path('superviseurs/assigner/<int:superviseur_id>/', views.assigner_chauffeurs, name='assigner_chauffeurs'),
+    path('superviseurs/detail/<int:superviseur_id>/', views.detail_superviseur, name='detail_superviseur'),
+    
     path('logout/', views.logout_admin, name='logout_admin'),
 ]

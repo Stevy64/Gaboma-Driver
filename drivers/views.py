@@ -123,6 +123,49 @@ def login_chauffeur(request):
     return render(request, 'drivers/login_chauffeur.html')
 
 
+def login_superviseur(request):
+    """
+    Vue de connexion pour les superviseurs
+    
+    Cette vue gère l'authentification des superviseurs. Elle vérifie les identifiants,
+    s'assure que l'utilisateur appartient au groupe 'Superviseurs', puis connecte l'utilisateur.
+    
+    Args:
+        request: Objet HttpRequest contenant les données du formulaire
+        
+    Returns:
+        HttpResponse: Template de connexion ou redirection vers l'espace admin
+    """
+    # Traitement du formulaire de connexion (méthode POST)
+    if request.method == 'POST':
+        # Récupération des données du formulaire
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        
+        # Validation des champs obligatoires
+        if not username or not password:
+            messages.error(request, 'Veuillez remplir tous les champs.')
+            return render(request, 'drivers/login_superviseur.html')
+        
+        # Authentification Django - Vérification des identifiants
+        user = authenticate(request, username=username, password=password)
+        
+        if user is not None:
+            # Vérification que l'utilisateur appartient au groupe 'Superviseurs'
+            if user.groups.filter(name='Superviseurs').exists():
+                # Connexion de l'utilisateur (création de la session)
+                login(request, user)
+                messages.success(request, f'Bienvenue {user.get_full_name() or user.username} !')
+                return redirect('admin_dashboard:dashboard_admin')
+            else:
+                messages.error(request, 'Vous n\'avez pas les privilèges de superviseur.')
+        else:
+            messages.error(request, 'Nom d\'utilisateur ou mot de passe incorrect.')
+    
+    # Affichage du formulaire de connexion (méthode GET ou en cas d'erreur)
+    return render(request, 'drivers/login_superviseur.html')
+
+
 def creer_compte_chauffeur(request):
     """
     Vue de création de compte pour les chauffeurs

@@ -1,0 +1,318 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Assigner des Chauffeurs - {{ superviseur.get_full_name|default:superviseur.username }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="bi bi-person-check text-primary me-2"></i>
+                        Assigner des Chauffeurs
+                    </h2>
+                    <p class="text-muted mb-0">
+                        Superviseur : <strong>{{ superviseur.get_full_name|default:superviseur.username }}</strong>
+                    </p>
+                </div>
+                <div>
+                    <a href="{% url 'admin_dashboard:gestion_superviseurs' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Retour
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Messages d'alerte -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                <i class="bi bi-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Formulaire d'assignation -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-list-check me-2"></i>
+                        Sélectionner les Chauffeurs à Assigner
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" id="assignationForm" action="{% url 'admin_dashboard:assigner_chauffeurs' superviseur.id %}">
+                        {% csrf_token %}
+                        
+                        <!-- Chauffeurs actuellement assignés -->
+                        {% if chauffeurs_assignes %}
+                        <div class="mb-4">
+                            <h6 class="text-success">
+                                <i class="bi bi-check-circle me-1"></i>
+                                Chauffeurs Actuellement Assignés ({{ chauffeurs_assignes.count }})
+                            </h6>
+                            
+                            <!-- Version Desktop -->
+                            <div class="row d-none d-lg-block">
+                                {% for chauffeur in chauffeurs_assignes %}
+                                <div class="col-md-4 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="chauffeurs" value="{{ chauffeur.id }}" 
+                                               id="chauffeur_assignes_{{ chauffeur.id }}" checked>
+                                        <label class="form-check-label" for="chauffeur_assignes_{{ chauffeur.id }}">
+                                            <span class="badge bg-success me-2">{{ forloop.counter }}</span>
+                                            <strong>{{ chauffeur.nom_complet }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ chauffeur.telephone }}</small>
+                                        </label>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <!-- Version Mobile -->
+                            <div class="d-lg-none">
+                                {% for chauffeur in chauffeurs_assignes %}
+                                <div class="card mb-2 border-success">
+                                    <div class="card-body py-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" 
+                                                   name="chauffeurs" value="{{ chauffeur.id }}" 
+                                                   id="chauffeur_assignes_mobile_{{ chauffeur.id }}" checked>
+                                            <label class="form-check-label w-100" for="chauffeur_assignes_mobile_{{ chauffeur.id }}">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div>
+                                                        <span class="badge bg-success me-2">{{ forloop.counter }}</span>
+                                                        <strong>{{ chauffeur.nom_complet }}</strong>
+                                                    </div>
+                                                    <span class="badge bg-success">Assigné</span>
+                                                </div>
+                                                <div class="mt-1">
+                                                    <small class="text-muted">
+                                                        <i class="bi bi-telephone me-1"></i>{{ chauffeur.telephone }}
+                                                    </small>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <hr>
+                        {% endif %}
+                        
+                        <!-- Tous les chauffeurs -->
+                        <div class="mb-4">
+                            <h6 class="text-primary">
+                                <i class="bi bi-people me-1"></i>
+                                Tous les Chauffeurs Disponibles ({{ chauffeurs.count }})
+                            </h6>
+                            
+                            <!-- Version Desktop -->
+                            <div class="row d-none d-lg-block">
+                                {% for chauffeur in chauffeurs %}
+                                <div class="col-md-4 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="chauffeurs" value="{{ chauffeur.id }}" 
+                                               id="chauffeur_{{ chauffeur.id }}"
+                                               {% if chauffeur in chauffeurs_assignes %}checked{% endif %}>
+                                        <label class="form-check-label" for="chauffeur_{{ chauffeur.id }}">
+                                            <span class="badge bg-secondary me-2">{{ forloop.counter }}</span>
+                                            <strong>{{ chauffeur.nom_complet }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ chauffeur.telephone }}</small>
+                                            {% if chauffeur.email %}
+                                                <br>
+                                                <small class="text-muted">{{ chauffeur.email }}</small>
+                                            {% endif %}
+                                        </label>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <div class="col-12">
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-info-circle me-2"></i>
+                                        Aucun chauffeur disponible.
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <!-- Version Mobile -->
+                            <div class="d-lg-none">
+                                {% for chauffeur in chauffeurs %}
+                                <div class="card mb-2">
+                                    <div class="card-body py-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" 
+                                                   name="chauffeurs" value="{{ chauffeur.id }}" 
+                                                   id="chauffeur_mobile_{{ chauffeur.id }}"
+                                                   {% if chauffeur in chauffeurs_assignes %}checked{% endif %}>
+                                            <label class="form-check-label w-100" for="chauffeur_mobile_{{ chauffeur.id }}">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div>
+                                                        <span class="badge bg-secondary me-2">{{ forloop.counter }}</span>
+                                                        <strong>{{ chauffeur.nom_complet }}</strong>
+                                                    </div>
+                                                    {% if chauffeur in chauffeurs_assignes %}
+                                                        <span class="badge bg-success">Assigné</span>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="mt-1">
+                                                    <small class="text-muted">
+                                                        <i class="bi bi-telephone me-1"></i>{{ chauffeur.telephone }}
+                                                    </small>
+                                                    {% if chauffeur.email %}
+                                                        <br>
+                                                        <small class="text-muted">
+                                                            <i class="bi bi-envelope me-1"></i>{{ chauffeur.email }}
+                                                        </small>
+                                                    {% endif %}
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    Aucun chauffeur disponible.
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <!-- Actions rapides -->
+                        <div class="mb-4">
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="selectAll()">
+                                    <i class="bi bi-check-all"></i> Tout sélectionner
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="deselectAll()">
+                                    <i class="bi bi-x-square"></i> Tout désélectionner
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Boutons d'action -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'admin_dashboard:gestion_superviseurs' %}" class="btn btn-outline-secondary me-md-2">
+                                <i class="bi bi-x-circle"></i> Annuler
+                            </a>
+                            <button type="submit" class="btn btn-primary" id="submitBtn">
+                                <i class="bi bi-check-circle"></i> Mettre à jour les Assignations
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function selectAll() {
+    const checkboxes = document.querySelectorAll('input[name="chauffeurs"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = true;
+    });
+    updateMobileLabels();
+}
+
+function deselectAll() {
+    const checkboxes = document.querySelectorAll('input[name="chauffeurs"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    updateMobileLabels();
+}
+
+function updateMobileLabels() {
+    // Mettre à jour les labels mobiles pour refléter l'état des checkboxes
+    const checkboxes = document.querySelectorAll('input[name="chauffeurs"]');
+    checkboxes.forEach(checkbox => {
+        const label = document.querySelector(`label[for="${checkbox.id}"]`);
+        if (label) {
+            const badge = label.querySelector('.badge.bg-success');
+            if (checkbox.checked) {
+                if (!badge) {
+                    const newBadge = document.createElement('span');
+                    newBadge.className = 'badge bg-success';
+                    newBadge.textContent = 'Assigné';
+                    
+                    // Chercher l'élément .d-flex dans le label (version mobile)
+                    const dFlexElement = label.querySelector('.d-flex');
+                    if (dFlexElement) {
+                        dFlexElement.appendChild(newBadge);
+                    } else {
+                        // Si pas de .d-flex, ajouter à la fin du label
+                        label.appendChild(newBadge);
+                    }
+                }
+            } else {
+                if (badge) {
+                    badge.remove();
+                }
+            }
+        }
+    });
+}
+
+// Confirmation avant soumission
+document.getElementById('assignationForm').addEventListener('submit', function(e) {
+    const submitBtn = document.getElementById('submitBtn');
+    const checkedBoxes = document.querySelectorAll('input[name="chauffeurs"]:checked');
+    
+    if (checkedBoxes.length === 0) {
+        e.preventDefault();
+        alert('Veuillez sélectionner au moins un chauffeur ou confirmer la suppression de toutes les assignations.');
+        return;
+    }
+    
+    const superviseur = '{{ superviseur.get_full_name|default:superviseur.username }}';
+    if (!confirm(`Êtes-vous sûr de vouloir mettre à jour les assignations pour ${superviseur} ?`)) {
+        e.preventDefault();
+        return;
+    }
+    
+    // Désactiver le bouton et afficher un spinner
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Mise à jour en cours...';
+    
+    // Ne pas empêcher la soumission - laisser le formulaire se soumettre
+    // Le formulaire se soumettra automatiquement après cette fonction
+});
+
+// Synchroniser les checkboxes desktop et mobile
+document.addEventListener('DOMContentLoaded', function() {
+    const checkboxes = document.querySelectorAll('input[name="chauffeurs"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            // Trouver la checkbox correspondante dans l'autre version
+            const otherId = this.id.includes('mobile_') ? 
+                this.id.replace('mobile_', '') : 
+                'mobile_' + this.id;
+            const otherCheckbox = document.getElementById(otherId);
+            if (otherCheckbox) {
+                otherCheckbox.checked = this.checked;
+            }
+            updateMobileLabels();
+        });
+    });
+    
+    // Initialiser les labels mobiles
+    updateMobileLabels();
+});
+</script>
+{% endblock %}

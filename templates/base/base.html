@@ -77,6 +77,13 @@
                                     <i class="bi bi-clipboard-check"></i> Demandes
                                 </a>
                             </li>
+                            {% if user.is_superuser %}
+                            <li class="nav-item">
+                                <a class="nav-link{% if '/admin-dashboard/superviseurs/' in request.path %} active{% endif %}" href="{% url 'admin_dashboard:gestion_superviseurs' %}">
+                                    <i class="bi bi-people-fill"></i> Superviseurs
+                                </a>
+                            </li>
+                            {% endif %}
                             <!-- Profil Admin -->
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
@@ -140,8 +147,8 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'admin:login' %}">
-                                <i class="bi bi-gear"></i> Admin
+                            <a class="nav-link" href="{% url 'drivers:login_superviseur' %}">
+                                <i class="bi bi-person-badge"></i> Connexion Superviseur
                             </a>
                         </li>
                     {% endif %}

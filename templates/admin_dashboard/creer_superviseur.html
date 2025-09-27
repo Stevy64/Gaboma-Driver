@@ -1,0 +1,140 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Créer un Superviseur - Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="bi bi-person-plus text-success me-2"></i>
+                        Créer un Superviseur
+                    </h2>
+                    <p class="text-muted mb-0">Créez un nouveau compte superviseur</p>
+                </div>
+                <div>
+                    <a href="{% url 'admin_dashboard:gestion_superviseurs' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Retour
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Messages d'alerte -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                <i class="bi bi-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Formulaire de création -->
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-person-badge me-2"></i>
+                        Informations du Superviseur
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{% url 'admin_dashboard:creer_superviseur' %}">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="username" class="form-label">
+                                    <i class="bi bi-person me-1"></i> Nom d'utilisateur *
+                                </label>
+                                <input type="text" class="form-control" id="username" name="username" required
+                                       placeholder="Entrez le nom d'utilisateur">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">
+                                    <i class="bi bi-envelope me-1"></i> Email
+                                </label>
+                                <input type="email" class="form-control" id="email" name="email"
+                                       placeholder="Entrez l'email">
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="first_name" class="form-label">
+                                    <i class="bi bi-person me-1"></i> Prénom
+                                </label>
+                                <input type="text" class="form-control" id="first_name" name="first_name"
+                                       placeholder="Entrez le prénom">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="last_name" class="form-label">
+                                    <i class="bi bi-person me-1"></i> Nom
+                                </label>
+                                <input type="text" class="form-control" id="last_name" name="last_name"
+                                       placeholder="Entrez le nom">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="password" class="form-label">
+                                <i class="bi bi-lock me-1"></i> Mot de passe *
+                            </label>
+                            <input type="password" class="form-control" id="password" name="password" required
+                                   placeholder="Entrez le mot de passe">
+                            <div class="form-text">
+                                Le mot de passe doit contenir au moins 8 caractères.
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>Note :</strong> L'utilisateur sera automatiquement ajouté au groupe "Superviseurs" 
+                            et pourra accéder à l'espace d'administration.
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'admin_dashboard:gestion_superviseurs' %}" class="btn btn-outline-secondary me-md-2">
+                                <i class="bi bi-x-circle"></i> Annuler
+                            </a>
+                            <button type="submit" class="btn btn-success" id="submitBtn">
+                                <i class="bi bi-check-circle"></i> Créer le Superviseur
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    if (form && submitBtn) {
+        form.addEventListener('submit', function(e) {
+            // Désactiver le bouton et afficher un spinner
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Création en cours...';
+            
+            // Ne pas empêcher la soumission - laisser le formulaire se soumettre
+            // Le formulaire se soumettra automatiquement après cette fonction
+        });
+    } else {
+        console.error('Formulaire ou bouton non trouvé');
+    }
+});
+</script>
+{% endblock %}

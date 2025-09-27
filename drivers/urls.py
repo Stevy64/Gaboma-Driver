@@ -44,6 +44,7 @@ urlpatterns = [
     
     # Authentification des chauffeurs
     path('login/', views.login_chauffeur, name='login_chauffeur'),
+    path('login-superviseur/', views.login_superviseur, name='login_superviseur'),
     path('creer-compte/', views.creer_compte_chauffeur, name='creer_compte'),
     
     # =============================================================================

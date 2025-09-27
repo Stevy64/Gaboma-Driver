@@ -1,0 +1,405 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Gestion des Superviseurs - Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="bi bi-people-fill text-success me-2"></i>
+                        Gestion des Superviseurs
+                    </h2>
+                    <p class="text-muted mb-0">Gérez les privilèges de supervision</p>
+                </div>
+                <div>
+                    <a href="{% url 'admin_dashboard:creer_superviseur' %}" class="btn btn-success">
+                        <i class="bi bi-person-plus"></i> Créer un Superviseur
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Messages d'alerte -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                <i class="bi bi-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ superviseurs_count }}</h4>
+                            <p class="mb-0">Superviseurs actifs</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-people-fill" style="font-size: 2rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des Superviseurs -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-list-ul me-2"></i>
+                        Superviseurs Actifs
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if superviseurs %}
+                        <!-- Version Desktop -->
+                        <div class="table-responsive d-none d-lg-block">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th width="5%">#</th>
+                                        <th>Nom d'utilisateur</th>
+                                        <th>Nom complet</th>
+                                        <th>Email</th>
+                                        <th>Date de création</th>
+                                        <th>Dernière connexion</th>
+                                        <th width="20%">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for superviseur in superviseurs %}
+                                    <tr>
+                                        <td class="text-muted">{{ forloop.counter }}</td>
+                                        <td>
+                                            <a href="{% url 'admin_dashboard:detail_superviseur' superviseur.id %}" 
+                                               class="text-decoration-none">
+                                                <strong>{{ superviseur.username }}</strong>
+                                            </a>
+                                            {% if superviseur.is_superuser %}
+                                                <span class="badge bg-danger ms-2">Super Admin</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ superviseur.get_full_name|default:"-" }}</td>
+                                        <td>{{ superviseur.email|default:"-" }}</td>
+                                        <td>{{ superviseur.date_joined|date:"d/m/Y H:i" }}</td>
+                                        <td>
+                                            {% if superviseur.last_login %}
+                                                {{ superviseur.last_login|date:"d/m/Y H:i" }}
+                                            {% else %}
+                                                <span class="text-muted">Jamais</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="{% url 'admin_dashboard:assigner_chauffeurs' superviseur.id %}" 
+                                                   class="btn btn-outline-primary btn-sm"
+                                                   title="Assigner des chauffeurs">
+                                                    <i class="bi bi-person-check"></i> Assigner
+                                                </a>
+                                                <a href="{% url 'admin_dashboard:retirer_superviseur' superviseur.id %}" 
+                                                   class="btn btn-outline-danger btn-sm"
+                                                   onclick="return confirm('Êtes-vous sûr de vouloir retirer les privilèges de superviseur à {{ superviseur.username }} ?')"
+                                                   title="Retirer les privilèges">
+                                                    <i class="bi bi-person-dash"></i> Retirer
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Version Mobile -->
+                        <div class="d-lg-none">
+                            {% for superviseur in superviseurs %}
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="card-title mb-0">
+                                            <span class="badge bg-primary me-2">{{ forloop.counter }}</span>
+                                            <a href="{% url 'admin_dashboard:detail_superviseur' superviseur.id %}" 
+                                               class="text-decoration-none">
+                                                {{ superviseur.username }}
+                                            </a>
+                                            {% if superviseur.is_superuser %}
+                                                <span class="badge bg-danger ms-2">Super Admin</span>
+                                            {% endif %}
+                                        </h6>
+                                        <div class="dropdown">
+                                            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                <i class="bi bi-three-dots-vertical"></i>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li>
+                                                    <a class="dropdown-item" href="{% url 'admin_dashboard:assigner_chauffeurs' superviseur.id %}">
+                                                        <i class="bi bi-person-check me-2"></i>Assigner
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item text-danger" href="{% url 'admin_dashboard:retirer_superviseur' superviseur.id %}" 
+                                                       onclick="return confirm('Êtes-vous sûr de vouloir retirer les privilèges de superviseur à {{ superviseur.username }} ?')">
+                                                        <i class="bi bi-person-dash me-2"></i>Retirer
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <small class="text-muted">Nom complet:</small><br>
+                                            <span>{{ superviseur.get_full_name|default:"-" }}</span>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted">Email:</small><br>
+                                            <span>{{ superviseur.email|default:"-" }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-2">
+                                        <div class="col-6">
+                                            <small class="text-muted">Créé le:</small><br>
+                                            <span>{{ superviseur.date_joined|date:"d/m/Y" }}</span>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted">Dernière connexion:</small><br>
+                                            {% if superviseur.last_login %}
+                                                {{ superviseur.last_login|date:"d/m/Y H:i" }}
+                                            {% else %}
+                                                <span class="text-muted">Jamais</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="bi bi-people text-muted" style="font-size: 3rem;"></i>
+                                <h5 class="text-muted mt-3">Aucun superviseur</h5>
+                                <p class="text-muted">Commencez par créer un superviseur ou promouvoir un utilisateur existant.</p>
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Pagination -->
+                        {% if page_obj.has_other_pages %}
+                        <nav aria-label="Pagination des superviseurs" class="mt-4">
+                            <ul class="pagination justify-content-center">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1">&laquo; Première</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Précédente</a>
+                                    </li>
+                                {% endif %}
+                                
+                                <li class="page-item active">
+                                    <span class="page-link">
+                                        Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}
+                                    </span>
+                                </li>
+                                
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Suivante</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Dernière &raquo;</a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+    </div>
+
+    <!-- Utilisateurs non-superviseurs -->
+    {% if non_superviseurs %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-person-plus me-2"></i>
+                        Utilisateurs Disponibles
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Version Desktop -->
+                    <div class="table-responsive d-none d-lg-block">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th width="5%">#</th>
+                                    <th>Nom d'utilisateur</th>
+                                    <th>Nom complet</th>
+                                    <th>Email</th>
+                                    <th>Date de création</th>
+                                    <th width="15%">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in non_superviseurs %}
+                                <tr>
+                                    <td class="text-muted">{{ forloop.counter|add:non_superviseurs_page_obj.start_index|add:"-1" }}</td>
+                                    <td>
+                                        <strong>{{ user.username }}</strong>
+                                        {% if user.is_superuser %}
+                                            <span class="badge bg-danger ms-2">Super Admin</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ user.get_full_name|default:"-" }}</td>
+                                    <td>{{ user.email|default:"-" }}</td>
+                                    <td>{{ user.date_joined|date:"d/m/Y H:i" }}</td>
+                                    <td>
+                                        <a href="{% url 'admin_dashboard:ajouter_superviseur' user.id %}" 
+                                           class="btn btn-outline-success btn-sm"
+                                           onclick="return confirm('Êtes-vous sûr de vouloir donner les privilèges de superviseur à {{ user.username }} ?')">
+                                            <i class="bi bi-person-plus"></i> Promouvoir
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Version Mobile -->
+                    <div class="d-lg-none">
+                        {% for user in non_superviseurs %}
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h6 class="card-title mb-0">
+                                        <span class="badge bg-secondary me-2">{{ forloop.counter|add:non_superviseurs_page_obj.start_index|add:"-1" }}</span>
+                                        {{ user.username }}
+                                        {% if user.is_superuser %}
+                                            <span class="badge bg-danger ms-2">Super Admin</span>
+                                        {% endif %}
+                                    </h6>
+                                    <a href="{% url 'admin_dashboard:ajouter_superviseur' user.id %}" 
+                                       class="btn btn-outline-success btn-sm"
+                                       onclick="return confirm('Êtes-vous sûr de vouloir donner les privilèges de superviseur à {{ user.username }} ?')">
+                                        <i class="bi bi-person-plus"></i> Promouvoir
+                                    </a>
+                                </div>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <small class="text-muted">Nom complet:</small><br>
+                                        <span>{{ user.get_full_name|default:"-" }}</span>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted">Email:</small><br>
+                                        <span>{{ user.email|default:"-" }}</span>
+                                    </div>
+                                </div>
+                                <div class="row mt-2">
+                                    <div class="col-12">
+                                        <small class="text-muted">Créé le:</small><br>
+                                        <span>{{ user.date_joined|date:"d/m/Y H:i" }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Pagination pour les utilisateurs non-superviseurs -->
+                    {% if non_superviseurs_page_obj.has_other_pages %}
+                    <nav aria-label="Pagination des utilisateurs disponibles" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if non_superviseurs_page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?non_superviseurs_page=1">&laquo; Première</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?non_superviseurs_page={{ non_superviseurs_page_obj.previous_page_number }}">Précédente</a>
+                                </li>
+                            {% endif %}
+                            
+                            <li class="page-item active">
+                                <span class="page-link">
+                                    Page {{ non_superviseurs_page_obj.number }} sur {{ non_superviseurs_page_obj.paginator.num_pages }}
+                                </span>
+                            </li>
+                            
+                            {% if non_superviseurs_page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?non_superviseurs_page={{ non_superviseurs_page_obj.next_page_number }}">Suivante</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?non_superviseurs_page={{ non_superviseurs_page_obj.paginator.num_pages }}">Dernière &raquo;</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Améliorer l'affichage des messages
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        // Ajouter une animation d'entrée
+        alert.style.opacity = '0';
+        alert.style.transform = 'translateY(-20px)';
+        
+        setTimeout(() => {
+            alert.style.transition = 'all 0.3s ease';
+            alert.style.opacity = '1';
+            alert.style.transform = 'translateY(0)';
+        }, 100);
+        
+        // Auto-dismiss après 5 secondes pour les messages de succès
+        if (alert.classList.contains('alert-success')) {
+            setTimeout(() => {
+                alert.style.transition = 'all 0.3s ease';
+                alert.style.opacity = '0';
+                alert.style.transform = 'translateY(-20px)';
+                setTimeout(() => {
+                    alert.remove();
+                }, 300);
+            }, 5000);
+        }
+    });
+    
+    // Confirmation pour les actions de suppression
+    const deleteLinks = document.querySelectorAll('a[href*="retirer"]');
+    deleteLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            const username = this.closest('tr')?.querySelector('td:first-child strong')?.textContent || 
+                           this.closest('.card')?.querySelector('.card-title')?.textContent?.replace(/\d+\s*/, '') || 
+                           'cet utilisateur';
+            
+            if (!confirm(`Êtes-vous sûr de vouloir retirer les privilèges de superviseur à ${username} ?`)) {
+                e.preventDefault();
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -167,18 +167,20 @@
                                 <table class="table table-hover">
                                     <thead class="table-light">
                                         <tr>
+                                            <th width="5%">#</th>
                                             <th>Chauffeur</th>
                                             <th>Date</th>
                                             <th>Heure</th>
                                             <th>Objectif (FCFA)</th>
                                             <th>Carburant</th>
                                             <th>Problème</th>
-                                            <th>Actions</th>
+                                            <th width="15%">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for prise in prises %}
                                         <tr>
+                                            <td class="text-muted">{{ forloop.counter|add:prises.start_index|add:"-1" }}</td>
                                             <td>
                                                 <div class="d-flex align-items-center">
                                                     <div class="avatar-sm bg-primary rounded-circle d-flex align-items-center justify-content-center me-2">
@@ -280,18 +282,20 @@
                                 <table class="table table-hover">
                                     <thead class="table-light">
                                         <tr>
+                                            <th width="5%">#</th>
                                             <th>Chauffeur</th>
                                             <th>Date</th>
                                             <th>Heure</th>
                                             <th>Recette (FCFA)</th>
                                             <th>Carburant</th>
                                             <th>Problème</th>
-                                            <th>Actions</th>
+                                            <th width="15%">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for remise in remises %}
                                         <tr>
+                                            <td class="text-muted">{{ forloop.counter|add:remises.start_index|add:"-1" }}</td>
                                             <td>
                                                 <div class="d-flex align-items-center">
                                                     <div class="avatar-sm bg-success rounded-circle d-flex align-items-center justify-content-center me-2">
