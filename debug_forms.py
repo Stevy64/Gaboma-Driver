@@ -214,3 +214,4 @@ if __name__ == "__main__":
         print(f"\n💥 Erreur inattendue: {e}")
         import traceback
         traceback.print_exc()
+

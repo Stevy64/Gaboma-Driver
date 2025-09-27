@@ -34,3 +34,4 @@ class Migration(migrations.Migration):
             constraint=models.UniqueConstraint(fields=('chauffeur', 'superviseur'), name='drivers_assignationsuperviseur_unique_chauffeur_superviseur'),
         ),
     ]
+

@@ -42,3 +42,4 @@ class Command(BaseCommand):
                 f'Groupe "Superviseurs" configuré avec {group.permissions.count()} permissions'
             )
         )
+
