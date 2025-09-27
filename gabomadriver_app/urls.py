@@ -1,8 +1,8 @@
 # =============================================================================
-# CONFIGURATION DES URLS PRINCIPALES - Gaboma Drive Application
+# CONFIGURATION DES URLS PRINCIPALES - Gaboma Driver Application
 # =============================================================================
 """
-Configuration des URLs principales pour l'application Gaboma Drive
+Configuration des URLs principales pour l'application Gaboma Driver
 
 Ce fichier centralise le routage de toutes les URLs de l'application :
 - Interface d'administration Django

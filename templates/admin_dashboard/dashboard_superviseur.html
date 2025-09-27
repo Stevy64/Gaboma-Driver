@@ -1,0 +1,447 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Dashboard Superviseur - Gaboma Driver{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i class="bi bi-person-badge"></i> Dashboard Superviseur
+        </h2>
+        <p class="text-muted">
+            <i class="bi bi-info-circle me-1"></i>
+            Espace de supervision - Accès limité à vos chauffeurs assignés
+        </p>
+    </div>
+</div>
+
+<!-- Menu de Navigation Rapide pour Superviseurs -->
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-grid-3x3-gap me-2"></i> Navigation Rapide - Espace Superviseur
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <!-- Première ligne - 4 éléments -->
+                    <div class="col-6 col-md-3">
+                        <a href="{% url 'admin_dashboard:dashboard_superviseur' %}" class="text-decoration-none">
+                            <div class="card text-center h-100 nav-card">
+                                <div class="card-body p-3">
+                                    <i class="bi bi-speedometer2 text-info mb-2" style="font-size: 2rem;"></i>
+                                    <h6 class="card-title mb-0">Dashboard</h6>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a href="{% url 'admin_dashboard:liste_chauffeurs' %}" class="text-decoration-none">
+                            <div class="card text-center h-100 nav-card">
+                                <div class="card-body p-3">
+                                    <i class="bi bi-people text-primary mb-2" style="font-size: 2rem;"></i>
+                                    <h6 class="card-title mb-0">Mes Chauffeurs</h6>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a href="{% url 'admin_dashboard:statistiques_recettes' %}" class="text-decoration-none">
+                            <div class="card text-center h-100 nav-card">
+                                <div class="card-body p-3">
+                                    <i class="bi bi-graph-up text-success mb-2" style="font-size: 2rem;"></i>
+                                    <h6 class="card-title mb-0">Recettes</h6>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a href="{% url 'admin_dashboard:calendrier_activites' %}" class="text-decoration-none">
+                            <div class="card text-center h-100 nav-card">
+                                <div class="card-body p-3">
+                                    <i class="bi bi-calendar3 text-warning mb-2" style="font-size: 2rem;"></i>
+                                    <h6 class="card-title mb-0">Calendrier</h6>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <!-- Deuxième ligne - 4 éléments -->
+                    <div class="col-6 col-md-3">
+                        <a href="{% url 'admin_dashboard:gestion_activites' %}" class="text-decoration-none">
+                            <div class="card text-center h-100 nav-card">
+                                <div class="card-body p-3">
+                                    <i class="bi bi-list-task text-info mb-2" style="font-size: 2rem;"></i>
+                                    <h6 class="card-title mb-0">Activités</h6>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a href="{% url 'admin_dashboard:gestion_demandes_modification' %}" class="text-decoration-none">
+                            <div class="card text-center h-100 nav-card">
+                                <div class="card-body p-3">
+                                    <i class="bi bi-clipboard-check text-primary mb-2" style="font-size: 2rem;"></i>
+                                    <h6 class="card-title mb-0">Demandes</h6>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a href="{% url 'admin_dashboard:gestion_pannes' %}" class="text-decoration-none">
+                            <div class="card text-center h-100 nav-card">
+                                <div class="card-body p-3">
+                                    <i class="bi bi-tools text-danger mb-2" style="font-size: 2rem;"></i>
+                                    <h6 class="card-title mb-0">Pannes</h6>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        {% if user.is_superuser %}
+                        <a href="/admin/" class="text-decoration-none" target="_blank">
+                            <div class="card text-center h-100 nav-card">
+                                <div class="card-body p-3">
+                                    <i class="bi bi-gear text-success mb-2" style="font-size: 2rem;"></i>
+                                    <h6 class="card-title mb-0">Admin</h6>
+                                </div>
+                            </div>
+                        </a>
+                        {% else %}
+                        <div class="card text-center h-100 nav-card disabled" style="opacity: 0.5; cursor: not-allowed;">
+                            <div class="card-body p-3">
+                                <i class="bi bi-gear-fill text-muted mb-2" style="font-size: 2rem;"></i>
+                                <h6 class="card-title mb-0 text-muted">Admin</h6>
+                                <small class="text-muted">Superuser requis</small>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistiques générales -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card text-center h-100">
+            <div class="card-body p-3">
+                <i class="bi bi-people text-primary" style="font-size: 1.5rem;"></i>
+                <h5 class="mt-2 mb-1">{{ total_chauffeurs }}</h5>
+                <p class="text-muted mb-0 small">Mes chauffeurs</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center h-100">
+            <div class="card-body p-3">
+                <i class="bi bi-clock text-info" style="font-size: 1.5rem;"></i>
+                <h5 class="mt-2 mb-1">{{ total_activites_aujourdhui }}</h5>
+                <p class="text-muted mb-0 small">Activités aujourd'hui</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center h-100">
+            <div class="card-body p-3">
+                <i class="bi bi-cash-coin text-success" style="font-size: 1.5rem;"></i>
+                <h5 class="mt-2 mb-1">{{ recettes_aujourdhui|floatformat:0 }} FCFA</h5>
+                <p class="text-muted mb-0 small">Recettes aujourd'hui</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center h-100">
+            <div class="card-body p-3">
+                <i class="bi bi-tools text-warning" style="font-size: 1.5rem;"></i>
+                <h5 class="mt-2 mb-1">{{ pannes_en_cours }}</h5>
+                <p class="text-muted mb-0 small">Pannes en cours</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recettes et alertes -->
+<div class="row g-3 mb-4">
+    <div class="col-12 col-lg-8">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-graph-up"></i> Recettes de mes chauffeurs
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center g-3">
+                    <div class="col-4 col-md-4">
+                        <h4 class="text-success mb-1">{{ recettes_aujourdhui|floatformat:0 }} FCFA</h4>
+                        <p class="text-muted small mb-0">Aujourd'hui</p>
+                    </div>
+                    <div class="col-4 col-md-4">
+                        <h4 class="text-info mb-1">{{ recettes_semaine|floatformat:0 }} FCFA</h4>
+                        <p class="text-muted small mb-0">Cette semaine</p>
+                    </div>
+                    <div class="col-4 col-md-4">
+                        <h4 class="text-primary mb-1">{{ recettes_mois|floatformat:0 }} FCFA</h4>
+                        <p class="text-muted small mb-0">Ce mois</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-exclamation-triangle"></i> Alertes
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if demandes_en_attente > 0 %}
+                <div class="alert alert-info mb-2 p-2">
+                    <i class="bi bi-clipboard-check me-1"></i>
+                    <strong>{{ demandes_en_attente }}</strong> demande(s) en attente
+                    <a href="{% url 'admin_dashboard:gestion_demandes_modification' %}" class="btn btn-sm btn-outline-info ms-2">Voir</a>
+                </div>
+                {% endif %}
+                
+                {% if pannes_critiques > 0 %}
+                <div class="alert alert-danger mb-2 p-2">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    <strong>{{ pannes_critiques }}</strong> panne(s) critique(s)
+                    <a href="{% url 'admin_dashboard:gestion_pannes' %}" class="btn btn-sm btn-outline-danger ms-2">Voir</a>
+                </div>
+                {% endif %}
+                
+                {% if pannes_en_cours > 0 %}
+                <div class="alert alert-warning mb-2 p-2">
+                    <i class="bi bi-tools me-1"></i>
+                    <strong>{{ pannes_en_cours }}</strong> panne(s) en cours
+                    <a href="{% url 'admin_dashboard:gestion_pannes' %}" class="btn btn-sm btn-outline-warning ms-2">Voir</a>
+                </div>
+                {% endif %}
+                
+                {% if prises_recentes_aujourdhui > 0 or remises_recentes_aujourdhui > 0 %}
+                <div class="alert alert-success mb-2 p-2">
+                    <i class="bi bi-activity me-1"></i>
+                    <strong>{{ prises_recentes_aujourdhui }}</strong> prise(s) et <strong>{{ remises_recentes_aujourdhui }}</strong> remise(s) aujourd'hui
+                </div>
+                {% endif %}
+                
+                {% if demandes_en_attente == 0 and pannes_critiques == 0 and pannes_en_cours == 0 %}
+                <div class="alert alert-success mb-0 p-2">
+                    <i class="bi bi-check-circle me-1"></i>
+                    Aucune alerte active
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Activités récentes -->
+{% if activites_recentes %}
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-clock-history"></i> Activités récentes
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    {% for activite in activites_recentes %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ activite.chauffeur.nom_complet }}</strong>
+                            <small class="text-muted ms-2">{{ activite.details }}</small>
+                        </div>
+                        <small class="text-muted">
+                            {{ activite.date|date:"d/m/Y" }} - {{ activite.heure|time:"H:i" }}
+                        </small>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Demandes récentes (dernières 24h) -->
+{% if demandes_recentes %}
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-clipboard-check"></i> Demandes récentes (24h)
+                </h5>
+                <a href="{% url 'admin_dashboard:gestion_demandes_modification' %}" class="btn btn-sm btn-outline-primary">
+                    Voir toutes
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    {% for demande in demandes_recentes %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <div class="avatar-sm bg-primary rounded-circle d-flex align-items-center justify-content-center me-3">
+                                <span class="text-white fw-bold">{{ demande.chauffeur.prenom|first }}</span>
+                            </div>
+                            <div>
+                                <strong>{{ demande.chauffeur.nom_complet }}</strong>
+                                <br>
+                                <small class="text-muted">
+                                    {% if demande.type_activite == 'prise' %}
+                                        <i class="bi bi-key me-1"></i>Prise de clés
+                                    {% else %}
+                                        <i class="bi bi-hand-holding me-1"></i>Remise de clés
+                                    {% endif %}
+                                    - {{ demande.date_activite|date:"d/m/Y" }}
+                                </small>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            {% if demande.statut == 'en_attente' %}
+                                <span class="badge bg-warning">En attente</span>
+                            {% elif demande.statut == 'approuvee' %}
+                                <span class="badge bg-success">Approuvée</span>
+                            {% else %}
+                                <span class="badge bg-danger">Rejetée</span>
+                            {% endif %}
+                            <br>
+                            <small class="text-muted">{{ demande.date_creation|timesince }} ago</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Note privilèges -->
+<div class="row">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>
+            <strong>Espace Superviseur :</strong> 
+            Vous êtes dans l'espace de supervision et avez accès uniquement aux chauffeurs qui vous sont assignés.
+            {% if is_chauffeur_with_staff and not is_supervisor_group %}
+            En tant que chauffeur avec privilèges superviseur, vos propres données sont incluses dans les statistiques.
+            {% endif %}
+            {% if not user.is_superuser %}
+            Le bouton "Admin" est désactivé car seuls les superusers peuvent accéder à l'interface d'administration Django.
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-refresh du dashboard superviseur toutes les 2 minutes
+function refreshDashboard() {
+    // Actualiser seulement les sections dynamiques
+    fetch(window.location.href, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.text())
+    .then(html => {
+        // Créer un document temporaire pour extraire les nouvelles données
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        
+        // Actualiser les alertes
+        const newAlertes = tempDiv.querySelector('.card .card-body');
+        const currentAlertes = document.querySelector('.card .card-body');
+        if (newAlertes && currentAlertes && currentAlertes.parentElement.querySelector('h5').textContent.includes('Alertes')) {
+            currentAlertes.innerHTML = newAlertes.innerHTML;
+        }
+        
+        // Actualiser les statistiques
+        const statsCards = document.querySelectorAll('.card .card-body h5, .card .card-body h4');
+        const newStatsCards = tempDiv.querySelectorAll('.card .card-body h5, .card .card-body h4');
+        
+        statsCards.forEach((card, index) => {
+            if (newStatsCards[index] && card.textContent !== newStatsCards[index].textContent) {
+                card.textContent = newStatsCards[index].textContent;
+                // Animation de mise à jour
+                card.style.color = '#28a745';
+                setTimeout(() => {
+                    card.style.color = '';
+                }, 1000);
+            }
+        });
+        
+        console.log('Dashboard superviseur mis à jour');
+    })
+    .catch(error => {
+        console.log('Erreur lors de l\'actualisation:', error);
+    });
+}
+
+// Actualiser toutes les 2 minutes (120000 ms)
+setInterval(refreshDashboard, 120000);
+
+// Indicateur de dernière mise à jour
+function updateLastRefresh() {
+    const now = new Date();
+    const timeString = now.toLocaleTimeString('fr-FR');
+    
+    // Créer ou mettre à jour l'indicateur
+    let indicator = document.getElementById('last-refresh');
+    if (!indicator) {
+        indicator = document.createElement('div');
+        indicator.id = 'last-refresh';
+        indicator.className = 'text-muted small text-center mt-3';
+        document.querySelector('.container-fluid').appendChild(indicator);
+    }
+    indicator.innerHTML = `<i class="bi bi-clock me-1"></i>Dernière mise à jour: ${timeString}`;
+}
+
+// Mettre à jour l'indicateur au chargement et lors des rafraîchissements
+document.addEventListener('DOMContentLoaded', updateLastRefresh);
+setInterval(updateLastRefresh, 60000); // Toutes les minutes
+
+// Notification visuelle pour nouvelles demandes
+function checkForNewRequests() {
+    const demandesCount = {{ demandes_en_attente|default:0 }};
+    if (demandesCount > 0) {
+        // Faire clignoter l'alerte des demandes
+        const demandesAlert = document.querySelector('.alert-info');
+        if (demandesAlert) {
+            demandesAlert.style.animation = 'pulse 2s infinite';
+        }
+    }
+}
+
+// CSS pour l'animation pulse
+const style = document.createElement('style');
+style.textContent = `
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+.avatar-sm {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+}
+`;
+document.head.appendChild(style);
+
+// Lancer la vérification au chargement
+document.addEventListener('DOMContentLoaded', checkForNewRequests);
+</script>
+{% endblock %}

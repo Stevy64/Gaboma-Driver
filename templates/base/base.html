@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Gaboma Drive{% endblock %}</title>
+    <title>{% block title %}Gaboma Driver{% endblock %}</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -25,7 +25,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top modern-navbar{% if user.is_staff and '/admin-dashboard/' in request.path %} admin-navbar{% endif %}">
         <div class="container">
             <a class="navbar-brand modern-brand" href="{% url 'drivers:index' %}">
-                <i class="bi bi-taxi-front"></i> <span class="brand-text">Gaboma Drive</span>
+                <i class="bi bi-taxi-front"></i> <span class="brand-text">Gaboma Driver</span>
             </a>
             
             <!-- Menu Toggle Moderne -->
@@ -40,12 +40,18 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav">
                     {% if user.is_authenticated %}
-                        {% if user.is_staff %}
-                            <!-- Menu Admin -->
+                        {% if user.is_staff or '/admin-dashboard/' in request.path %}
+                            <!-- Menu Admin/Superviseur selon les privilèges -->
                             <li class="nav-item">
+                                {% if user.is_superuser or user.is_staff %}
                                 <a class="nav-link{% if '/admin-dashboard/' == request.path %} active{% endif %}" href="{% url 'admin_dashboard:dashboard_admin' %}">
                                     <i class="bi bi-speedometer2"></i> Dashboard
                                 </a>
+                                {% else %}
+                                <a class="nav-link{% if '/admin-dashboard/superviseur/' in request.path %} active{% endif %}" href="{% url 'admin_dashboard:dashboard_superviseur' %}">
+                                    <i class="bi bi-speedometer2"></i> Dashboard Superviseur
+                                </a>
+                                {% endif %}
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link{% if '/admin-dashboard/chauffeurs/' in request.path %} active{% endif %}" href="{% url 'admin_dashboard:liste_chauffeurs' %}">
@@ -63,11 +69,6 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link{% if '/admin-dashboard/classements/' in request.path %} active{% endif %}" href="{% url 'admin_dashboard:classements' %}">
-                                    <i class="bi bi-trophy"></i> Classements
-                                </a>
-                            </li>
-                            <li class="nav-item">
                                 <a class="nav-link{% if '/admin-dashboard/activites/' in request.path %} active{% endif %}" href="{% url 'admin_dashboard:gestion_activites' %}">
                                     <i class="bi bi-list-task"></i> Activités
                                 </a>
@@ -77,10 +78,16 @@
                                     <i class="bi bi-clipboard-check"></i> Demandes
                                 </a>
                             </li>
-                            {% if user.is_superuser %}
+                            {% if user.is_superuser or user.is_staff %}
                             <li class="nav-item">
                                 <a class="nav-link{% if '/admin-dashboard/superviseurs/' in request.path %} active{% endif %}" href="{% url 'admin_dashboard:gestion_superviseurs' %}">
                                     <i class="bi bi-people-fill"></i> Superviseurs
+                                </a>
+                            </li>
+                            {% else %}
+                            <li class="nav-item">
+                                <a class="nav-link{% if '/admin-dashboard/pannes/' in request.path %} active{% endif %}" href="{% url 'admin_dashboard:gestion_pannes' %}">
+                                    <i class="bi bi-tools"></i> Pannes
                                 </a>
                             </li>
                             {% endif %}
@@ -185,7 +192,7 @@
     <!-- Footer -->
     <footer class="bg-light mt-5 py-4">
         <div class="container text-center">
-            <p class="text-muted mb-0">&copy; 2024 Gaboma Drive - Suivi d'activité</p>
+            <p class="text-muted mb-0">&copy; 2024 Gaboma Driver - Suivi d'activité</p>
         </div>
     </footer>
 

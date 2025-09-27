@@ -48,8 +48,10 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <a href="{% url 'admin:activities_panne_change' panne.id %}" class="btn btn-sm btn-outline-primary">
-                                        <i class="bi bi-pencil"></i> Modifier
+                                    <a href="{% url 'admin_dashboard:supprimer_panne' panne.id %}" 
+                                       class="btn btn-sm btn-outline-danger"
+                                       onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette panne ?')">
+                                        <i class="bi bi-trash"></i> Supprimer
                                     </a>
                                 </td>
                             </tr>

@@ -5,11 +5,49 @@ from django.contrib.auth.models import User, Group
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Sum, Count, Avg, Q
+from django.db import models
 from django.utils import timezone
 from django.http import HttpResponse
 from datetime import datetime, date, timedelta
 from drivers.models import Chauffeur, AssignationSuperviseur
 from activities.models import Activite, Recette, Panne, PriseCles, RemiseCles, DemandeModification
+from functools import wraps
+
+
+def supervisor_required(view_func):
+    """
+    Décorateur personnalisé pour vérifier les privilèges de superviseur
+    Accepte :
+    - Superusers
+    - Utilisateurs avec is_staff = True
+    - Utilisateurs du groupe 'Superviseurs'
+    """
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            messages.error(request, 'Vous devez être connecté pour accéder à cette page.')
+            return redirect('drivers:login_superviseur')
+        
+        # Vérifier les privilèges superviseur
+        is_supervisor_group = request.user.groups.filter(name='Superviseurs').exists()
+        is_staff_user = request.user.is_staff
+        is_superuser = request.user.is_superuser
+        
+        # Vérifier aussi si c'est un chauffeur avec is_staff
+        is_chauffeur_with_staff = False
+        try:
+            from drivers.models import Chauffeur
+            chauffeur = Chauffeur.objects.get(user=request.user)
+            is_chauffeur_with_staff = chauffeur.actif and request.user.is_staff
+        except Chauffeur.DoesNotExist:
+            pass
+        
+        if not (is_superuser or is_staff_user or is_supervisor_group or is_chauffeur_with_staff):
+            messages.error(request, 'Vous n\'avez pas les privilèges nécessaires pour accéder à cette page.')
+            return redirect('drivers:index')
+        
+        return view_func(request, *args, **kwargs)
+    return wrapper
 
 
 def get_chauffeurs_for_user(user):
@@ -22,14 +60,14 @@ def get_chauffeurs_for_user(user):
     Returns:
         QuerySet: Chauffeurs accessibles
     """
-    if user.is_superuser:
-        # Super admin : accès à tous les chauffeurs
+    if user.is_superuser or user.is_staff:
+        # Super admin ou superviseur avec is_staff : accès à tous les chauffeurs
         return Chauffeur.objects.all()
     elif user.groups.filter(name='Superviseurs').exists():
-        # Superviseur : seulement ses chauffeurs assignés
+        # Superviseur du groupe (sans is_staff) : seulement ses chauffeurs assignés
         return AssignationSuperviseur.get_chauffeurs_assignes(user)
     else:
-        # Autres utilisateurs : aucun chauffeur
+        # Autres utilisateurs : aucun accès
         return Chauffeur.objects.none()
 
 
@@ -78,10 +116,134 @@ def logout_admin(request):
     messages.success(request, 'Vous avez été déconnecté avec succès.')
     return redirect('drivers:index')
 
-@staff_member_required
+def dashboard_superviseur(request):
+    """
+    Dashboard spécifique pour les superviseurs (non super admin)
+    
+    Affiche les mêmes statistiques que le dashboard admin mais avec:
+    - Navigation adaptée aux superviseurs
+    - Bouton Admin conditionnel selon les privilèges staff
+    - Accès limité aux chauffeurs assignés
+    """
+    # Vérifier que l'utilisateur a les privilèges de superviseur
+    # Soit membre du groupe 'Superviseurs', soit chauffeur avec is_staff = True
+    is_supervisor_group = request.user.groups.filter(name='Superviseurs').exists()
+    is_chauffeur_with_staff = False
+    
+    try:
+        from drivers.models import Chauffeur
+        chauffeur = Chauffeur.objects.get(user=request.user)
+        is_chauffeur_with_staff = chauffeur.actif and request.user.is_staff
+    except Chauffeur.DoesNotExist:
+        pass
+    
+    if not (is_supervisor_group or is_chauffeur_with_staff):
+        messages.error(request, 'Accès refusé. Vous devez être superviseur ou chauffeur avec statut équipe pour accéder à cet espace.')
+        return redirect('drivers:index')
+    
+    # Si c'est un superuser ou utilisateur avec is_staff, rediriger vers le dashboard admin complet
+    if request.user.is_superuser or request.user.is_staff:
+        return redirect('admin_dashboard:dashboard_admin')
+    
+    # Récupérer les chauffeurs accessibles selon le type d'utilisateur
+    # La fonction get_chauffeurs_for_user gère déjà toute la logique de filtrage
+    chauffeurs_accessibles = get_chauffeurs_for_user(request.user)
+    
+    # Statistiques générales (identiques au dashboard admin mais filtrées)
+    total_chauffeurs = chauffeurs_accessibles.filter(actif=True).count()
+    
+    # Activités du jour
+    prises_aujourdhui = get_activites_for_user(request.user, PriseCles, date=date.today()).count()
+    remises_aujourdhui = get_activites_for_user(request.user, RemiseCles, date=date.today()).count()
+    total_activites_aujourdhui = prises_aujourdhui + remises_aujourdhui
+    
+    # Recettes
+    recettes_aujourdhui = get_activites_for_user(request.user, RemiseCles, date=date.today()).aggregate(total=Sum('recette_realisee'))['total'] or 0
+    recettes_semaine = get_activites_for_user(request.user, RemiseCles, date__gte=date.today() - timedelta(days=7)).aggregate(total=Sum('recette_realisee'))['total'] or 0
+    recettes_mois = get_activites_for_user(request.user, RemiseCles, date__gte=date.today().replace(day=1)).aggregate(total=Sum('recette_realisee'))['total'] or 0
+    
+    # Pannes
+    pannes_en_cours = get_activites_for_user(request.user, Panne, statut__in=['signalee', 'en_cours']).count()
+    pannes_critiques = get_activites_for_user(request.user, Panne, severite='critique', statut__in=['signalee', 'en_cours']).count()
+    
+    # Activités récentes (limitées)
+    activites_recentes = []
+    prises_recentes = get_activites_for_user(request.user, PriseCles).order_by('-date', '-heure_prise')[:5]
+    remises_recentes = get_activites_for_user(request.user, RemiseCles).order_by('-date', '-heure_remise')[:5]
+    
+    for prise in prises_recentes:
+        activites_recentes.append({
+            'type': 'prise',
+            'chauffeur': prise.chauffeur,
+            'date': prise.date,
+            'heure': prise.heure_prise,
+            'details': f"Prise de clés - Objectif: {prise.objectif_recette} FCFA"
+        })
+    
+    for remise in remises_recentes:
+        activites_recentes.append({
+            'type': 'remise',
+            'chauffeur': remise.chauffeur,
+            'date': remise.date,
+            'heure': remise.heure_remise,
+            'details': f"Remise de clés - {remise.recette_realisee} FCFA"
+        })
+    
+    # Trier par date et heure décroissante
+    activites_recentes = sorted(activites_recentes, key=lambda x: (x['date'], x['heure']), reverse=True)[:10]
+    
+    # Pannes récentes
+    pannes_recentes = get_activites_for_user(request.user, Panne).order_by('-date_creation')[:5]
+    
+    # Demandes récentes (dernières 24h)
+    hier = timezone.now() - timedelta(hours=24)
+    demandes_recentes = DemandeModification.objects.select_related('chauffeur').filter(
+        chauffeur__in=chauffeurs_accessibles,
+        date_creation__gte=hier
+    ).order_by('-date_creation')[:10]
+    
+    # Alertes spéciales pour superviseur
+    demandes_en_attente = DemandeModification.objects.filter(
+        chauffeur__in=chauffeurs_accessibles,
+        statut='en_attente'
+    ).count()
+    
+    # Activités très récentes (aujourd'hui)
+    prises_recentes_aujourdhui = get_activites_for_user(request.user, PriseCles, date=date.today()).count()
+    remises_recentes_aujourdhui = get_activites_for_user(request.user, RemiseCles, date=date.today()).count()
+    
+    # Vérifier si l'utilisateur a le privilège "Statut équipe" (is_staff)
+    has_staff_privilege = request.user.is_staff
+    
+    context = {
+        'total_chauffeurs': total_chauffeurs,
+        'total_activites_aujourdhui': total_activites_aujourdhui,
+        'prises_aujourdhui': prises_aujourdhui,
+        'remises_aujourdhui': remises_aujourdhui,
+        'recettes_aujourdhui': recettes_aujourdhui,
+        'recettes_semaine': recettes_semaine,
+        'recettes_mois': recettes_mois,
+        'pannes_en_cours': pannes_en_cours,
+        'pannes_critiques': pannes_critiques,
+        'activites_recentes': activites_recentes,
+        'pannes_recentes': pannes_recentes,
+        'is_supervisor': True,
+        'has_staff_privilege': has_staff_privilege,
+        'is_supervisor_group': is_supervisor_group,
+        'is_chauffeur_with_staff': is_chauffeur_with_staff,
+        'demandes_recentes': demandes_recentes,
+        'demandes_en_attente': demandes_en_attente,
+        'prises_recentes_aujourdhui': prises_recentes_aujourdhui,
+        'remises_recentes_aujourdhui': remises_recentes_aujourdhui,
+    }
+    
+    return render(request, 'admin_dashboard/dashboard_superviseur.html', context)
+
+
+@supervisor_required
 def dashboard_admin(request):
-    # Vérifier si l'utilisateur est un superviseur (pas super admin)
-    is_supervisor = request.user.groups.filter(name='Superviseurs').exists() and not request.user.is_superuser
+    # Vérifier si l'utilisateur est un superviseur simple (pas super admin ni is_staff)
+    is_supervisor = request.user.groups.filter(name='Superviseurs').exists() and not request.user.is_superuser and not request.user.is_staff
     """
     Tableau de bord administrateur avec statistiques en temps réel
     
@@ -177,7 +339,7 @@ def dashboard_admin(request):
     return render(request, 'admin_dashboard/dashboard.html', context)
 
 
-@staff_member_required
+@supervisor_required
 def liste_chauffeurs(request):
     """Liste des chauffeurs avec pagination"""
     from django.core.paginator import Paginator
@@ -190,15 +352,23 @@ def liste_chauffeurs(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
+    # Déterminer les permissions de l'utilisateur
+    can_modify_chauffeurs = request.user.is_superuser or request.user.is_staff
+    is_simple_supervisor = (request.user.groups.filter(name='Superviseurs').exists() and 
+                           not request.user.is_superuser and 
+                           not request.user.is_staff)
+    
     context = {
         'chauffeurs': page_obj,
         'page_obj': page_obj,
+        'can_modify_chauffeurs': can_modify_chauffeurs,
+        'is_simple_supervisor': is_simple_supervisor,
     }
     
     return render(request, 'admin_dashboard/liste_chauffeurs.html', context)
 
 
-@staff_member_required
+@supervisor_required
 def statistiques_recettes(request):
     """
     Statistiques des recettes avec filtres par période et chauffeur
@@ -243,8 +413,10 @@ def statistiques_recettes(request):
     else:
         chauffeur = None
     
-    # Recettes par chauffeur (utilisant les nouveaux modèles)
-    recettes_chauffeurs = Chauffeur.objects.filter(
+    # Recettes par chauffeur (filtrées selon les permissions utilisateur)
+    chauffeurs_accessibles = get_chauffeurs_for_user(request.user)
+    
+    recettes_chauffeurs = chauffeurs_accessibles.filter(
         remisecles__date__gte=date_debut,
         remisecles__date__lte=date_fin
     ).annotate(
@@ -278,7 +450,7 @@ def statistiques_recettes(request):
         nom_chauffeur = chauffeur.nom_complet
     else:
         # Si tous les chauffeurs sont sélectionnés
-        nombre_chauffeurs_actifs = recettes_chauffeurs.count()
+        nombre_chauffeurs_actifs = chauffeurs_accessibles.filter(actif=True).count()
         moyenne_par_chauffeur = recette_totale / nombre_chauffeurs_actifs if nombre_chauffeurs_actifs > 0 else 0
         nom_chauffeur = "Chauffeurs Actifs"
     
@@ -375,8 +547,8 @@ def statistiques_recettes(request):
                     'recette': float(recette_mois)
                 })
     
-    # Liste de tous les chauffeurs pour le filtre
-    tous_chauffeurs = Chauffeur.objects.all().order_by('nom', 'prenom')
+    # Liste des chauffeurs pour le filtre (filtrée selon les permissions)
+    tous_chauffeurs = chauffeurs_accessibles.filter(actif=True).order_by('nom', 'prenom')
     
     context = {
         'periode': periode,
@@ -406,14 +578,13 @@ def statistiques_recettes(request):
     return render(request, 'admin_dashboard/statistiques_recettes.html', context)
 
 
-@staff_member_required
+@supervisor_required
 def calendrier_activites(request):
     """
     Calendrier des activités pour l'administrateur
     
     Utilise la même logique que le calendrier chauffeur mais pour tous les chauffeurs.
     """
-    from datetime import timedelta
     import calendar
     
     # Paramètres de navigation
@@ -429,16 +600,16 @@ def calendrier_activites(request):
     else:
         mois_fin = date(annee, mois + 1, 1) - timedelta(days=1)
     
-    # Récupération des chauffeurs pour le filtre
-    chauffeurs = Chauffeur.objects.all().order_by('nom', 'prenom')
+    # Récupération des chauffeurs pour le filtre (filtrée selon les permissions)
+    chauffeurs = get_chauffeurs_for_user(request.user).filter(actif=True).order_by('nom', 'prenom')
     
     # Récupération des données du mois
-    prises_query = PriseCles.objects.filter(
+    prises_query = get_activites_for_user(request.user, PriseCles, 
         date__gte=mois_debut,
         date__lte=mois_fin
     ).select_related('chauffeur').order_by('date')
     
-    remises_query = RemiseCles.objects.filter(
+    remises_query = get_activites_for_user(request.user, RemiseCles,
         date__gte=mois_debut,
         date__lte=mois_fin
     ).select_related('chauffeur').order_by('date')
@@ -468,7 +639,7 @@ def calendrier_activites(request):
         else:
             mois_fin_m = date(annee, m + 1, 1) - timedelta(days=1)
         
-        remises_m = RemiseCles.objects.filter(
+        remises_m = get_activites_for_user(request.user, RemiseCles,
             date__gte=mois_debut_m, 
             date__lte=mois_fin_m
         )
@@ -579,10 +750,14 @@ def creer_calendrier_admin_mensuel(annee, mois, prises, remises):
     return calendrier_semaines
 
 
-@staff_member_required
+@supervisor_required
 def gestion_pannes(request):
     """Gestion des pannes"""
-    pannes = Panne.objects.select_related('chauffeur').order_by('-date_creation')
+    # Filtrer les pannes selon les chauffeurs accessibles
+    chauffeurs_accessibles = get_chauffeurs_for_user(request.user)
+    pannes = Panne.objects.select_related('chauffeur').filter(
+        chauffeur__in=chauffeurs_accessibles
+    ).order_by('-date_creation')
     
     # Filtres
     statut = request.GET.get('statut')
@@ -602,79 +777,11 @@ def gestion_pannes(request):
     return render(request, 'admin_dashboard/gestion_pannes.html', context)
 
 
-@staff_member_required
-def classements(request):
-    """
-    Classements et gamification des chauffeurs
-    
-    Affiche les classements par recettes :
-    - Top chauffeurs du jour
-    - Top chauffeurs de la semaine
-    - Top chauffeurs du mois
-    - Statistiques de présence
-    """
-    
-    # Top chauffeurs du jour (utilisant les nouveaux modèles)
-    top_jour = Chauffeur.objects.filter(
-        remisecles__date=date.today()
-    ).annotate(
-        recette_jour=Sum('remisecles__recette_realisee')
-    ).filter(recette_jour__gt=0).order_by('-recette_jour')[:3]
-    
-    # Top chauffeurs de la semaine (lundi au dimanche)
-    semaine_debut = date.today() - timedelta(days=date.today().weekday())
-    top_semaine = Chauffeur.objects.filter(
-        remisecles__date__gte=semaine_debut
-    ).annotate(
-        recette_semaine=Sum('remisecles__recette_realisee')
-    ).filter(recette_semaine__gt=0).order_by('-recette_semaine')[:3]
-    
-    # Top chauffeurs du mois (1er au dernier jour du mois)
-    mois_debut = date.today().replace(day=1)
-    top_mois = Chauffeur.objects.filter(
-        remisecles__date__gte=mois_debut
-    ).annotate(
-        recette_mois=Sum('remisecles__recette_realisee')
-    ).filter(recette_mois__gt=0).order_by('-recette_mois')[:3]
-    
-    # Statistiques de présence (utilisant les nouveaux modèles)
-    presence_semaine = Chauffeur.objects.annotate(
-        jours_travailles=Count('prisecles', filter=Q(
-            prisecles__date__gte=semaine_debut
-        ), distinct=True)
-    ).filter(jours_travailles__gt=0).order_by('-jours_travailles')
-    
-    # Statistiques globales
-    total_recettes_jour = RemiseCles.objects.filter(
-        date=date.today()
-    ).aggregate(total=Sum('recette_realisee'))['total'] or 0
-    
-    total_recettes_semaine = RemiseCles.objects.filter(
-        date__gte=semaine_debut
-    ).aggregate(total=Sum('recette_realisee'))['total'] or 0
-    
-    total_recettes_mois = RemiseCles.objects.filter(
-        date__gte=mois_debut
-    ).aggregate(total=Sum('recette_realisee'))['total'] or 0
-    
-    context = {
-        'top_jour': top_jour,
-        'top_semaine': top_semaine,
-        'top_mois': top_mois,
-        'presence_semaine': presence_semaine,
-        'total_recettes_jour': total_recettes_jour,
-        'total_recettes_semaine': total_recettes_semaine,
-        'total_recettes_mois': total_recettes_mois,
-    }
-    
-    return render(request, 'admin_dashboard/classements.html', context)
-
-
 # =============================================================================
 # GESTION DES ACTIVITÉS - Nouvelles fonctionnalités administrateur
 # =============================================================================
 
-@staff_member_required
+@supervisor_required
 def gestion_activites(request):
     """
     Vue pour la gestion des activités par chauffeur
@@ -688,12 +795,12 @@ def gestion_activites(request):
     date_fin = request.GET.get('date_fin')
     type_activite = request.GET.get('type_activite')
     
-    # Filtrage des chauffeurs
-    chauffeurs = Chauffeur.objects.filter(actif=True).order_by('nom', 'prenom')
+    # Filtrage des chauffeurs selon les permissions utilisateur
+    chauffeurs = get_chauffeurs_for_user(request.user).filter(actif=True).order_by('nom', 'prenom')
     
-    # Récupération des activités avec filtres
-    prises = PriseCles.objects.select_related('chauffeur').all()
-    remises = RemiseCles.objects.select_related('chauffeur').all()
+    # Récupération des activités avec filtres (filtrées selon les permissions)
+    prises = get_activites_for_user(request.user, PriseCles)
+    remises = get_activites_for_user(request.user, RemiseCles)
     
     # Application des filtres
     if chauffeur_id:
@@ -769,7 +876,7 @@ def gestion_activites(request):
     return render(request, 'admin_dashboard/gestion_activites.html', context)
 
 
-@staff_member_required
+@supervisor_required
 def activites_chauffeur(request, chauffeur_id):
     """
     Vue détaillée des activités d'un chauffeur spécifique
@@ -777,7 +884,9 @@ def activites_chauffeur(request, chauffeur_id):
     Affiche toutes les activités d'un chauffeur avec possibilité de voir
     les détails complets et les performances.
     """
-    chauffeur = get_object_or_404(Chauffeur, id=chauffeur_id)
+    # Vérifier que le chauffeur est accessible au superviseur
+    chauffeurs_accessibles = get_chauffeurs_for_user(request.user)
+    chauffeur = get_object_or_404(Chauffeur, id=chauffeur_id, id__in=chauffeurs_accessibles.values_list('id', flat=True))
     
     # Récupération des activités du chauffeur
     prises = PriseCles.objects.filter(chauffeur=chauffeur).order_by('-date', '-heure_prise')
@@ -841,7 +950,7 @@ def activites_chauffeur(request, chauffeur_id):
     return render(request, 'admin_dashboard/activites_chauffeur.html', context)
 
 
-@staff_member_required
+@supervisor_required
 def exporter_activite_chauffeur_pdf(request, chauffeur_id):
     """
     Vue pour exporter les activités d'un chauffeur en PDF
@@ -849,7 +958,9 @@ def exporter_activite_chauffeur_pdf(request, chauffeur_id):
     Génère un rapport PDF mensuel complet des activités d'un chauffeur avec
     les jours travaillés, recettes réalisées, performances et totaux par semaine.
     """
-    chauffeur = get_object_or_404(Chauffeur, id=chauffeur_id)
+    # Vérifier que le chauffeur est accessible au superviseur
+    chauffeurs_accessibles = get_chauffeurs_for_user(request.user)
+    chauffeur = get_object_or_404(Chauffeur, id=chauffeur_id, id__in=chauffeurs_accessibles.values_list('id', flat=True))
     
     # Récupération des paramètres de filtrage (par défaut: mois en cours)
     date_debut = request.GET.get('date_debut')
@@ -987,32 +1098,30 @@ def exporter_activite_chauffeur_pdf(request, chauffeur_id):
         'date_fin': date_fin,
         'date_generation': timezone.now(),
         'mois_nom': date_debut.strftime('%B %Y'),
+        'superviseur_generateur': request.user,
     }
     
-    # Génération du PDF
+    # Génération du rapport en HTML pour impression/PDF
+    # Solution simple sans dépendances externes - utilise le template HTML existant
     try:
         from django.template.loader import render_to_string
         from django.http import HttpResponse
-        import weasyprint
         
+        # Utiliser le template HTML existant avec des styles optimisés pour l'impression
         html_string = render_to_string('admin_dashboard/rapport_mensuel_chauffeur_pdf.html', context)
-        html = weasyprint.HTML(string=html_string, base_url=request.build_absolute_uri())
-        pdf = html.write_pdf()
         
-        response = HttpResponse(pdf, content_type='application/pdf')
-        mois_str = date_debut.strftime('%Y-%m')
-        response['Content-Disposition'] = f'attachment; filename="rapport_mensuel_{chauffeur.nom}_{chauffeur.prenom}_{mois_str}.pdf"'
+        # Retourner le HTML directement pour affichage dans le navigateur
+        # L'utilisateur pourra l'imprimer en PDF via le bouton intégré (Ctrl+P -> Enregistrer en PDF)
+        response = HttpResponse(html_string, content_type='text/html; charset=utf-8')
+        
         return response
         
-    except ImportError:
-        messages.error(request, 'Le module weasyprint n\'est pas installé. Impossible de générer le PDF.')
-        return redirect('admin_dashboard:activites_chauffeur', chauffeur_id=chauffeur_id)
     except Exception as e:
-        messages.error(request, f'Erreur lors de la génération du PDF: {str(e)}')
+        messages.error(request, f'Erreur lors de la génération du rapport: {str(e)}')
         return redirect('admin_dashboard:activites_chauffeur', chauffeur_id=chauffeur_id)
 
 
-@staff_member_required
+@supervisor_required
 def gestion_demandes_modification(request):
     """
     Vue pour la gestion des demandes de modification d'activité
@@ -1024,8 +1133,11 @@ def gestion_demandes_modification(request):
     statut = request.GET.get('statut', 'en_attente')
     chauffeur_id = request.GET.get('chauffeur')
     
-    # Récupération des demandes avec filtres
-    demandes = DemandeModification.objects.select_related('chauffeur', 'admin_traite').all()
+    # Récupération des demandes avec filtres (selon les permissions utilisateur)
+    chauffeurs_accessibles = get_chauffeurs_for_user(request.user)
+    demandes = DemandeModification.objects.select_related('chauffeur', 'admin_traite').filter(
+        chauffeur__in=chauffeurs_accessibles
+    )
     
     if statut:
         demandes = demandes.filter(statut=statut)
@@ -1041,8 +1153,8 @@ def gestion_demandes_modification(request):
     page_number = request.GET.get('page')
     demandes_obj = paginator.get_page(page_number)
     
-    # Liste des chauffeurs pour le filtre
-    chauffeurs = Chauffeur.objects.filter(actif=True).order_by('nom', 'prenom')
+    # Liste des chauffeurs pour le filtre (filtrée selon les permissions)
+    chauffeurs = chauffeurs_accessibles.filter(actif=True).order_by('nom', 'prenom')
     
     # Statistiques
     total_demandes = demandes.count()
@@ -1067,7 +1179,7 @@ def gestion_demandes_modification(request):
     return render(request, 'admin_dashboard/gestion_demandes_modification.html', context)
 
 
-@staff_member_required
+@supervisor_required
 def traiter_demande_modification(request, demande_id):
     """
     Vue pour traiter une demande de modification spécifique
@@ -1075,7 +1187,9 @@ def traiter_demande_modification(request, demande_id):
     Permet à l'administrateur d'approuver ou rejeter une demande
     avec commentaires et d'appliquer les modifications si approuvée.
     """
-    demande = get_object_or_404(DemandeModification, id=demande_id)
+    # Vérifier que la demande concerne un chauffeur accessible
+    chauffeurs_accessibles = get_chauffeurs_for_user(request.user)
+    demande = get_object_or_404(DemandeModification, id=demande_id, chauffeur__in=chauffeurs_accessibles)
     
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -1154,16 +1268,19 @@ def traiter_demande_modification(request, demande_id):
     return render(request, 'admin_dashboard/traiter_demande_modification.html', context)
 
 
-@staff_member_required
+@supervisor_required
 def supprimer_activite(request, activite_id, type_activite):
     """
     Vue pour supprimer une activité spécifique (prise ou remise de clés)
     """
+    # Vérifier les permissions d'accès
+    chauffeurs_accessibles = get_chauffeurs_for_user(request.user)
+    
     try:
         if type_activite == 'prise':
-            activite = get_object_or_404(PriseCles, id=activite_id)
+            activite = get_object_or_404(PriseCles, id=activite_id, chauffeur__in=chauffeurs_accessibles)
         else:
-            activite = get_object_or_404(RemiseCles, id=activite_id)
+            activite = get_object_or_404(RemiseCles, id=activite_id, chauffeur__in=chauffeurs_accessibles)
         
         chauffeur_nom = activite.chauffeur.nom_complet
         activite.delete()
@@ -1175,20 +1292,23 @@ def supprimer_activite(request, activite_id, type_activite):
     return redirect('admin_dashboard:gestion_activites')
 
 
-@staff_member_required
+@supervisor_required
 def supprimer_toutes_activites(request):
     """
     Vue pour supprimer toutes les activités (prises et remises de clés)
     """
     if request.method == 'POST':
         try:
-            # Supprimer toutes les prises de clés
-            prises_count = PriseCles.objects.count()
-            PriseCles.objects.all().delete()
+            # Supprimer seulement les activités des chauffeurs accessibles
+            chauffeurs_accessibles = get_chauffeurs_for_user(request.user)
             
-            # Supprimer toutes les remises de clés
-            remises_count = RemiseCles.objects.count()
-            RemiseCles.objects.all().delete()
+            # Supprimer les prises de clés
+            prises_count = PriseCles.objects.filter(chauffeur__in=chauffeurs_accessibles).count()
+            PriseCles.objects.filter(chauffeur__in=chauffeurs_accessibles).delete()
+            
+            # Supprimer les remises de clés
+            remises_count = RemiseCles.objects.filter(chauffeur__in=chauffeurs_accessibles).count()
+            RemiseCles.objects.filter(chauffeur__in=chauffeurs_accessibles).delete()
             
             messages.success(request, f'Toutes les activités ont été supprimées ({prises_count} prises, {remises_count} remises).')
         except Exception as e:
@@ -1197,13 +1317,15 @@ def supprimer_toutes_activites(request):
     return redirect('admin_dashboard:gestion_activites')
 
 
-@staff_member_required
+@supervisor_required
 def supprimer_demande_modification(request, demande_id):
     """
     Vue pour supprimer une demande de modification spécifique
     """
     try:
-        demande = get_object_or_404(DemandeModification, id=demande_id)
+        # Vérifier que la demande concerne un chauffeur accessible
+        chauffeurs_accessibles = get_chauffeurs_for_user(request.user)
+        demande = get_object_or_404(DemandeModification, id=demande_id, chauffeur__in=chauffeurs_accessibles)
         chauffeur_nom = demande.chauffeur.nom_complet
         demande.delete()
         
@@ -1214,15 +1336,17 @@ def supprimer_demande_modification(request, demande_id):
     return redirect('admin_dashboard:gestion_demandes_modification')
 
 
-@staff_member_required
+@supervisor_required
 def reinitialiser_demandes_modification(request):
     """
     Vue pour réinitialiser toutes les demandes de modification
     """
     if request.method == 'POST':
         try:
-            demandes_count = DemandeModification.objects.count()
-            DemandeModification.objects.all().delete()
+            # Supprimer seulement les demandes des chauffeurs accessibles
+            chauffeurs_accessibles = get_chauffeurs_for_user(request.user)
+            demandes_count = DemandeModification.objects.filter(chauffeur__in=chauffeurs_accessibles).count()
+            DemandeModification.objects.filter(chauffeur__in=chauffeurs_accessibles).delete()
             
             messages.success(request, f'Toutes les demandes de modification ont été supprimées ({demandes_count} demandes).')
         except Exception as e:
@@ -1231,7 +1355,7 @@ def reinitialiser_demandes_modification(request):
     return redirect('admin_dashboard:gestion_demandes_modification')
 
 
-@staff_member_required
+@supervisor_required
 def supprimer_panne(request, panne_id):
     """
     Vue pour supprimer une panne spécifique
@@ -1248,15 +1372,17 @@ def supprimer_panne(request, panne_id):
     return redirect('admin_dashboard:dashboard_admin')
 
 
-@staff_member_required
+@supervisor_required
 def supprimer_toutes_pannes(request):
     """
     Vue pour supprimer toutes les pannes
     """
     if request.method == 'POST':
         try:
-            pannes_count = Panne.objects.count()
-            Panne.objects.all().delete()
+            # Supprimer seulement les pannes des chauffeurs accessibles
+            chauffeurs_accessibles = get_chauffeurs_for_user(request.user)
+            pannes_count = Panne.objects.filter(chauffeur__in=chauffeurs_accessibles).count()
+            Panne.objects.filter(chauffeur__in=chauffeurs_accessibles).delete()
             
             messages.success(request, f'Toutes les pannes ont été supprimées ({pannes_count} pannes).')
         except Exception as e:
@@ -1265,7 +1391,7 @@ def supprimer_toutes_pannes(request):
     return redirect('admin_dashboard:dashboard_admin')
 
 
-@staff_member_required
+@supervisor_required
 def exporter_excel(request):
     """
     Export des données de recettes et performances en fichier Excel
@@ -1304,10 +1430,11 @@ def exporter_excel(request):
             date_debut = aujourd_hui.replace(month=1, day=1)
             date_fin = aujourd_hui.replace(month=12, day=31)
         
-        # Filtrage des données
-        chauffeur_filter = Q()
+        # Filtrage des données selon les permissions utilisateur
+        chauffeurs_accessibles = get_chauffeurs_for_user(request.user)
+        chauffeur_filter = Q(chauffeur__in=chauffeurs_accessibles)
         if chauffeur_id:
-            chauffeur_filter = Q(chauffeur_id=chauffeur_id)
+            chauffeur_filter &= Q(chauffeur_id=chauffeur_id)
         
         # Récupération des données
         prises = PriseCles.objects.filter(
@@ -1441,11 +1568,11 @@ def exporter_excel(request):
 # GESTION DES SUPERVISEURS - Privilèges et permissions
 # =============================================================================
 
-@staff_member_required
+@supervisor_required
 def gestion_superviseurs(request):
-    # Vérifier que l'utilisateur est super admin
-    if not request.user.is_superuser:
-        messages.error(request, 'Accès refusé. Seuls les super administrateurs peuvent gérer les superviseurs.')
+    # Vérifier que l'utilisateur a les privilèges pour gérer les superviseurs
+    if not (request.user.is_superuser or request.user.is_staff):
+        messages.error(request, 'Accès refusé. Vous n\'avez pas les privilèges nécessaires pour gérer les superviseurs.')
         return redirect('admin_dashboard:dashboard_admin')
     """
     Vue de gestion des superviseurs
@@ -1493,11 +1620,11 @@ def gestion_superviseurs(request):
     return render(request, 'admin_dashboard/gestion_superviseurs.html', context)
 
 
-@staff_member_required
+@supervisor_required
 def ajouter_superviseur(request, user_id):
-    # Vérifier que l'utilisateur est super admin
-    if not request.user.is_superuser:
-        messages.error(request, 'Accès refusé. Seuls les super administrateurs peuvent gérer les superviseurs.')
+    # Vérifier que l'utilisateur a les privilèges pour gérer les superviseurs
+    if not (request.user.is_superuser or request.user.is_staff):
+        messages.error(request, 'Accès refusé. Vous n\'avez pas les privilèges nécessaires pour gérer les superviseurs.')
         return redirect('admin_dashboard:dashboard_admin')
     """
     Vue pour ajouter un utilisateur au groupe Superviseurs
@@ -1527,11 +1654,11 @@ def ajouter_superviseur(request, user_id):
     return redirect('admin_dashboard:gestion_superviseurs')
 
 
-@staff_member_required
+@supervisor_required
 def retirer_superviseur(request, user_id):
-    # Vérifier que l'utilisateur est super admin
-    if not request.user.is_superuser:
-        messages.error(request, 'Accès refusé. Seuls les super administrateurs peuvent gérer les superviseurs.')
+    # Vérifier que l'utilisateur a les privilèges pour gérer les superviseurs
+    if not (request.user.is_superuser or request.user.is_staff):
+        messages.error(request, 'Accès refusé. Vous n\'avez pas les privilèges nécessaires pour gérer les superviseurs.')
         return redirect('admin_dashboard:dashboard_admin')
     """
     Vue pour retirer un utilisateur du groupe Superviseurs
@@ -1561,11 +1688,11 @@ def retirer_superviseur(request, user_id):
     return redirect('admin_dashboard:gestion_superviseurs')
 
 
-@staff_member_required
+@supervisor_required
 def creer_superviseur(request):
-    # Vérifier que l'utilisateur est super admin
-    if not request.user.is_superuser:
-        messages.error(request, 'Accès refusé. Seuls les super administrateurs peuvent gérer les superviseurs.')
+    # Vérifier que l'utilisateur a les privilèges pour gérer les superviseurs
+    if not (request.user.is_superuser or request.user.is_staff):
+        messages.error(request, 'Accès refusé. Vous n\'avez pas les privilèges nécessaires pour gérer les superviseurs.')
         return redirect('admin_dashboard:dashboard_admin')
     """
     Vue pour créer un nouveau compte superviseur
@@ -1582,6 +1709,7 @@ def creer_superviseur(request):
         password = request.POST.get('password')
         first_name = request.POST.get('first_name', '')
         last_name = request.POST.get('last_name', '')
+        
         
         # Validation des champs obligatoires
         if not username or not password:
@@ -1604,7 +1732,7 @@ def creer_superviseur(request):
             )
             
             # Ajout au groupe Superviseurs
-            superviseurs_group = Group.objects.get(name='Superviseurs')
+            superviseurs_group, created = Group.objects.get_or_create(name='Superviseurs')
             user.groups.add(superviseurs_group)
             
             messages.success(request, f'Superviseur {username} créé avec succès.')
@@ -1618,7 +1746,7 @@ def creer_superviseur(request):
     return render(request, 'admin_dashboard/creer_superviseur.html')
 
 
-@staff_member_required
+@supervisor_required
 def assigner_chauffeurs(request, superviseur_id):
     """
     Vue pour assigner des chauffeurs à un superviseur
@@ -1630,9 +1758,9 @@ def assigner_chauffeurs(request, superviseur_id):
     Returns:
         HttpResponse: Template d'assignation ou redirection
     """
-    # Vérifier que l'utilisateur est super admin
-    if not request.user.is_superuser:
-        messages.error(request, 'Accès refusé. Seuls les super administrateurs peuvent gérer les assignations.')
+    # Vérifier que l'utilisateur a les privilèges pour gérer les assignations
+    if not (request.user.is_superuser or request.user.is_staff):
+        messages.error(request, 'Accès refusé. Vous n\'avez pas les privilèges nécessaires pour gérer les assignations.')
         return redirect('admin_dashboard:dashboard_admin')
     
     try:
@@ -1644,25 +1772,72 @@ def assigner_chauffeurs(request, superviseur_id):
     if request.method == 'POST':
         chauffeur_ids = request.POST.getlist('chauffeurs')
         
-        # Supprimer complètement les assignations existantes
-        AssignationSuperviseur.objects.filter(superviseur=superviseur).delete()
         
-        # Créer les nouvelles assignations
-        for chauffeur_id in chauffeur_ids:
-            try:
-                chauffeur = Chauffeur.objects.get(id=chauffeur_id)
-                AssignationSuperviseur.objects.create(
-                    chauffeur=chauffeur,
-                    superviseur=superviseur,
-                    assigne_par=request.user
-                )
-            except Chauffeur.DoesNotExist:
-                continue
+        try:
+            # Approche sans transaction atomique pour éviter les rollbacks
+            # 1. Supprimer TOUTES les assignations existantes pour ce superviseur
+            old_assignments = AssignationSuperviseur.objects.filter(superviseur=superviseur)
+            old_count = old_assignments.count()
+            old_assignments.delete()
+            
+            # 2. Créer les nouvelles assignations une par une avec gestion d'erreur individuelle
+            created_count = 0
+            errors = []
+            
+            for chauffeur_id in chauffeur_ids:
+                try:
+                    chauffeur = Chauffeur.objects.get(id=chauffeur_id)
+                    
+                    # Utiliser get_or_create pour éviter les doublons
+                    assignment, created = AssignationSuperviseur.objects.get_or_create(
+                        chauffeur=chauffeur,
+                        superviseur=superviseur,
+                        defaults={
+                            'assigne_par': request.user,
+                            'actif': True
+                        }
+                    )
+                    
+                    if created:
+                        created_count += 1
+                    else:
+                        # Réactiver si nécessaire
+                        if not assignment.actif:
+                            assignment.actif = True
+                            assignment.assigne_par = request.user
+                            assignment.save()
+                    
+                except Chauffeur.DoesNotExist:
+                    error_msg = f"Chauffeur ID {chauffeur_id} non trouvé"
+                    errors.append(error_msg)
+                    continue
+                except Exception as e:
+                    error_msg = f"Erreur lors de l'assignation du chauffeur {chauffeur_id}: {str(e)}"
+                    errors.append(error_msg)
+                    continue
+            
+            # Messages de succès/erreur
+            total_final = AssignationSuperviseur.objects.filter(superviseur=superviseur, actif=True).count()
+            if total_final > 0:
+                messages.success(request, f'Assignations mises à jour pour {superviseur.get_full_name() or superviseur.username}. {total_final} chauffeur(s) assigné(s).')
+            else:
+                messages.info(request, f'Toutes les assignations supprimées pour {superviseur.get_full_name() or superviseur.username}.')
+            
+            if errors:
+                messages.warning(request, f'Quelques erreurs sont survenues: {"; ".join(errors[:3])}')
+            
+        except Exception as e:
+            messages.error(request, f'Erreur lors de la mise à jour des assignations: {str(e)}')
         
-        messages.success(request, f'Assignations mises à jour pour {superviseur.get_full_name() or superviseur.username}.')
+        # TOUJOURS rediriger après POST (pattern PRG - Post-Redirect-Get)
         return redirect('admin_dashboard:gestion_superviseurs')
     
-    # Récupérer tous les chauffeurs
+    # Vérifier que l'utilisateur a les privilèges pour cette fonctionnalité
+    if not (request.user.is_superuser or request.user.is_staff):
+        messages.error(request, 'Vous n\'avez pas les privilèges nécessaires pour assigner des chauffeurs aux superviseurs.')
+        return redirect('admin_dashboard:gestion_superviseurs')
+    
+    # Récupérer tous les chauffeurs (superuser a accès à tous)
     chauffeurs = Chauffeur.objects.filter(actif=True).order_by('nom', 'prenom')
     
     # Récupérer les chauffeurs déjà assignés
@@ -1677,7 +1852,7 @@ def assigner_chauffeurs(request, superviseur_id):
     return render(request, 'admin_dashboard/assigner_chauffeurs.html', context)
 
 
-@staff_member_required
+@supervisor_required
 def detail_superviseur(request, superviseur_id):
     """
     Vue pour afficher les détails d'un superviseur et ses chauffeurs assignés
@@ -1689,9 +1864,9 @@ def detail_superviseur(request, superviseur_id):
     Returns:
         HttpResponse: Template de détail du superviseur
     """
-    # Vérifier que l'utilisateur est super admin
-    if not request.user.is_superuser:
-        messages.error(request, 'Accès refusé. Seuls les super administrateurs peuvent voir les détails des superviseurs.')
+    # Vérifier que l'utilisateur a les privilèges pour voir les détails des superviseurs
+    if not (request.user.is_superuser or request.user.is_staff):
+        messages.error(request, 'Accès refusé. Vous n\'avez pas les privilèges nécessaires pour voir les détails des superviseurs.')
         return redirect('admin_dashboard:dashboard_admin')
     
     try:
@@ -1746,3 +1921,87 @@ def detail_superviseur(request, superviseur_id):
     }
     
     return render(request, 'admin_dashboard/detail_superviseur.html', context)
+
+    # Calcul des performances
+
+    performances = []
+
+    for remise in remises:
+
+        try:
+
+            prise = PriseCles.objects.get(chauffeur=chauffeur, date=remise.date)
+
+            pourcentage = (remise.recette_realisee / prise.objectif_recette) * 100
+
+            performances.append({
+
+                'date': remise.date,
+
+                'objectif': prise.objectif_recette,
+
+                'realise': remise.recette_realisee,
+
+                'pourcentage': pourcentage,
+
+                'statut': 'success' if pourcentage >= 100 else 'warning' if pourcentage >= 90 else 'danger'
+
+            })
+
+        except PriseCles.DoesNotExist:
+
+            performances.append({
+
+                'date': remise.date,
+
+                'objectif': 0,
+
+                'realise': remise.recette_realisee,
+
+                'pourcentage': 0,
+
+                'statut': 'info'
+
+            })
+
+    
+
+    # Statistiques globales
+
+    recettes_totales = remises.aggregate(total=Sum('recette_realisee'))['total'] or 0
+
+    objectifs_totaux = prises.aggregate(total=Sum('objectif_recette'))['total'] or 0
+
+    performance_moyenne = (recettes_totales / objectifs_totaux * 100) if objectifs_totaux > 0 else 0
+
+    
+
+    context = {
+
+        'chauffeur': chauffeur,
+
+        'prises': prises_obj,
+
+        'remises': remises_obj,
+
+        'prises_paginator': prises_paginator,
+
+        'remises_paginator': remises_paginator,
+
+        'performances': performances,
+
+        'total_prises': total_prises,
+
+        'total_remises': total_remises,
+
+        'recettes_totales': recettes_totales,
+
+        'objectifs_totaux': objectifs_totaux,
+
+        'performance_moyenne': performance_moyenne,
+
+    }
+
+    
+
+    return render(request, 'admin_dashboard/activites_chauffeur.html', context)

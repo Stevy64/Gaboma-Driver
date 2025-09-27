@@ -1,34 +1,65 @@
 # Python
 __pycache__/
 *.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
 *.egg-info/
-.env
-venv/
-ENV/
-.build/
+.installed.cfg
+*.egg
+MANIFEST
 
 # Django
+*.log
+local_settings.py
+db.sqlite3
 db.sqlite3-journal
+media/
 
-# OS
-.DS_Store
-Thumbs.db
-
-# Node/Frontend (au cas où)
-node_modules/
-.dist/
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
 
 # IDE
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
 
-# Static build artifacts
-staticfiles/
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 
-# Tests temporaires
-.coverage
-htmlcov/
-.pytest_cache/
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
 
-# Logs
-*.log
+# Debug files
+debug*.py
+test_*.py
+*_test.py

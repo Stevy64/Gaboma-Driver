@@ -2,7 +2,7 @@
 # CONFIGURATION DES URLS - Application Drivers
 # =============================================================================
 """
-Configuration des URLs pour l'application drivers de Gaboma Drive
+Configuration des URLs pour l'application drivers de Gaboma Driver
 
 Ce fichier définit toutes les routes (URLs) disponibles pour les chauffeurs :
 - Pages d'accueil et d'authentification

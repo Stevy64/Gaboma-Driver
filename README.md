@@ -17,7 +17,6 @@ Application web Django pour le suivi d'activité des chauffeurs de taxi avec int
 - **Gestion des chauffeurs** (ajout, modification, désactivation)
 - **Suivi des recettes** (journalières, hebdomadaires, mensuelles)
 - **Gestion des pannes** avec statuts et priorités
-- **Classements et gamification** pour motiver les chauffeurs
 - **Interface d'administration Django** complète
 
 ## 🛠️ Technologies
@@ -101,7 +100,6 @@ Après avoir exécuté `create_test_data.py` :
 2. Accéder au dashboard pour voir les statistiques globales
 3. Gérer les chauffeurs via l'interface Django
 4. Consulter les recettes et pannes
-5. Suivre les classements
 
 ## 🏗️ Architecture
 
@@ -112,7 +110,7 @@ taxi_app/
 ├── admin_dashboard/   # Application dashboard admin
 ├── templates/         # Templates HTML
 ├── static/           # Fichiers CSS/JS
-└── taxi_app/         # Configuration Django
+└── gabomadriver_app/ # Configuration Django
 ```
 
 ## 📊 Modèles de données
@@ -130,7 +128,7 @@ Par défaut SQLite, pour PostgreSQL :
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'taxi_app',
+        'NAME': 'gabomadriver_app',
         'USER': 'votre_user',
         'PASSWORD': 'votre_password',
         'HOST': 'localhost',

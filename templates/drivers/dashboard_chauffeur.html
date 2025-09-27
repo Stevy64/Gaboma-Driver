@@ -330,7 +330,7 @@
 <script>
 // Fonctions de partage sur les réseaux sociaux
 function partagerWhatsApp() {
-    const message = `🚕 *Rapport d'Activité - Gaboma Drive*\n\n` +
+    const message = `🚕 *Rapport d'Activité - Gaboma Driver*\n\n` +
                    `Bonjour ! Voici mon rapport d'activité de la semaine.\n` +
                    `📊 Total recettes: {{ total_semaine|floatformat:0 }} FCFA\n` +
                    `📈 Moyenne journalière: {{ moyenne_semaine|floatformat:0 }} FCFA\n` +
@@ -354,21 +354,21 @@ function partagerGmail() {
                 `{{ request.build_absolute_uri }}{% url 'drivers:exporter_pdf' %}\n\n` +
                 `Cordialement,\n` +
                 `{{ chauffeur.prenom }} {{ chauffeur.nom }}\n` +
-                `Chauffeur - Gaboma Drive`;
+                `Chauffeur - Gaboma Driver`;
     
     const url = `https://mail.google.com/mail/?view=cm&fs=1&to=&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     window.open(url, '_blank');
 }
 
 function partagerTelegram() {
-    const message = `🚕 *Rapport d'Activité - Gaboma Drive*\n\n` +
+    const message = `🚕 *Rapport d'Activité - Gaboma Driver*\n\n` +
                    `📊 *Résumé de la semaine :*\n` +
                    `• Total recettes: {{ total_semaine|floatformat:0 }} FCFA\n` +
                    `• Moyenne journalière: {{ moyenne_semaine|floatformat:0 }} FCFA\n` +
                    `• Jours travaillés: {{ recettes_semaine|length }}/7\n\n` +
                    `📄 *Rapport complet :*\n` +
                    `{{ request.build_absolute_uri }}{% url 'drivers:exporter_pdf' %}\n\n` +
-                   `_Généré automatiquement par Gaboma Drive_`;
+                   `_Généré automatiquement par Gaboma Driver_`;
     
     const url = `https://t.me/share/url?url=${encodeURIComponent('{{ request.build_absolute_uri }}{% url "drivers:exporter_pdf" %}')}&text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');

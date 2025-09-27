@@ -1,7 +1,7 @@
 {% extends 'base/base.html' %}
 {% load static %}
 
-{% block title %}Activités de {{ chauffeur.nom_complet }} - Gaboma Drive{% endblock %}
+{% block title %}Activités de {{ chauffeur.nom_complet }} - Gaboma Driver{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -439,7 +439,7 @@ function partagerPDF(type) {
     } else if (type === 'email') {
         // Partage par email
         const subject = `Rapport d'activité - ${chauffeurNom}`;
-        const body = `Bonjour,\n\nVeuillez trouver ci-joint le rapport d'activité de ${chauffeurNom} généré le ${dateAujourdhui}.\n\nPour télécharger le PDF complet, cliquez sur le lien ci-dessous :\n${window.location.origin}${pdfUrl}\n\nCordialement,\nL'équipe Gaboma Drive`;
+        const body = `Bonjour,\n\nVeuillez trouver ci-joint le rapport d'activité de ${chauffeurNom} généré le ${dateAujourdhui}.\n\nPour télécharger le PDF complet, cliquez sur le lien ci-dessous :\n${window.location.origin}${pdfUrl}\n\nCordialement,\nL'équipe Gaboma Driver`;
         const emailUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
         window.location.href = emailUrl;
     }

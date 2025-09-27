@@ -243,8 +243,10 @@ function updateMobileLabels() {
     const checkboxes = document.querySelectorAll('input[name="chauffeurs"]');
     checkboxes.forEach(checkbox => {
         const label = document.querySelector(`label[for="${checkbox.id}"]`);
-        if (label) {
-            const badge = label.querySelector('.badge.bg-success');
+        if (label && checkbox.id.includes('mobile_')) {
+            // Ne traiter que les versions mobiles
+            let badge = label.querySelector('.badge.bg-success');
+            
             if (checkbox.checked) {
                 if (!badge) {
                     const newBadge = document.createElement('span');
@@ -253,7 +255,8 @@ function updateMobileLabels() {
                     
                     // Chercher l'élément .d-flex dans le label (version mobile)
                     const dFlexElement = label.querySelector('.d-flex');
-                    if (dFlexElement) {
+                    if (dFlexElement && dFlexElement.children.length > 0) {
+                        // Ajouter après le dernier élément dans .d-flex
                         dFlexElement.appendChild(newBadge);
                     } else {
                         // Si pas de .d-flex, ajouter à la fin du label
@@ -261,7 +264,8 @@ function updateMobileLabels() {
                     }
                 }
             } else {
-                if (badge) {
+                if (badge && !badge.textContent.includes(checkbox.value)) {
+                    // Ne supprimer que si ce n'est pas un badge existant du template
                     badge.remove();
                 }
             }
@@ -269,44 +273,86 @@ function updateMobileLabels() {
     });
 }
 
-// Confirmation avant soumission
-document.getElementById('assignationForm').addEventListener('submit', function(e) {
-    const submitBtn = document.getElementById('submitBtn');
-    const checkedBoxes = document.querySelectorAll('input[name="chauffeurs"]:checked');
-    
-    if (checkedBoxes.length === 0) {
-        e.preventDefault();
-        alert('Veuillez sélectionner au moins un chauffeur ou confirmer la suppression de toutes les assignations.');
-        return;
-    }
-    
-    const superviseur = '{{ superviseur.get_full_name|default:superviseur.username }}';
-    if (!confirm(`Êtes-vous sûr de vouloir mettre à jour les assignations pour ${superviseur} ?`)) {
-        e.preventDefault();
-        return;
-    }
-    
-    // Désactiver le bouton et afficher un spinner
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Mise à jour en cours...';
-    
-    // Ne pas empêcher la soumission - laisser le formulaire se soumettre
-    // Le formulaire se soumettra automatiquement après cette fonction
-});
-
-// Synchroniser les checkboxes desktop et mobile
+// Gestion du formulaire d'assignation
 document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('assignationForm');
+    const submitBtn = document.getElementById('submitBtn');
     const checkboxes = document.querySelectorAll('input[name="chauffeurs"]');
+    
+    // Event listener sur le bouton de soumission
+    if (submitBtn && form) {
+        submitBtn.addEventListener('click', function(e) {
+            e.preventDefault(); // Empêcher la soumission automatique
+            
+            const checkedBoxes = document.querySelectorAll('input[name="chauffeurs"]:checked');
+            
+            // Compter les chauffeurs uniques (éviter les doublons desktop/mobile)
+            const uniqueDriverIds = new Set();
+            checkedBoxes.forEach(cb => {
+                uniqueDriverIds.add(cb.value);
+            });
+            const uniqueDriverCount = uniqueDriverIds.size;
+            const superviseur = '{{ superviseur.get_full_name|default:superviseur.username }}';
+            
+            // Message de confirmation personnalisé
+            let confirmMessage;
+            if (uniqueDriverCount === 0) {
+                confirmMessage = `Êtes-vous sûr de vouloir supprimer TOUTES les assignations pour ${superviseur} ?`;
+            } else {
+                confirmMessage = `Êtes-vous sûr de vouloir assigner ${uniqueDriverCount} chauffeur(s) à ${superviseur} ?`;
+            }
+            
+            // Demander confirmation AVANT de modifier le bouton
+            if (!confirm(confirmMessage)) {
+                // Annulation - le bouton reste inchangé
+                return false;
+            }
+            
+            // Confirmation OK - modifier le bouton pour indiquer le traitement
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Mise à jour en cours...';
+            
+            // Fonction pour réinitialiser le bouton
+            function resetButton() {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="bi bi-check-circle"></i> Mettre à jour les Assignations';
+            }
+            
+            // Timeout de sécurité pour réactiver le bouton si nécessaire
+            const timeoutId = setTimeout(function() {
+                resetButton();
+                alert('La requête prend trop de temps. Veuillez réessayer.');
+            }, 30000);
+            
+            // Soumettre le formulaire
+            try {
+                form.submit();
+            } catch (error) {
+                // En cas d'erreur, réinitialiser le bouton
+                clearTimeout(timeoutId);
+                resetButton();
+                console.error('Erreur lors de la soumission:', error);
+            }
+        });
+    }
+    
+    
+    // Code original de synchronisation
     checkboxes.forEach(checkbox => {
         checkbox.addEventListener('change', function() {
-            // Trouver la checkbox correspondante dans l'autre version
-            const otherId = this.id.includes('mobile_') ? 
-                this.id.replace('mobile_', '') : 
-                'mobile_' + this.id;
-            const otherCheckbox = document.getElementById(otherId);
-            if (otherCheckbox) {
-                otherCheckbox.checked = this.checked;
-            }
+            // Extraire l'ID du chauffeur à partir de la valeur
+            const chauffeurId = this.value;
+            
+            // Trouver toutes les checkboxes avec la même valeur (même chauffeur)
+            const allCheckboxesForChauffeur = document.querySelectorAll(`input[name="chauffeurs"][value="${chauffeurId}"]`);
+            
+            // Synchroniser toutes les checkboxes du même chauffeur
+            allCheckboxesForChauffeur.forEach(cb => {
+                if (cb !== this) {  // Ne pas modifier la checkbox qui a déclenché l'événement
+                    cb.checked = this.checked;
+                }
+            });
+            
             updateMobileLabels();
         });
     });

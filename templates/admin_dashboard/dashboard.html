@@ -1,7 +1,7 @@
 {% extends 'base/base.html' %}
 {% load static %}
 
-{% block title %}Dashboard Admin - Gaboma Drive{% endblock %}
+{% block title %}Dashboard Admin - Gaboma Driver{% endblock %}
 
 {% block content %}
 <div class="row">
@@ -9,6 +9,116 @@
         <h2 class="mb-4">
             <i class="bi bi-speedometer2"></i> Dashboard Administrateur
         </h2>
+    </div>
+</div>
+
+<!-- Menu de Navigation Rapide -->
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-grid-3x3-gap me-2"></i> Navigation Rapide
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <!-- Première ligne - 4 éléments -->
+                    <div class="col-6 col-md-3">
+                        <a href="{% url 'admin_dashboard:dashboard_admin' %}" class="text-decoration-none">
+                            <div class="card text-center h-100 nav-card">
+                                <div class="card-body p-3">
+                                    <i class="bi bi-speedometer2 text-primary mb-2" style="font-size: 2rem;"></i>
+                                    <h6 class="card-title mb-0">Dashboard</h6>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a href="{% url 'admin_dashboard:liste_chauffeurs' %}" class="text-decoration-none">
+                            <div class="card text-center h-100 nav-card">
+                                <div class="card-body p-3">
+                                    <i class="bi bi-people text-info mb-2" style="font-size: 2rem;"></i>
+                                    <h6 class="card-title mb-0">Chauffeurs</h6>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a href="{% url 'admin_dashboard:statistiques_recettes' %}" class="text-decoration-none">
+                            <div class="card text-center h-100 nav-card">
+                                <div class="card-body p-3">
+                                    <i class="bi bi-graph-up text-success mb-2" style="font-size: 2rem;"></i>
+                                    <h6 class="card-title mb-0">Recettes</h6>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a href="{% url 'admin_dashboard:calendrier_activites' %}" class="text-decoration-none">
+                            <div class="card text-center h-100 nav-card">
+                                <div class="card-body p-3">
+                                    <i class="bi bi-calendar3 text-warning mb-2" style="font-size: 2rem;"></i>
+                                    <h6 class="card-title mb-0">Calendrier</h6>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <!-- Deuxième ligne - 4 éléments -->
+                    <div class="col-6 col-md-3">
+                        <a href="{% url 'admin_dashboard:gestion_activites' %}" class="text-decoration-none">
+                            <div class="card text-center h-100 nav-card">
+                                <div class="card-body p-3">
+                                    <i class="bi bi-list-task text-primary mb-2" style="font-size: 2rem;"></i>
+                                    <h6 class="card-title mb-0">Activités</h6>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a href="{% url 'admin_dashboard:gestion_demandes_modification' %}" class="text-decoration-none">
+                            <div class="card text-center h-100 nav-card">
+                                <div class="card-body p-3">
+                                    <i class="bi bi-clipboard-check text-info mb-2" style="font-size: 2rem;"></i>
+                                    <h6 class="card-title mb-0">Demandes</h6>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        {% if user.is_superuser or user.is_staff %}
+                        <a href="{% url 'admin_dashboard:gestion_superviseurs' %}" class="text-decoration-none">
+                            <div class="card text-center h-100 nav-card">
+                                <div class="card-body p-3">
+                                    <i class="bi bi-people-fill text-success mb-2" style="font-size: 2rem;"></i>
+                                    <h6 class="card-title mb-0">Superviseurs</h6>
+                                </div>
+                            </div>
+                        </a>
+                        {% else %}
+                        <a href="{% url 'admin_dashboard:gestion_pannes' %}" class="text-decoration-none">
+                            <div class="card text-center h-100 nav-card">
+                                <div class="card-body p-3">
+                                    <i class="bi bi-tools text-danger mb-2" style="font-size: 2rem;"></i>
+                                    <h6 class="card-title mb-0">Pannes</h6>
+                                </div>
+                            </div>
+                        </a>
+                        {% endif %}
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a href="/admin/" class="text-decoration-none" target="_blank">
+                            <div class="card text-center h-100 nav-card">
+                                <div class="card-body p-3">
+                                    <i class="bi bi-gear text-warning mb-2" style="font-size: 2rem;"></i>
+                                    <h6 class="card-title mb-0">Admin</h6>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 

@@ -1,14 +1,14 @@
 # =============================================================================
-# CONFIGURATION DJANGO - Gaboma Drive Application
+# CONFIGURATION DJANGO - Gaboma Driver Application
 # =============================================================================
 """
-Configuration Django pour l'application Gaboma Drive
+Configuration Django pour l'application Gaboma Driver
 
 Ce fichier contient tous les paramètres de configuration pour l'application
-de suivi d'activité de taxi. Il définit les applications installées, la base
+de suivi d'activité pour Gaboma Driver. Il définit les applications installées, la base
 de données, les templates, les fichiers statiques, et les paramètres de sécurité.
 
-Application : Gaboma Drive
+Application : Gaboma Driver
 Version : 1.0
 Django : 4.2.7
 Base de données : SQLite (développement) / PostgreSQL (production)
@@ -53,7 +53,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',     # Système de messages
     'django.contrib.staticfiles',  # Gestion des fichiers statiques
     
-    # Applications personnalisées de Gaboma Drive
+    # Applications personnalisées de Gaboma Driver
     'drivers',          # Gestion des chauffeurs
     'activities',       # Gestion des activités (prises/remises de clés)
     'admin_dashboard',  # Tableau de bord administrateur
@@ -77,7 +77,7 @@ MIDDLEWARE = [
 # CONFIGURATION DES URLS - Point d'entrée du routage
 # =============================================================================
 
-ROOT_URLCONF = 'taxi_app.urls'
+ROOT_URLCONF = 'gabomadriver_app.urls'
 
 # =============================================================================
 # CONFIGURATION DES TEMPLATES - Moteur de rendu des vues
@@ -104,7 +104,7 @@ TEMPLATES = [
 # CONFIGURATION WSGI - Interface de déploiement
 # =============================================================================
 
-WSGI_APPLICATION = 'taxi_app.wsgi.application'
+WSGI_APPLICATION = 'gabomadriver_app.wsgi.application'
 
 # =============================================================================
 # CONFIGURATION DE LA BASE DE DONNÉES - Stockage des données

@@ -119,18 +119,61 @@
 </div>
 
 <script>
+// Gestion du formulaire de création de superviseur
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.querySelector('form');
     const submitBtn = document.getElementById('submitBtn');
     
-    if (form && submitBtn) {
-        form.addEventListener('submit', function(e) {
-            // Désactiver le bouton et afficher un spinner
+    // Event listener sur le bouton de soumission
+    if (submitBtn && form) {
+        submitBtn.addEventListener('click', function(e) {
+            e.preventDefault(); // Empêcher la soumission automatique
+            
+            // Validation basique
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            
+            if (!username || !password) {
+                alert('Le nom d\'utilisateur et le mot de passe sont obligatoires.');
+                return false;
+            }
+            
+            if (password.length < 8) {
+                alert('Le mot de passe doit contenir au moins 8 caractères.');
+                return false;
+            }
+            
+            // Demander confirmation
+            const confirmMessage = `Êtes-vous sûr de vouloir créer le superviseur "${username}" ?`;
+            if (!confirm(confirmMessage)) {
+                return false;
+            }
+            
+            // Modifier le bouton pour indiquer le traitement
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Création en cours...';
             
-            // Ne pas empêcher la soumission - laisser le formulaire se soumettre
-            // Le formulaire se soumettra automatiquement après cette fonction
+            // Fonction pour réinitialiser le bouton
+            function resetButton() {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="bi bi-check-circle"></i> Créer le Superviseur';
+            }
+            
+            // Timeout de sécurité pour réactiver le bouton si nécessaire
+            const timeoutId = setTimeout(function() {
+                resetButton();
+                alert('La requête prend trop de temps. Veuillez réessayer.');
+            }, 30000);
+            
+            // Soumettre le formulaire
+            try {
+                form.submit();
+            } catch (error) {
+                // En cas d'erreur, réinitialiser le bouton
+                clearTimeout(timeoutId);
+                resetButton();
+                console.error('Erreur lors de la soumission:', error);
+            }
         });
     } else {
         console.error('Formulaire ou bouton non trouvé');

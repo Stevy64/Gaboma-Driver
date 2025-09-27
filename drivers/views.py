@@ -51,7 +51,7 @@ def logout_chauffeur(request):
 
 def index(request):
     """
-    Vue d'accueil de l'application Gaboma Drive
+    Vue d'accueil de l'application Gaboma Driver
     
     Cette vue affiche la page d'accueil avec les options de connexion
     pour les chauffeurs uniquement. L'accès admin se fait via une URL séparée.
@@ -110,12 +110,15 @@ def login_chauffeur(request):
                     # Connexion de l'utilisateur (création de la session)
                     login(request, user)
                     messages.success(request, f'Bienvenue {chauffeur.prenom} {chauffeur.nom} !')
+                    
+                    # Note: L'utilisateur accède à l'espace chauffeur même s'il a des droits superviseur
+                    # Car il a choisi de se connecter via la page de login chauffeur
                     return redirect('drivers:dashboard_chauffeur')
                 else:
                     messages.error(request, 'Votre compte chauffeur est désactivé.')
             
             except Chauffeur.DoesNotExist:
-                messages.error(request, 'Aucun chauffeur associé à ce compte.')
+                messages.error(request, 'Aucun chauffeur associé à ce compte. Essayez de vous connecter en tant que superviseur si vous avez ces droits.')
         else:
             messages.error(request, 'Nom d\'utilisateur ou mot de passe incorrect.')
     
@@ -151,14 +154,41 @@ def login_superviseur(request):
         user = authenticate(request, username=username, password=password)
         
         if user is not None:
-            # Vérification que l'utilisateur appartient au groupe 'Superviseurs'
-            if user.groups.filter(name='Superviseurs').exists():
+            # Vérification des privilèges de supervision
+            # Un utilisateur peut être superviseur s'il :
+            # 1. Appartient au groupe 'Superviseurs' OU
+            # 2. Est un chauffeur avec is_staff = True (Statut équipe)
+            
+            is_supervisor_group = user.groups.filter(name='Superviseurs').exists()
+            is_chauffeur_with_staff = False
+            
+            try:
+                chauffeur = Chauffeur.objects.get(user=user)
+                is_chauffeur_with_staff = chauffeur.actif and user.is_staff
+            except Chauffeur.DoesNotExist:
+                pass
+            
+            if is_supervisor_group or is_chauffeur_with_staff:
                 # Connexion de l'utilisateur (création de la session)
                 login(request, user)
-                messages.success(request, f'Bienvenue {user.get_full_name() or user.username} !')
-                return redirect('admin_dashboard:dashboard_admin')
+                
+                # Message de bienvenue personnalisé selon le type d'utilisateur
+                if is_chauffeur_with_staff and not is_supervisor_group:
+                    try:
+                        chauffeur = Chauffeur.objects.get(user=user)
+                        messages.success(request, f'Bienvenue {chauffeur.prenom} {chauffeur.nom} - Accès Superviseur activé !')
+                    except Chauffeur.DoesNotExist:
+                        messages.success(request, f'Bienvenue {user.get_full_name() or user.username} !')
+                else:
+                    messages.success(request, f'Bienvenue {user.get_full_name() or user.username} !')
+                
+                # Redirection selon le niveau de privilège
+                if user.is_superuser or user.is_staff:
+                    return redirect('admin_dashboard:dashboard_admin')
+                else:
+                    return redirect('admin_dashboard:dashboard_superviseur')
             else:
-                messages.error(request, 'Vous n\'avez pas les privilèges de superviseur.')
+                messages.error(request, 'Vous n\'avez pas les privilèges de superviseur. Pour accéder à cet espace, vous devez soit appartenir au groupe "Superviseurs", soit être un chauffeur avec le statut équipe.')
         else:
             messages.error(request, 'Nom d\'utilisateur ou mot de passe incorrect.')
     

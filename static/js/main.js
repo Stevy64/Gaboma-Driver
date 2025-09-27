@@ -1,8 +1,8 @@
 // =============================================================================
-// GABOMA DRIVE - JavaScript Principal
+// GABOMA DRIVER - JavaScript Principal
 // =============================================================================
 /**
- * Fichier JavaScript principal pour l'application Gaboma Drive
+ * Fichier JavaScript principal pour l'application Gaboma Driver
  * 
  * Ce fichier contient toutes les fonctionnalités JavaScript nécessaires
  * pour l'interface utilisateur de l'application de suivi d'activité de taxi.
@@ -557,7 +557,7 @@ function initializeApp() {
     // Initialisation des alertes persistantes
     initPersistentAlerts();
     
-    console.log('🚗 Gaboma Drive - Application initialisée avec succès');
+    console.log('🚗 Gaboma Driver - Application initialisée avec succès');
 }
 
 // =============================================================================

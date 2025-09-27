@@ -3,6 +3,18 @@
 
 {% block title %}Liste des Chauffeurs - Admin{% endblock %}
 
+{% block extra_css %}
+<style>
+.btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.btn.disabled:hover {
+    opacity: 0.5;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row">
     <div class="col-12">
@@ -45,9 +57,15 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <a href="{% url 'admin:drivers_chauffeur_change' chauffeur.id %}" class="btn btn-sm btn-outline-primary">
+                                    {% if can_modify_chauffeurs %}
+                                    <a href="{% url 'admin:drivers_chauffeur_change' chauffeur.id %}" class="btn btn-sm btn-outline-primary" target="_blank">
                                         <i class="bi bi-pencil"></i> Modifier
                                     </a>
+                                    {% else %}
+                                    <a href="{% url 'admin_dashboard:activites_chauffeur' chauffeur.id %}" class="btn btn-sm btn-outline-info">
+                                        <i class="bi bi-eye"></i> Voir activité
+                                    </a>
+                                    {% endif %}
                                 </td>
                             </tr>
                             {% empty %}
@@ -93,9 +111,15 @@
                                     <span>{{ chauffeur.date_embauche|date:"d/m/Y" }}</span>
                                 </div>
                                 <div class="col-6">
-                                    <a href="{% url 'admin:drivers_chauffeur_change' chauffeur.id %}" class="btn btn-sm btn-outline-primary">
+                                    {% if can_modify_chauffeurs %}
+                                    <a href="{% url 'admin:drivers_chauffeur_change' chauffeur.id %}" class="btn btn-sm btn-outline-primary" target="_blank">
                                         <i class="bi bi-pencil me-1"></i>Modifier
                                     </a>
+                                    {% else %}
+                                    <a href="{% url 'admin_dashboard:activites_chauffeur' chauffeur.id %}" class="btn btn-sm btn-outline-info">
+                                        <i class="bi bi-eye me-1"></i>Voir activité
+                                    </a>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>

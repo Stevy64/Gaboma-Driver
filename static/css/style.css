@@ -1,4 +1,44 @@
-/* Gaboma Drive - Styles personnalisés */
+/* Gaboma Driver - Styles personnalisés */
+
+/* Navigation Cards - Menu en grille */
+.nav-card {
+    transition: all 0.3s ease;
+    border: 1px solid #e3e6f0;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+}
+
+.nav-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 2rem 0 rgba(58, 59, 69, 0.2);
+    border-color: #5a5c69;
+}
+
+.nav-card .card-body {
+    padding: 1.5rem 1rem;
+}
+
+.nav-card .card-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #5a5c69;
+    margin-top: 0.5rem;
+}
+
+.nav-card:hover .card-title {
+    color: #3a3b45;
+}
+
+/* Bouton Admin désactivé */
+.nav-card.disabled {
+    pointer-events: none;
+    user-select: none;
+}
+
+.nav-card.disabled:hover {
+    transform: none;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    border-color: #e3e6f0;
+}
 
 :root {
     --primary-color: #0d6efd;
