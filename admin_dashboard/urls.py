@@ -47,6 +47,7 @@ urlpatterns = [
     path('superviseurs/creer/', views.creer_superviseur, name='creer_superviseur'),
     path('superviseurs/assigner/<int:superviseur_id>/', views.assigner_chauffeurs, name='assigner_chauffeurs'),
     path('superviseurs/detail/<int:superviseur_id>/', views.detail_superviseur, name='detail_superviseur'),
+    path('supprimer-compte-superviseur/', views.supprimer_compte_superviseur, name='supprimer_compte_superviseur'),
     
     path('logout/', views.logout_admin, name='logout_admin'),
 ]

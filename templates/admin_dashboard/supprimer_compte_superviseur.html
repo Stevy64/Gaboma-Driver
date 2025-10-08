@@ -1,0 +1,152 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Supprimer mon compte superviseur{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    Suppression de compte superviseur
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <h5 class="alert-heading">
+                        <i class="bi bi-warning"></i>
+                        Attention ! Action irréversible
+                    </h5>
+                    <p class="mb-0">
+                        Vous êtes sur le point de supprimer définitivement votre compte superviseur. 
+                        Cette action ne peut pas être annulée.
+                    </p>
+                </div>
+
+                <div class="mb-4">
+                    <h6>Informations qui seront supprimées :</h6>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-person-badge text-primary"></i> Compte superviseur</span>
+                            <span class="badge bg-primary rounded-pill">{{ user.username }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-people text-success"></i> Assignations de chauffeurs</span>
+                            <span class="badge bg-success rounded-pill">Toutes</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-person-check text-warning"></i> Assignations créées</span>
+                            <span class="badge bg-warning rounded-pill">Mises à NULL</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-shield-check text-info"></i> Privilèges superviseur</span>
+                            <span class="badge bg-info rounded-pill">Supprimés</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <form method="post" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <label for="confirmation" class="form-label">
+                            <strong>Pour confirmer la suppression, tapez "supprimer" dans le champ ci-dessous :</strong>
+                        </label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="confirmation" 
+                               name="confirmation" 
+                               placeholder="Tapez 'supprimer' pour confirmer"
+                               required>
+                        <div class="invalid-feedback">
+                            Vous devez taper "supprimer" pour confirmer la suppression.
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'admin_dashboard:dashboard_superviseur' %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i>
+                            Annuler
+                        </a>
+                        <button type="submit" class="btn btn-danger" id="deleteButton" disabled>
+                            <i class="bi bi-trash"></i>
+                            Supprimer définitivement mon compte
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Informations supplémentaires -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-info-circle"></i>
+                    Informations importantes
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li>Une fois supprimé, vous ne pourrez plus accéder à votre compte superviseur</li>
+                    <li>Toutes vos assignations de chauffeurs seront supprimées</li>
+                    <li>Vous perdrez tous vos privilèges de superviseur</li>
+                    <li>Cette action ne peut pas être annulée</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Script de suppression de compte superviseur - Version simplifiée
+function initDeleteSupervisorAccount() {
+    const confirmationInput = document.getElementById('confirmation');
+    const deleteButton = document.getElementById('deleteButton');
+    const form = document.querySelector('form');
+    
+    if (!confirmationInput || !deleteButton || !form) {
+        console.error('Éléments manquants pour la suppression de compte superviseur');
+        return;
+    }
+    
+    // Activer/désactiver le bouton selon la saisie
+    confirmationInput.addEventListener('input', function() {
+        const value = this.value.toLowerCase().trim();
+        if (value === 'supprimer') {
+            deleteButton.disabled = false;
+            deleteButton.className = 'btn btn-danger';
+        } else {
+            deleteButton.disabled = true;
+            deleteButton.className = 'btn btn-secondary';
+        }
+    });
+    
+    // Validation à la soumission
+    form.addEventListener('submit', function(event) {
+        const value = confirmationInput.value.toLowerCase().trim();
+        if (value !== 'supprimer') {
+            event.preventDefault();
+            alert('Vous devez taper exactement "supprimer" pour confirmer la suppression.');
+            return false;
+        }
+        
+        // Confirmation finale
+        if (!confirm('Êtes-vous ABSOLUMENT SÛR de vouloir supprimer votre compte superviseur ? Cette action est IRRÉVERSIBLE !')) {
+            event.preventDefault();
+            return false;
+        }
+        
+        return true;
+    });
+}
+
+// Initialiser quand le DOM est prêt
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initDeleteSupervisorAccount);
+} else {
+    initDeleteSupervisorAccount();
+}
+</script>
+{% endblock %}

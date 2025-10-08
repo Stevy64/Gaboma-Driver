@@ -1362,3 +1362,78 @@ def mon_compte(request):
     }
     
     return render(request, 'drivers/mon_compte.html', context)
+
+
+# =============================================================================
+# SUPPRESSION DE COMPTE - Fonctionnalité de suppression sécurisée
+# =============================================================================
+
+@login_required
+def supprimer_compte_chauffeur(request):
+    """
+    Vue pour supprimer le compte d'un chauffeur
+    
+    Cette vue permet à un chauffeur de supprimer définitivement son compte.
+    La suppression est sécurisée et gère toutes les dépendances :
+    - Suppression des activités liées
+    - Suppression du profil chauffeur
+    - Suppression de l'utilisateur Django
+    
+    Args:
+        request: Objet HttpRequest de l'utilisateur connecté
+        
+    Returns:
+        HttpResponse: Page de confirmation ou redirection
+    """
+    # Vérifier que l'utilisateur a un profil chauffeur
+    try:
+        chauffeur = Chauffeur.objects.get(user=request.user)
+    except Chauffeur.DoesNotExist:
+        messages.error(request, 'Aucun chauffeur associé à votre compte.')
+        return redirect('drivers:index')
+    
+    if request.method == 'POST':
+        # Vérifier la confirmation
+        confirmation = request.POST.get('confirmation', '').strip().lower()
+        if confirmation != 'supprimer':
+            messages.error(request, 'Vous devez taper "supprimer" pour confirmer la suppression.')
+            return render(request, 'drivers/supprimer_compte.html', {'chauffeur': chauffeur})
+        
+        try:
+            from django.db import transaction
+            
+            with transaction.atomic():
+                # Supprimer toutes les activités liées au chauffeur
+                from activities.models import PriseCles, RemiseCles, Panne, Recette, DemandeModification
+                
+                PriseCles.objects.filter(chauffeur=chauffeur).delete()
+                RemiseCles.objects.filter(chauffeur=chauffeur).delete()
+                Panne.objects.filter(chauffeur=chauffeur).delete()
+                Recette.objects.filter(chauffeur=chauffeur).delete()
+                DemandeModification.objects.filter(chauffeur=chauffeur).delete()
+                
+                # Supprimer les assignations de superviseur
+                from drivers.models import AssignationSuperviseur
+                AssignationSuperviseur.objects.filter(chauffeur=chauffeur).delete()
+                AssignationSuperviseur.objects.filter(assigne_par=request.user).update(assigne_par=None)
+                
+                # Supprimer le profil chauffeur
+                chauffeur.delete()
+                
+                # Supprimer l'utilisateur Django
+                username = request.user.username
+                request.user.delete()
+                
+                # Déconnecter l'utilisateur
+                from django.contrib.auth import logout
+                logout(request)
+                
+                messages.success(request, f'Votre compte "{username}" a été supprimé avec succès.')
+                return redirect('drivers:index')
+                
+        except Exception as e:
+            messages.error(request, f'Erreur lors de la suppression du compte : {str(e)}')
+            return render(request, 'drivers/supprimer_compte.html', {'chauffeur': chauffeur})
+    
+    # Affichage de la page de confirmation (méthode GET)
+    return render(request, 'drivers/supprimer_compte.html', {'chauffeur': chauffeur})

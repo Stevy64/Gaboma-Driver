@@ -3,35 +3,315 @@
 
 {% block title %}Accueil - Gaboma Driver{% endblock %}
 
-{% block content %}
-<div class="row justify-content-center">
-    <div class="col-lg-8">
-        <div class="text-center mb-5">
-            <h1 class="display-4 text-primary">
-                <i class="bi bi-taxi-front"></i> Gaboma Driver
-            </h1>
-            <p class="lead">Application de suivi d'activité dans le domaine du transport au Gabon</p>
-        </div>
+{% block extra_css %}
+<style>
+    /* =============================================================================
+       STYLES POUR LA PAGE D'ACCUEIL MODERNE - Landing Page Professionnelle
+       ============================================================================= */
+    
+    /* Section Hero avec image de fond */
+    .hero-section {
+        min-height: 100vh;
+        background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), 
+                    url('https://images.unsplash.com/photo-1449824913935-59a10b8d2000?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        display: flex;
+        align-items: center;
+        position: relative;
+    }
+    
+    .hero-content {
+        color: white;
+        text-align: center;
+        z-index: 2;
+    }
+    
+    .hero-title {
+        font-size: 3.5rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    }
+    
+    .hero-subtitle {
+        font-size: 1.3rem;
+        margin-bottom: 2.5rem;
+        opacity: 0.9;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    }
+    
+    .hero-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .hero-btn {
+        padding: 12px 30px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border-radius: 50px;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .hero-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* Section des connexions */
+    .login-section {
+        padding: 80px 0;
+        background: #f8f9fa;
+    }
+    
+    .login-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        border: none;
+        overflow: hidden;
+    }
+    
+    .login-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+    
+    .login-icon {
+        font-size: 4rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .login-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+    
+    .login-description {
+        color: #6c757d;
+        margin-bottom: 2rem;
+        line-height: 1.6;
+    }
+    
+    .login-btn {
+        padding: 12px 25px;
+        font-weight: 600;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 10px;
+    }
+    
+    .login-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    /* Section des fonctionnalités */
+    .features-section {
+        padding: 80px 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .feature-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-5px);
+        background: rgba(255, 255, 255, 0.2);
+    }
+    
+    .feature-icon {
+        font-size: 3rem;
+        margin-bottom: 1.5rem;
+        opacity: 0.9;
+    }
+    
+    .feature-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+    
+    .feature-description {
+        opacity: 0.8;
+        line-height: 1.6;
+    }
+    
+    /* Footer moderne */
+    .modern-footer {
+        background: #1a1a1a;
+        color: white;
+        padding: 60px 0 30px;
+    }
+    
+    .footer-brand {
+        margin-bottom: 2rem;
+    }
+    
+    .footer-brand h5 {
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    
+    .footer-links {
+        list-style: none;
+        padding: 0;
+    }
+    
+    .footer-links li {
+        margin-bottom: 0.5rem;
+    }
+    
+    .footer-links a {
+        color: #adb5bd;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+    
+    .footer-links a:hover {
+        color: white;
+    }
+    
+    .footer-bottom {
+        border-top: 1px solid #333;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        text-align: center;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .hero-title {
+            font-size: 2.5rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.1rem;
+        }
+        
+        .hero-buttons {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .hero-btn {
+            width: 100%;
+            max-width: 300px;
+        }
+        
+        .login-section {
+            padding: 60px 0;
+        }
+        
+        .features-section {
+            padding: 60px 0;
+        }
+        
+        .feature-card {
+            margin-bottom: 2rem;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .hero-title {
+            font-size: 2rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1rem;
+        }
+        
+        .login-card {
+            margin-bottom: 2rem;
+        }
+    }
+</style>
+{% endblock %}
 
-        <!-- Connexions -->
+{% block homepage_content %}
+<!-- =============================================================================
+     SECTION 1 - HERO (Image de fond plein écran avec overlay)
+     ============================================================================= -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="hero-content">
+                    <h1 class="hero-title">
+                        <i class="bi bi-taxi-front"></i> Bienvenue sur Gaboma Driver
+                    </h1>
+                    <p class="hero-subtitle">
+                        La solution digitale complète pour la gestion et le suivi d'activité 
+                        dans le domaine du transport au Gabon
+                    </p>
+                    <div class="hero-buttons">
+                        <a href="{% url 'drivers:creer_compte' %}" class="hero-btn btn btn-primary">
+                            <i class="bi bi-person-plus"></i> Créer un compte
+                        </a>
+                        <a href="{% url 'drivers:login_chauffeur' %}" class="hero-btn btn btn-outline-light">
+                            <i class="bi bi-box-arrow-in-right"></i> Se connecter
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- =============================================================================
+     SECTION 2 - PAGES DE CONNEXION (Chauffeur et Superviseur)
+     ============================================================================= -->
+<section class="login-section">
+    <div class="container">
+        <div class="row justify-content-center mb-5">
+            <div class="col-lg-8 text-center">
+                <h2 class="display-5 fw-bold text-dark mb-3">Accédez à votre espace</h2>
+                <p class="lead text-muted">
+                    Choisissez votre profil pour accéder aux fonctionnalités adaptées à votre rôle
+                </p>
+            </div>
+        </div>
+        
         <div class="row justify-content-center">
             <!-- Connexion Chauffeur -->
-            <div class="col-md-6 mb-4">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body text-center p-5">
-                        <div class="mb-4">
-                            <i class="bi bi-person-circle text-primary" style="font-size: 4rem;"></i>
-                        </div>
-                        <h3 class="card-title">Chauffeur</h3>
-                        <p class="card-text text-muted">
-                            Connectez-vous pour gérer vos prises et remises de clés, 
-                            signaler des pannes et consulter vos statistiques.
+            <div class="col-lg-5 col-md-6 mb-4">
+                <div class="login-card h-100 p-4">
+                    <div class="text-center">
+                        <i class="bi bi-person-circle login-icon text-primary"></i>
+                        <h3 class="login-title text-primary">Chauffeur</h3>
+                        <p class="login-description">
+                            Gérez vos prises et remises de clés, signalez des pannes, 
+                            enregistrez vos recettes et consultez vos statistiques d'activité.
                         </p>
                         <div class="d-grid gap-2">
-                            <a href="{% url 'drivers:login_chauffeur' %}" class="btn btn-primary btn-lg">
+                            <a href="{% url 'drivers:login_chauffeur' %}" class="login-btn btn btn-primary">
                                 <i class="bi bi-box-arrow-in-right"></i> Connexion Chauffeur
                             </a>
-                            <a href="{% url 'drivers:creer_compte' %}" class="btn btn-outline-primary">
+                            <a href="{% url 'drivers:creer_compte' %}" class="login-btn btn btn-outline-primary">
                                 <i class="bi bi-person-plus"></i> Créer un compte
                             </a>
                         </div>
@@ -40,22 +320,20 @@
             </div>
             
             <!-- Connexion Superviseur -->
-            <div class="col-md-6 mb-4">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body text-center p-5">
-                        <div class="mb-4">
-                            <i class="bi bi-person-badge text-success" style="font-size: 4rem;"></i>
-                        </div>
-                        <h3 class="card-title">Superviseur</h3>
-                        <p class="card-text text-muted">
-                            Accédez à votre espace de supervision pour gérer les chauffeurs, 
-                            traiter les demandes et suivre les performances.
+            <div class="col-lg-5 col-md-6 mb-4">
+                <div class="login-card h-100 p-4">
+                    <div class="text-center">
+                        <i class="bi bi-person-badge login-icon text-success"></i>
+                        <h3 class="login-title text-success">Superviseur</h3>
+                        <p class="login-description">
+                            Supervisez les chauffeurs, traitez les demandes de modification, 
+                            analysez les performances et gérez les assignations.
                         </p>
                         <div class="d-grid gap-2">
-                            <a href="{% url 'drivers:login_superviseur' %}" class="btn btn-success btn-lg">
+                            <a href="{% url 'drivers:login_superviseur' %}" class="login-btn btn btn-success">
                                 <i class="bi bi-box-arrow-in-right"></i> Connexion Superviseur
                             </a>
-                            <small class="text-muted">
+                            <small class="text-muted mt-2">
                                 <i class="bi bi-info-circle"></i> Privilège octroyé par l'administrateur
                             </small>
                         </div>
@@ -63,78 +341,136 @@
                 </div>
             </div>
         </div>
+    </div>
+</section>
 
-        <!-- Fonctionnalités -->
-        <div class="row mt-5">
-            <div class="col-12">
-                <h2 class="text-center mb-4">Fonctionnalités</h2>
-                <div class="row g-4">
-                    <div class="col-md-4">
-                        <div class="text-center">
-                            <i class="bi bi-key text-primary mb-3" style="font-size: 2rem;"></i>
-                            <h5>Gestion des clés</h5>
-                            <p class="text-muted">Prise et remise de clés avec signature électronique</p>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="text-center">
-                            <i class="bi bi-graph-up text-success mb-3" style="font-size: 2rem;"></i>
-                            <h5>Suivi des recettes</h5>
-                            <p class="text-muted">Enregistrement et suivi des recettes journalières</p>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="text-center">
-                            <i class="bi bi-tools text-warning mb-3" style="font-size: 2rem;"></i>
-                            <h5>Signalement de pannes</h5>
-                            <p class="text-muted">Signalement et suivi des problèmes mécaniques</p>
-                        </div>
-                    </div>
+<!-- =============================================================================
+     SECTION 3 - FONCTIONNALITÉS (Points clés de l'application)
+     ============================================================================= -->
+<section class="features-section">
+    <div class="container">
+        <div class="row justify-content-center mb-5">
+            <div class="col-lg-8 text-center">
+                <h2 class="display-5 fw-bold mb-3">Fonctionnalités principales</h2>
+                <p class="lead opacity-75">
+                    Découvrez les outils qui simplifient la gestion de votre activité de transport
+                </p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="feature-card h-100">
+                    <i class="bi bi-key feature-icon"></i>
+                    <h4 class="feature-title">Gestion des clés</h4>
+                    <p class="feature-description">
+                        Prise et remise de clés avec signature électronique et horodatage automatique
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="feature-card h-100">
+                    <i class="bi bi-graph-up feature-icon"></i>
+                    <h4 class="feature-title">Suivi des recettes</h4>
+                    <p class="feature-description">
+                        Enregistrement et suivi des recettes journalières avec rapports détaillés
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="feature-card h-100">
+                    <i class="bi bi-tools feature-icon"></i>
+                    <h4 class="feature-title">Signalement de pannes</h4>
+                    <p class="feature-description">
+                        Signalement et suivi des problèmes mécaniques avec photos et descriptions
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="feature-card h-100">
+                    <i class="bi bi-headset feature-icon"></i>
+                    <h4 class="feature-title">Assistance rapide</h4>
+                    <p class="feature-description">
+                        Support technique et assistance utilisateur pour une utilisation optimale
+                    </p>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</section>
 
-<!-- Footer -->
-<footer class="bg-light border-top mt-5 py-4">
+<!-- =============================================================================
+     SECTION 4 - PIED DE PAGE MODERNE (Footer avec liens légaux)
+     ============================================================================= -->
+<footer class="modern-footer">
     <div class="container">
-        <div class="row align-items-center">
-            <div class="col-md-6">
-                <div class="d-flex align-items-center">
-                    <i class="bi bi-taxi-front text-primary me-2" style="font-size: 1.5rem;"></i>
-                    <div>
-                        <h6 class="mb-0 text-dark fw-bold">Gaboma Driver</h6>
-                        <small class="text-muted">Transport au Gabon</small>
-                    </div>
+        <div class="row">
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="footer-brand">
+                    <h5 class="text-white">
+                        <i class="bi bi-taxi-front text-primary"></i> Gaboma Driver
+                    </h5>
+                    <p class="text-muted">
+                        Solution digitale pour la gestion et le suivi d'activité 
+                        dans le domaine du transport au Gabon.
+                    </p>
                 </div>
             </div>
-            <div class="col-md-6 text-md-end">
-                <div class="d-flex justify-content-md-end align-items-center gap-3">
-                    <small class="text-muted">
-                        <i class="bi bi-envelope me-1"></i>support@gabomadrive.ga
-                    </small>
-                    <small class="text-muted">
-                        <i class="bi bi-telephone me-1"></i>+241 XX XX XX XX
-                    </small>
-                </div>
+            
+            <div class="col-lg-2 col-md-6 mb-4">
+                <h6 class="text-white mb-3">Liens utiles</h6>
+                <ul class="footer-links">
+                    <li><a href="{% url 'drivers:login_chauffeur' %}">Connexion Chauffeur</a></li>
+                    <li><a href="{% url 'drivers:login_superviseur' %}">Connexion Superviseur</a></li>
+                    <li><a href="{% url 'drivers:creer_compte' %}">Créer un compte</a></li>
+                    <li><a href="/admin/">Accès Admin</a></li>
+                </ul>
+            </div>
+            
+            <div class="col-lg-2 col-md-6 mb-4">
+                <h6 class="text-white mb-3">Support</h6>
+                <ul class="footer-links">
+                    <li><a href="mailto:support@gabomadrive.ga">Contact</a></li>
+                    <li><a href="#">Assistance</a></li>
+                    <li><a href="#">FAQ</a></li>
+                    <li><a href="#">Documentation</a></li>
+                </ul>
+            </div>
+            
+            <div class="col-lg-2 col-md-6 mb-4">
+                <h6 class="text-white mb-3">Légal</h6>
+                <ul class="footer-links">
+                    <li><a href="#">Mentions légales</a></li>
+                    <li><a href="#">Politique de confidentialité</a></li>
+                    <li><a href="#">Conditions d'utilisation</a></li>
+                    <li><a href="#">CGV</a></li>
+                </ul>
+            </div>
+            
+            <div class="col-lg-2 col-md-6 mb-4">
+                <h6 class="text-white mb-3">Contact</h6>
+                <ul class="footer-links">
+                    <li><i class="bi bi-envelope me-2"></i>support@gabomadrive.ga</li>
+                    <li><i class="bi bi-telephone me-2"></i>+241 XX XX XX XX</li>
+                    <li><i class="bi bi-geo-alt me-2"></i>Libreville, Gabon</li>
+                </ul>
             </div>
         </div>
-        <hr class="my-3 text-muted">
-        <div class="row align-items-center">
-            <div class="col-md-8">
-                <small class="text-muted">
-                    &copy; {{ current_year }} Gaboma Driver. Tous droits réservés.
-                </small>
-            </div>
-            <div class="col-md-4 text-md-end">
-                <div class="d-flex justify-content-md-end align-items-center gap-3">
-                    <small class="text-muted">
+        
+        <div class="footer-bottom">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <p class="text-muted mb-0">
+                        &copy; {{ current_year }} Gaboma Driver. Tous droits réservés.
+                    </p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="text-muted mb-0">
                         Développé avec <i class="bi bi-heart-fill text-danger"></i> pour le Gabon
-                    </small>
-                    <a href="/admin/" class="btn btn-outline-secondary btn-sm" title="Accès administrateur">
-                        <i class="bi bi-gear"></i> Admin
-                    </a>
+                    </p>
                 </div>
             </div>
         </div>

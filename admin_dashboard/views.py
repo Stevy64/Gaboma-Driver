@@ -2005,3 +2005,63 @@ def detail_superviseur(request, superviseur_id):
     
 
     return render(request, 'admin_dashboard/activites_chauffeur.html', context)
+
+
+# =============================================================================
+# SUPPRESSION DE COMPTE SUPERVISEUR - Fonctionnalité de suppression sécurisée
+# =============================================================================
+
+@supervisor_required
+def supprimer_compte_superviseur(request):
+    """
+    Vue pour supprimer le compte d'un superviseur
+    
+    Cette vue permet à un superviseur de supprimer définitivement son compte.
+    La suppression est sécurisée et gère toutes les dépendances :
+    - Suppression des assignations de superviseur
+    - Suppression de l'utilisateur Django
+    
+    Args:
+        request: Objet HttpRequest de l'utilisateur connecté
+        
+    Returns:
+        HttpResponse: Page de confirmation ou redirection
+    """
+    # Vérifier que l'utilisateur est un superviseur
+    is_supervisor_group = request.user.groups.filter(name='Superviseurs').exists()
+    if not is_supervisor_group:
+        messages.error(request, 'Vous devez être superviseur pour accéder à cette fonctionnalité.')
+        return redirect('admin_dashboard:dashboard_superviseur')
+    
+    if request.method == 'POST':
+        # Vérifier la confirmation
+        confirmation = request.POST.get('confirmation', '').strip().lower()
+        if confirmation != 'supprimer':
+            messages.error(request, 'Vous devez taper "supprimer" pour confirmer la suppression.')
+            return render(request, 'admin_dashboard/supprimer_compte_superviseur.html')
+        
+        try:
+            from django.db import transaction
+            
+            with transaction.atomic():
+                # Supprimer les assignations de superviseur
+                AssignationSuperviseur.objects.filter(superviseur=request.user).delete()
+                AssignationSuperviseur.objects.filter(assigne_par=request.user).update(assigne_par=None)
+                
+                # Supprimer l'utilisateur Django
+                username = request.user.username
+                request.user.delete()
+                
+                # Déconnecter l'utilisateur
+                from django.contrib.auth import logout
+                logout(request)
+                
+                messages.success(request, f'Votre compte superviseur "{username}" a été supprimé avec succès.')
+                return redirect('drivers:index')
+                
+        except Exception as e:
+            messages.error(request, f'Erreur lors de la suppression du compte : {str(e)}')
+            return render(request, 'admin_dashboard/supprimer_compte_superviseur.html')
+    
+    # Affichage de la page de confirmation (méthode GET)
+    return render(request, 'admin_dashboard/supprimer_compte_superviseur.html')
