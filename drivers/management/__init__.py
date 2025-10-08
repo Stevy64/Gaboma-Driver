@@ -1,2 +1,1 @@
-# Management commands for drivers app
-
+# Management commands package

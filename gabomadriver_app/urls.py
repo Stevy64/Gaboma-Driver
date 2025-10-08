@@ -25,6 +25,9 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+# Import de la configuration admin personnalisée
+from admin_custom import *
+
 # =============================================================================
 # DÉFINITION DES ROUTES PRINCIPALES - Mapping des applications
 # =============================================================================
