@@ -39,7 +39,7 @@ DEBUG = True
 
 # Hôtes autorisés - Liste des domaines/IP autorisés à servir l'application
 # En production, remplacer par les vrais domaines
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', 'testserver']
+ALLOWED_HOSTS = ['www.gabomazone.pythonanywhere.com', '*']
 
 # =============================================================================
 # CONFIGURATION DES APPLICATIONS - Modules Django installés
@@ -53,7 +53,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',     # Gestion des sessions
     'django.contrib.messages',     # Système de messages
     'django.contrib.staticfiles',  # Gestion des fichiers statiques
-    
+
     # Applications personnalisées de Gaboma Driver
     'drivers',          # Gestion des chauffeurs
     'activities',       # Gestion des activités (prises/remises de clés)
