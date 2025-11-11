@@ -28,6 +28,9 @@ from django.conf.urls.static import static
 # Import de la configuration admin personnalisée
 from admin_custom import *
 
+# Import du webhook GitHub pour le déploiement automatique
+from .webhook import github_webhook
+
 # =============================================================================
 # DÉFINITION DES ROUTES PRINCIPALES - Mapping des applications
 # =============================================================================
@@ -59,6 +62,15 @@ urlpatterns = [
     # Accès : /admin-dashboard/
     # Fonctionnalités : Statistiques, rapports, gestion avancée
     path('admin-dashboard/', include('admin_dashboard.urls')),
+    
+    # =============================================================================
+    # WEBHOOK GITHUB - Déploiement automatique
+    # =============================================================================
+    
+    # Webhook GitHub pour déclencher le déploiement automatique
+    # Accès : /webhook/github/
+    # Utilisation : Configuré sur GitHub pour appeler cette URL lors d'un push
+    path('webhook/github/', github_webhook, name='github_webhook'),
 ]
 
 # =============================================================================

@@ -15,6 +15,7 @@ Base de données : SQLite (développement) / PostgreSQL (production)
 """
 
 from pathlib import Path
+import os
 
 # =============================================================================
 # CONFIGURATION DES CHEMINS - Définition des répertoires du projet
@@ -199,3 +200,13 @@ LOGOUT_REDIRECT_URL = 'drivers:index'
 # 403.html : Accès refusé (Permission Denied)
 # 404.html : Page non trouvée (Not Found)
 # 500.html : Erreur serveur interne (Internal Server Error)
+
+# =============================================================================
+# CONFIGURATION WEBHOOK GITHUB - Déploiement automatique
+# =============================================================================
+
+# Clé secrète pour authentifier les webhooks GitHub
+# À définir dans les variables d'environnement sur PythonAnywhere :
+# export GITHUB_WEBHOOK_SECRET="votre-clé-secrète-ici"
+# Ou définir directement ici (moins sécurisé) :
+GITHUB_WEBHOOK_SECRET = os.environ.get('GITHUB_WEBHOOK_SECRET', '')
